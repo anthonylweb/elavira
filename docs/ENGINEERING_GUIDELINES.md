@@ -55,8 +55,8 @@ Do not require:
 
 - A specific theme
 - WooCommerce unless WooCommerce-specific functionality is executing
-- A separate queue/scheduler plugin
-- External accessibility services
+- A separate queue/scheduler plugin for Core single-page scanning
+- External accessibility/scanning services for Core single-page scanning
 - External font services
 - A visitor account
 - Third-party analytics
@@ -407,13 +407,11 @@ Schema migrations must be safe to run repeatedly.
 
 ## 24. URL security
 
-Phase 1 selected-URL auditing is restricted to URLs belonging to the current site.
+Core single-page auditing is restricted to canonical public URLs belonging to the current WordPress site.
 
-Validate URLs before adding them to the audit queue.
+Validate the requested/canonical URL before authorizing a scan and before accepting persisted scan results. Do not allow a scan session to be repurposed for another origin or unauthorized URL.
 
-Protect against SSRF and unintended internal-resource access.
-
-Do not allow user-supplied URLs to bypass site-boundary restrictions through redirects, encoded hosts, alternative ports, userinfo syntax, DNS tricks, or scheme manipulation where reasonably preventable.
+Future Premium remote or batch scanning must additionally protect against SSRF and unintended internal-resource access, including redirect, encoded-host, alternative-port, userinfo, DNS, scheme, and private-network bypasses where reasonably preventable.
 
 ## 25. Privacy
 
@@ -445,50 +443,63 @@ Avoid recording:
 
 Premium diagnostics may expose more technical detail, but that does not remove privacy obligations.
 
-## 27. Background processing
+## 27. Core single-page scan execution
 
-Never execute a complete site-wide audit in one synchronous PHP request.
+Core single-page audits execute in the user's browser against the canonical public page.
 
-The audit queue must:
+Core must not require:
 
-- Persist jobs
-- Process incrementally
-- Support interruption and recovery
-- Bound runtime
-- Bound memory use
-- Bound concurrency
-- Support retry/backoff
-- Prevent duplicate processing
-- Handle failed URLs independently
-- Persist progress incrementally
+- A persistent site-wide audit queue
+- A remote browser-worker service
+- Chromium/Playwright/browser binaries on the WordPress host
+- A separate scheduler/queue plugin
+- The administrator's browser to remain open beyond completion of the individual single-page scan
 
-One failed page must not fail the entire audit.
+The browser scanner should produce bounded structured evidence and persist results through an authenticated/authorized WordPress endpoint. It must not perform remediation.
 
-## 28. Queue concurrency
+## 28. Browser scanner boundary and integrity
 
-Use leases, locks, or equivalent safe concurrency controls.
+Keep the browser execution layer separate from Elavira's product semantics.
 
-Jobs must not accidentally execute multiple times because two workers acquire them simultaneously.
+The browser scanner may determine rule outcomes and collect the minimum evidence needed for a finding. WordPress/Elavira remains authoritative for:
 
-Workers should recover safely after:
+- Rule metadata/version registry
+- WCAG mappings
+- Priority
+- Explanations
+- Recommendations
+- WordPress guidance
+- Developer guidance
+- Guided Decision associations
+- Finding workflow/history
+- Reports and statement recommendations
 
-- PHP termination
-- Request timeout
-- Server restart
-- Temporary hosting failure
+Do not represent PHP-fetched source HTML as equivalent to a rendered browser scan when relevant client-side DOM changes have not executed.
 
-A stale processing lock must eventually be recoverable.
+Protect result submission against forged, stale, cross-site, or unauthorized requests. Bound runtime and payload size, and avoid collecting sensitive form values or unnecessary page content.
 
-## 29. One active site-wide audit
+## 29. Premium site-wide and remote execution boundary
 
-Only one site-wide audit may be active at a time.
+Site-wide audits, selected/multi-page batch audits, persistent audit queues, and remote browser-worker execution are Premium capabilities reserved for later implementation.
 
-Paused still counts as active.
+Core architecture should leave stable extension points for these systems without implementing speculative infrastructure or making Core depend on them.
 
-Single-page audits may run while a site-wide audit exists and should receive higher queue priority.
+When Premium site-wide execution is designed, it must address at minimum:
 
-Do not create a setting that disables this rule.
+- Persistent/resumable jobs
+- Bounded processing and concurrency
+- Retry/backoff and failed-page isolation
+- Safe leases/locks and stale-job recovery
+- One active site-wide audit unless the specification is revised
+- Worker authentication and authorization
+- Same-site URL policy plus SSRF/network/redirect protections
+- Browser isolation
+- Data minimization and retention
+- Service health and failure reporting
+- Privacy disclosures
+- Remote service cost/abuse controls
 
+Do not implement these details before a dedicated Premium site-wide/remote-worker specification exists.
 ## 30. Performance
 
 Avoid unnecessary work on every WordPress request.
@@ -524,7 +535,7 @@ Respect the entities defined by the specification, including:
 - Statement
 - Statement Recommendation
 - Statement Revision
-- Queue Job
+- Premium Queue Job (reserved for later site-wide execution)
 
 Do not collapse logically separate entities merely to reduce table count if doing so harms performance, history, or data integrity.
 
@@ -648,20 +659,24 @@ Examples:
 
 Core must remain a genuinely useful accessibility product.
 
-Do not place fundamental accessibility improvement behind Premium.
+Core includes rendered single-page browser auditing plus the findings, education, Guided Decisions, reporting, statement, toolbar, and related workflows defined by the specification.
 
-Premium is primarily for:
+Premium is the intended home for:
 
-- Complex management
-- Agency workflows
+- Site-wide audits
+- Selected/multi-page batch auditing
+- Remote browser-worker execution
+- Persistent site-wide processing/queue infrastructure
+- Complex management and agency workflows
 - Advanced URL/content controls
 - Report retention configuration
 - Developer diagnostics
 - Permission management
 - Future advanced workflows
 
-Code should allow Premium functionality to extend Core without requiring Core logic to become duplicated or forked.
+Do not weaken the quality or truthfulness of Core single-page accessibility evaluation merely to create a Premium distinction. The commercial boundary is primarily **page-level evaluation vs. website-scale management/execution**, not deliberately less accurate accessibility rules for Core.
 
+Code should allow Premium functionality to extend Core without requiring Core logic to become duplicated or forked.
 ## 43. Feature gating
 
 Premium features should be gated cleanly.
@@ -701,10 +716,10 @@ Test especially:
 - Authorization
 - Validation
 - Audit lifecycle
-- Queue recovery
-- Concurrency
+- Browser scanner authorization and result integrity
+- Single-page scan lifecycle
 - Status transitions
-- URL hygiene
+- Canonical/same-site single-page URL validation
 - Statement recommendations
 - Persistence
 - Premium gating
@@ -763,7 +778,8 @@ Comments should explain **why**, not narrate obvious code.
 Complex areas should document:
 
 - Architectural decisions
-- Queue behavior
+- Single-page browser scanner behavior
+- Premium extension boundaries where applicable
 - Locking assumptions
 - Security boundaries
 - Accessibility-specific interaction requirements

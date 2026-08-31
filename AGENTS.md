@@ -33,8 +33,6 @@ If a requested task conflicts with either authoritative source, identify the con
 
 ## Existing code first
 
-Elavira is not a greenfield project.
-
 Before implementing a task:
 
 1. Inspect the relevant existing code, tests, schema, hooks, APIs, and UI.
@@ -84,9 +82,9 @@ Keep these concepts distinct:
 
 Core must remain a genuinely useful accessibility product.
 
-Premium primarily extends Elavira for professional management of complex sites, teams, clients, diagnostics, permissions, retention, and advanced configuration.
+Core provides rendered single-page auditing in the user's browser. Premium extends Elavira with site-wide auditing, remote browser-worker execution, and professional management features for complex sites, teams, clients, diagnostics, permissions, retention, and advanced configuration.
 
-Implement feature gating cleanly. Core must remain stable if Premium is missing, inactive, outdated, or unavailable.
+Implement feature gating cleanly. Core must remain stable if Premium is missing, inactive, outdated, or unavailable. Do not introduce a remote browser service, persistent site-wide queue, or site-wide audit workflow into Core unless the specification is explicitly revised again.
 
 ## WordPress engineering
 
@@ -99,7 +97,7 @@ Follow current WordPress best practices and the detailed requirements in `ENGINE
 - Safe database queries
 - Internationalization
 - Scoped frontend assets
-- Bounded background processing
+- Bounded processing and resource use appropriate to the feature
 - Privacy-conscious logging
 - Graceful failure handling
 

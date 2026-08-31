@@ -47,5 +47,7 @@ wp-config.php
 # uncomment the next line
 #/wp-content/themes
 
-AGENTS.md
-docs/
+# Local development artifacts. Release packages must include the production
+# Composer autoloader generated with `composer install --no-dev`.
+/vendor/
+/.phpunit.result.cache
