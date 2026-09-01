@@ -11,6 +11,7 @@ use Elavira\Core\Capabilities\Capability;
 use Elavira\Core\Lifecycle\Activator;
 use Elavira\Core\Lifecycle\Deactivator;
 use Elavira\Core\Version\VersionManager;
+use Elavira\Tests\Support\FakeWpdb;
 use PHPUnit\Framework\TestCase;
 
 final class LifecycleTest extends TestCase {
@@ -20,19 +21,20 @@ final class LifecycleTest extends TestCase {
 		}
 
 		if ( ! defined( 'ELAVIRA_SCHEMA_VERSION' ) ) {
-			define( 'ELAVIRA_SCHEMA_VERSION', '0.1.0' );
+			define( 'ELAVIRA_SCHEMA_VERSION', '0.2.0' );
 		}
 
 		$GLOBALS['elavira_test_options']       = array();
 		$GLOBALS['elavira_test_administrator'] = new RecordingRole();
 		$GLOBALS['elavira_test_fired_actions'] = array();
+		$GLOBALS['wpdb']                       = new FakeWpdb();
 	}
 
 	public function test_activation_installs_versions_and_capabilities() {
 		Activator::activate();
 
 		$this->assertSame( '0.1.0', get_option( VersionManager::PLUGIN_VERSION_OPTION ) );
-		$this->assertSame( '0.1.0', get_option( VersionManager::SCHEMA_VERSION_OPTION ) );
+		$this->assertSame( '0.2.0', get_option( VersionManager::SCHEMA_VERSION_OPTION ) );
 		$this->assertSame( Capability::all(), array_keys( $GLOBALS['elavira_test_administrator']->capabilities ) );
 		$this->assertArrayHasKey( 'elavira_activated', $GLOBALS['elavira_test_fired_actions'] );
 	}
