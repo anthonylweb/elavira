@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'ELAVIRA_VERSION', '0.1.0' );
-define( 'ELAVIRA_SCHEMA_VERSION', '0.1.0' );
+define( 'ELAVIRA_SCHEMA_VERSION', '0.2.0' );
 define( 'ELAVIRA_FILE', __FILE__ );
 
 $elavira_autoloader = __DIR__ . '/vendor/autoload.php';
