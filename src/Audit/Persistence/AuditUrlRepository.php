@@ -11,6 +11,7 @@ use Elavira\Audit\Values\AuditUrlStatus;
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Core\Database\Repository;
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Persists canonical pages belonging to an Audit.
@@ -64,5 +65,33 @@ final class AuditUrlRepository extends Repository {
 			$this->database->prepare( "SELECT * FROM {$this->tables->audit_urls()} WHERE audit_id = %d ORDER BY id ASC", absint( $audit_id ) ),
 			ARRAY_A
 		);
+	}
+
+	/**
+	 * Update page scan lifecycle.
+	 *
+	 * @param int   $audit_url_id URL ID.
+	 * @param array $data         Fields.
+	 * @return void
+	 * @throws RuntimeException When the update fails.
+	 */
+	public function update_lifecycle( $audit_url_id, array $data ) {
+		$allowed = array_intersect_key( $data, array_flip( array( 'status', 'failure_code', 'failure_message', 'completed_at' ) ) );
+		if ( isset( $allowed['status'] ) ) {
+			$allowed['status'] = PersistenceValidator::one_of( $allowed['status'], AuditUrlStatus::all(), 'audit URL status' );
+		}
+		if ( isset( $allowed['failure_code'] ) ) {
+			$allowed['failure_code'] = PersistenceValidator::text( $allowed['failure_code'], 64, 'failure code', true );
+		}
+		if ( isset( $allowed['failure_message'] ) ) {
+			$allowed['failure_message'] = PersistenceValidator::text( $allowed['failure_message'], 1000, 'failure message', true );
+		}
+		if ( array_key_exists( 'completed_at', $allowed ) ) {
+			$allowed['completed_at'] = PersistenceValidator::datetime( $allowed['completed_at'], 'completed timestamp' );
+		}
+		$allowed['updated_at'] = $this->now();
+		if ( false === $this->database->update( $this->tables->audit_urls(), $allowed, array( 'id' => absint( $audit_url_id ) ) ) ) {
+			throw new RuntimeException( 'Elavira could not update the audited URL.' );
+		}
 	}
 }

@@ -61,7 +61,7 @@ final class CoreAuditSchema implements Migration {
 			throw new RuntimeException( 'Elavira could not create its Core audit tables.' );
 		}
 
-		foreach ( $tables->all() as $table ) {
+		foreach ( array( $tables->audits(), $tables->audit_urls(), $tables->findings(), $tables->occurrences(), $tables->finding_status_history() ) as $table ) {
 			$found = $this->database->get_var(
 				$this->database->prepare( 'SHOW TABLES LIKE %s', $table )
 			);

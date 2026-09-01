@@ -18,6 +18,9 @@ $GLOBALS['elavira_test_actions']            = array();
 $GLOBALS['elavira_test_activation_hooks']   = array();
 $GLOBALS['elavira_test_deactivation_hooks'] = array();
 $GLOBALS['elavira_test_fired_actions']      = array();
+$GLOBALS['elavira_test_current_user_id']    = 7;
+$GLOBALS['elavira_test_capabilities']       = array();
+$GLOBALS['elavira_test_url_objects']        = array();
 
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = false ) {
@@ -146,4 +149,83 @@ if ( ! function_exists( '__' ) ) {
 		unset( $domain );
 		return $text;
 	}
+}
+
+if ( ! function_exists( 'plugin_dir_url' ) ) {
+	function plugin_dir_url( $file ) {
+		unset( $file );
+		return 'https://example.com/wp-content/plugins/elavira/';
+	}
+}
+
+if ( ! function_exists( 'current_user_can' ) ) {
+	function current_user_can( $capability ) {
+		return ! empty( $GLOBALS['elavira_test_capabilities'][ $capability ] );
+	}
+}
+
+if ( ! function_exists( 'get_current_user_id' ) ) {
+	function get_current_user_id() {
+		return (int) $GLOBALS['elavira_test_current_user_id'];
+	}
+}
+
+if ( ! function_exists( 'home_url' ) ) {
+	function home_url( $path = '/' ) {
+		return 'https://example.com' . $path;
+	}
+}
+
+if ( ! function_exists( 'wp_parse_url' ) ) {
+	function wp_parse_url( $url, $component = -1 ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Test stub intentionally delegates to PHP.
+		return parse_url( $url, $component );
+	}
+}
+
+if ( ! function_exists( 'add_query_arg' ) ) {
+	function add_query_arg( $key, $value, $url ) {
+		return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . rawurlencode( $key ) . '=' . $value;
+	}
+}
+
+if ( ! function_exists( 'wp_date' ) ) {
+	function wp_date( $format ) {
+		return gmdate( $format, strtotime( '2026-08-31 12:00:00 UTC' ) );
+	}
+}
+
+if ( ! function_exists( 'url_to_postid' ) ) {
+	function url_to_postid( $url ) {
+		return $GLOBALS['elavira_test_url_objects'][ $url ]['id'] ?? 0;
+	}
+}
+
+if ( ! function_exists( 'get_post_status' ) ) {
+	function get_post_status( $post_id ) {
+		foreach ( $GLOBALS['elavira_test_url_objects'] as $object ) {
+			if ( (int) $object['id'] === (int) $post_id ) {
+				return $object['status']; }
+		}
+		return false;
+	}
+}
+
+if ( ! function_exists( 'get_post_type' ) ) {
+	function get_post_type( $post_id ) {
+		unset( $post_id );
+		return 'page'; }
+}
+
+if ( ! function_exists( 'get_post_type_object' ) ) {
+	function get_post_type_object( $post_type ) {
+		return (object) array(
+			'name'               => $post_type,
+			'publicly_queryable' => true,
+		); }
+}
+
+if ( ! function_exists( 'is_post_type_viewable' ) ) {
+	function is_post_type_viewable( $post_type ) {
+		return ! empty( $post_type->publicly_queryable ); }
 }

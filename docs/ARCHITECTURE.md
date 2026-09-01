@@ -22,7 +22,8 @@ Settings, Admin HTTP, and API handling. The Core scanner boundary is browser-sid
 JavaScript operating on one rendered canonical public page and submitting
 bounded structured evidence to an authenticated and authorized WordPress
 endpoint. WordPress remains authoritative for rule metadata, findings, guidance,
-history, and reports. The scanner implementation is intentionally deferred.
+history, and reports. The current `src/Scanner` module implements this Core
+single-page boundary; reports and the wider improvement workflow remain separate.
 
 Site-wide and selected/multi-page audits, URL inventory, persistent queues, and
 remote browser workers belong to a later Premium implementation. Core contains
@@ -49,7 +50,9 @@ installed plugin never depends on a site administrator running Composer.
 
 ## Core audit persistence
 
-Schema version `0.2.0` introduces five WordPress-prefixed custom tables:
+Schema versions `0.2.0` and `0.3.0` introduce seven WordPress-prefixed custom
+tables. Five retain audit/report history and two coordinate short-lived browser
+scan sessions:
 
 - `elavira_audits` stores the Audit aggregate, scope, WCAG target, lifecycle,
   configuration snapshot, owner, and scanner/ruleset/editorial versions.
@@ -62,6 +65,10 @@ Schema version `0.2.0` introduces five WordPress-prefixed custom tables:
   structured target, evidence, and element metadata.
 - `elavira_finding_status_history` stores every workflow transition, actor,
   bounded reason, timestamp, and optional source Audit used by later verification.
+- `elavira_scan_sessions` stores hashed browser credentials, ownership, canonical
+  URL and version snapshots, expiry, lifecycle state, and result totals.
+- `elavira_scan_batches` stores small accepted-batch receipts with a unique
+  session/batch key. It stores no browser payload and is not a queue.
 
 Table names always use the active WordPress database prefix. Relational IDs are
 validated in repositories rather than enforced through MySQL foreign keys, in
@@ -84,9 +91,9 @@ target metadata, 16,384 bytes for scanner evidence, and 8,192 bytes for element
 metadata. Audit configuration JSON is limited to 65,535 bytes. The persistence
 boundary rejects fields intended for passwords, authentication/cookies/tokens,
 form values, HTML blobs, and full request/response bodies. These limits are a
-storage safety boundary; the future scanner submission endpoint must still
-authenticate, authorize, validate rule/session identifiers, enforce same-site
-canonical URLs, and apply request-size limits before calling repositories.
+storage safety boundary. The scanner workflow additionally authenticates,
+authorizes, validates rule/session identifiers, enforces canonical page binding,
+and applies request-size limits before calling repositories.
 
 ## Rule Registry and browser evidence contract
 
@@ -126,12 +133,66 @@ inputs. Arbitrary browser grouping keys are never trusted.
 The transport-independent flow is:
 
 **browser evidence → PHP structural/privacy validation → exact Rule Registry
-lookup → rule-specific evidence validation → server normalization → later scan
+lookup → rule-specific evidence validation → server normalization → bounded scan
 persistence**
 
 Normalization supplies trusted rule/editorial versions, complete WCAG mapping,
 primary persistence mapping, classification, priority, review state, editorial
-metadata, grouping key, and bounded occurrence structures. Authentication,
-capability checks, CSRF protection, same-site scan authorization, scan-session
-validation, HTTP request limits, persistence orchestration, and browser scanner
-execution remain responsibilities of later tasks.
+metadata, grouping key, and bounded occurrence structures. The Core scanner
+module supplies authentication, authorization, session validation, transport
+limits, persistence orchestration, and browser execution.
+
+## Core single-page browser scan execution
+
+Core scan initiation is an authorized application service requiring
+`elavira_run_audits`. It accepts only HTTP(S) URLs on the exact scheme, host, and
+port of `home_url()`, removes the Elavira credential parameter, canonicalizes
+query ordering, and rejects WordPress administrative and internal endpoints.
+It creates the Audit, Audit URL, and scan session in one database transaction.
+The session snapshots scanner `core-browser-1.0.0`, ruleset
+`core-rules-1.0.0`, editorial `core-editorial-1.0.0`, WCAG target, and the exact
+allowed rule ID/version map. A 256-bit random credential is returned to the
+browser; only its SHA-256 hash is stored.
+
+Sessions expire after 15 minutes and use `created → active → completing →
+completed`, with explicit `failed` and `expired` terminals. The public scanner
+assets load only when the logged-in session owner presents a valid unexpired
+credential on the exact canonical Audit URL. Valid credential-bearing pages
+receive no-cache headers so personalized runtime configuration cannot enter a
+shared page cache. Ordinary frontend requests retain normal caching and load no
+scanner assets.
+
+The browser waits for the window load state, then observes DOM mutations until
+500 ms of quiet time. Stabilization ends after 3 seconds even on continuously
+changing pages, and the entire readiness phase has a 10-second absolute limit.
+The MutationObserver, timers, and load listener are always removed. Readiness is
+deliberately not defined as permanent network or DOM idleness.
+
+The framework-free scanner evaluates only the five registered representative
+rules. It collects no input values, cookies, tokens, HTML snapshots, or
+editorial data and never modifies page content for remediation. Its only page
+addition is a scoped live status region describing preparation, scanning,
+saving, completion, or failure. It does not move or trap focus, rely on color,
+or animate.
+
+Authenticated REST `POST` requests use WordPress cookie authentication, the
+`wp_rest` nonce, and `elavira_run_audits`. JSON content type and a 256 KiB raw
+request limit are enforced before application processing. Batches contain at
+most 50 results and one session accepts at most 1,000 total results. Crossing
+the total limit fails the scan rather than silently truncating it.
+
+PHP checks ownership, expiry, lifecycle, the snapshotted rule/version map, and
+every evidence schema before normalization. It creates or reuses server-grouped
+Findings and adds Occurrences through existing repositories. A batch identity
+is the server-computed SHA-256 hash of its exact structured results. Findings,
+Occurrences, counts, and the unique batch receipt commit in one bounded
+transaction. An identical retry returns the prior acceptance without inserting
+again; a failed transaction records no receipt and may be retried safely.
+
+Completion is a separate idempotent request. It transitions the Audit URL,
+Audit, and session only after accepted batches have committed. Browser silence
+never implies success. Safe failure codes cover scanner errors, readiness
+timeout, transport or validation failure, result limits, and session expiry.
+Raw SQL, paths, request bodies, and stack traces are not stored or returned. A
+temporary authenticated completion page reports only the audit label and
+grouped finding count pending the full Reports implementation.

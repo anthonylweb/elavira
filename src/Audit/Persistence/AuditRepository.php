@@ -11,6 +11,7 @@ use Elavira\Audit\Values\AuditScope;
 use Elavira\Audit\Values\AuditStatus;
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Core\Database\Repository;
+use RuntimeException;
 
 /**
  * Persists Core Audit aggregate roots.
@@ -58,5 +59,27 @@ final class AuditRepository extends Repository {
 			$this->database->prepare( "SELECT * FROM {$this->tables->audits()} WHERE id = %d", absint( $audit_id ) ),
 			ARRAY_A
 		);
+	}
+
+	/**
+	 * Update lifecycle state and completion counts.
+	 *
+	 * @param int   $audit_id Audit ID.
+	 * @param array $data     Fields.
+	 * @return void
+	 * @throws RuntimeException When the update fails.
+	 */
+	public function update_lifecycle( $audit_id, array $data ) {
+		$allowed = array_intersect_key( $data, array_flip( array( 'status', 'completed_at' ) ) );
+		if ( isset( $allowed['status'] ) ) {
+			$allowed['status'] = PersistenceValidator::one_of( $allowed['status'], AuditStatus::all(), 'audit status' );
+		}
+		if ( array_key_exists( 'completed_at', $allowed ) ) {
+			$allowed['completed_at'] = PersistenceValidator::datetime( $allowed['completed_at'], 'completed timestamp' );
+		}
+		$allowed['updated_at'] = $this->now();
+		if ( false === $this->database->update( $this->tables->audits(), $allowed, array( 'id' => absint( $audit_id ) ) ) ) {
+			throw new RuntimeException( 'Elavira could not update the audit.' );
+		}
 	}
 }
