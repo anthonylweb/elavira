@@ -37,6 +37,8 @@ final class SinglePageScanTest extends TestCase {
 	private $complete;
 	private $guard;
 	private $findings;
+	private $audits;
+	private $urls;
 
 	protected function setUp(): void {
 		$this->database  = new FakeWpdb();
@@ -46,15 +48,15 @@ final class SinglePageScanTest extends TestCase {
 		$GLOBALS['elavira_test_current_user_id'] = 7;
 		$GLOBALS['elavira_test_capabilities']    = array( Capability::RUN_AUDITS => true );
 		$GLOBALS['elavira_test_url_objects']     = array();
-		$audits                                  = new AuditRepository( $this->database );
-		$urls                                    = new AuditUrlRepository( $this->database );
+		$this->audits                            = new AuditRepository( $this->database );
+		$this->urls                              = new AuditUrlRepository( $this->database );
 		$this->sessions                          = new ScanSessionRepository( $this->database );
-		$this->guard                             = new SessionGuard( $this->database, $this->sessions, $audits, $urls );
+		$this->guard                             = new SessionGuard( $this->database, $this->sessions, $this->audits, $this->urls );
 		$rules                                   = CoreRuleRegistry::create();
 		$this->findings                          = new FindingRepository( $this->database );
-		$this->start                             = new StartSinglePageScan( $this->database, $audits, $urls, $this->sessions, $rules, new CanonicalUrl() );
-		$this->submit                            = new SubmitScanBatch( $this->database, $this->sessions, $this->guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $this->findings, new OccurrenceRepository( $this->database ) );
-		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $audits, $urls, $this->findings );
+		$this->start                             = new StartSinglePageScan( $this->database, $this->audits, $this->urls, $this->sessions, $rules, new CanonicalUrl() );
+		$this->submit                            = new SubmitScanBatch( $this->database, $this->sessions, $this->guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $this->findings, new OccurrenceRepository( $this->database ), $this->audits, $this->urls );
+		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $this->audits, $this->urls, $this->findings );
 	}
 
 	public function test_creates_unpredictable_owner_bound_session_and_version_snapshot() {
@@ -151,6 +153,9 @@ final class SinglePageScanTest extends TestCase {
 			$this->assertNotEmpty( $error->getMessage() ); }
 		$this->assertSame( 'failed', $this->sessions->find_by_token( $token )['state'] );
 		$this->assertSame( 'result_limit_exceeded', $this->sessions->find_by_token( $token )['failure_code'] );
+		$session = $this->sessions->find_by_token( $token );
+		$this->assertSame( 'failed', $this->audits->find( $session['audit_id'] )['status'] );
+		$this->assertSame( 'failed', $this->urls->find_by_audit( $session['audit_id'] )[0]['status'] );
 	}
 
 	public function test_partial_failure_rolls_back_and_retry_does_not_inflate_counts() {

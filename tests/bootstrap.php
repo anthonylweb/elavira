@@ -21,6 +21,7 @@ $GLOBALS['elavira_test_fired_actions']      = array();
 $GLOBALS['elavira_test_current_user_id']    = 7;
 $GLOBALS['elavira_test_capabilities']       = array();
 $GLOBALS['elavira_test_url_objects']        = array();
+$GLOBALS['elavira_test_rest_routes']        = array();
 
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = false ) {
@@ -78,6 +79,14 @@ if ( ! function_exists( 'register_deactivation_hook' ) ) {
 if ( ! function_exists( 'do_action' ) ) {
 	function do_action( $hook_name, ...$args ) {
 		$GLOBALS['elavira_test_fired_actions'][ $hook_name ][] = $args;
+	}
+}
+
+if ( ! function_exists( 'register_rest_route' ) ) {
+	function register_rest_route( $route_namespace, $route, $args ) {
+		$GLOBALS['elavira_test_rest_routes'][ $route_namespace . $route ] = $args;
+
+		return true;
 	}
 }
 

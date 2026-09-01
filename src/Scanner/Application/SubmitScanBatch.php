@@ -7,6 +7,10 @@
 
 namespace Elavira\Scanner\Application;
 
+use Elavira\Audit\Persistence\AuditRepository;
+use Elavira\Audit\Persistence\AuditUrlRepository;
+use Elavira\Audit\Values\AuditStatus;
+use Elavira\Audit\Values\AuditUrlStatus;
 use Elavira\Findings\Persistence\FindingRepository;
 use Elavira\Findings\Persistence\OccurrenceRepository;
 use Elavira\Rules\Browser\BrowserEvidenceValidator;
@@ -56,6 +60,16 @@ final class SubmitScanBatch {
 	 * @var OccurrenceRepository
 	 */
 	private $occurrences;
+	/** Audit repository.
+	 *
+	 * @var AuditRepository
+	 */
+	private $audits;
+	/** Audit URL repository.
+	 *
+	 * @var AuditUrlRepository
+	 */
+	private $urls;
 
 	/**
 	 * Construct the batch application service.
@@ -67,8 +81,10 @@ final class SubmitScanBatch {
 	 * @param RuleResultNormalizer     $normalizer  Result normalizer.
 	 * @param FindingRepository        $findings    Finding repository.
 	 * @param OccurrenceRepository     $occurrences Occurrence repository.
+	 * @param AuditRepository          $audits      Audit repository.
+	 * @param AuditUrlRepository       $urls        Audit URL repository.
 	 */
-	public function __construct( $database, ScanSessionRepository $sessions, SessionGuard $guard, BrowserEvidenceValidator $validator, RuleResultNormalizer $normalizer, FindingRepository $findings, OccurrenceRepository $occurrences ) {
+	public function __construct( $database, ScanSessionRepository $sessions, SessionGuard $guard, BrowserEvidenceValidator $validator, RuleResultNormalizer $normalizer, FindingRepository $findings, OccurrenceRepository $occurrences, AuditRepository $audits, AuditUrlRepository $urls ) {
 		$this->database    = $database;
 		$this->sessions    = $sessions;
 		$this->guard       = $guard;
@@ -76,6 +92,8 @@ final class SubmitScanBatch {
 		$this->normalizer  = $normalizer;
 		$this->findings    = $findings;
 		$this->occurrences = $occurrences;
+		$this->audits      = $audits;
+		$this->urls        = $urls;
 	}
 
 	/**
@@ -98,17 +116,6 @@ final class SubmitScanBatch {
 		if ( strlen( (string) wp_json_encode( $results ) ) > ScanLimits::MAX_REQUEST_BYTES ) {
 			throw new InvalidArgumentException( 'The scan batch is too large.' );
 		}
-		if ( (int) $session['total_results'] + $count > ScanLimits::MAX_TOTAL_RESULTS ) {
-			$this->sessions->update(
-				$session['id'],
-				array(
-					'state'        => ScanSessionState::FAILED,
-					'failure_code' => 'result_limit_exceeded',
-				)
-			);
-			throw new RuntimeException( 'The page produced more results than this Core scan can safely store.' );
-		}
-
 		$allowed    = json_decode( $session['allowed_rules_json'], true );
 		$normalized = array();
 		foreach ( $results as $result ) {
@@ -141,6 +148,15 @@ final class SubmitScanBatch {
 						'failure_code' => 'result_limit_exceeded',
 					)
 				);
+				$this->urls->update_lifecycle(
+					$session['audit_url_id'],
+					array(
+						'status'          => AuditUrlStatus::FAILED,
+						'failure_code'    => 'result_limit_exceeded',
+						'failure_message' => 'The page produced more results than this Core scan can safely store.',
+					)
+				);
+				$this->audits->update_lifecycle( $session['audit_id'], array( 'status' => AuditStatus::FAILED ) );
 				$this->database->query( 'COMMIT' );
 				throw new RuntimeException( 'The page produced more results than this Core scan can safely store.' );
 			}

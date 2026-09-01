@@ -40,14 +40,14 @@ final class ScannerModule implements Module {
 		$database    = $GLOBALS['wpdb'];
 		$rules       = CoreRuleRegistry::create();
 		$sessions    = new ScanSessionRepository( $database );
-		$guard       = new SessionGuard( $database, $sessions, $audits, $urls );
-		$canonical   = new CanonicalUrl();
 		$audits      = new AuditRepository( $database );
 		$urls        = new AuditUrlRepository( $database );
+		$guard       = new SessionGuard( $database, $sessions, $audits, $urls );
+		$canonical   = new CanonicalUrl();
 		$findings    = new FindingRepository( $database );
 		$occurrences = new OccurrenceRepository( $database );
 		$start       = new StartSinglePageScan( $database, $audits, $urls, $sessions, $rules, $canonical );
-		$submit      = new SubmitScanBatch( $database, $sessions, $guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $findings, $occurrences );
+		$submit      = new SubmitScanBatch( $database, $sessions, $guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $findings, $occurrences, $audits, $urls );
 		$complete    = new CompleteScan( $database, $sessions, $guard, $audits, $urls, $findings );
 		$controller  = new ScanRestController( $start, $submit, $complete );
 		$controller->register_routes();
