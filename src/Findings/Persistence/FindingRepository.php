@@ -19,6 +19,65 @@ use Throwable;
  * Persists grouped findings rather than individual DOM occurrences.
  */
 final class FindingRepository extends Repository {
+	/** Summarize grouped findings without loading individual rows.
+	 *
+	 * @param int $audit_id Audit ID.
+	 * @return array
+	 */
+	public function summarize_by_audit( $audit_id ) {
+		$query = "SELECT priority, current_status, review_state, COUNT(*) AS finding_count, SUM(occurrence_count) AS occurrence_count FROM {$this->tables->findings()} WHERE audit_id = %d GROUP BY priority, current_status, review_state";
+		return $this->database->get_results( $this->database->prepare( $query, absint( $audit_id ) ), ARRAY_A );
+	}
+
+	/** Find a finding by ID.
+	 *
+	 * @param int $finding_id Finding ID.
+	 * @return array|null
+	 */
+	public function find( $finding_id ) {
+		return $this->database->get_row( $this->database->prepare( "SELECT * FROM {$this->tables->findings()} WHERE id = %d", absint( $finding_id ) ), ARRAY_A );
+	}
+
+	/** Return a bounded filtered page of grouped findings.
+	 *
+	 * @param int   $audit_id Audit ID.
+	 * @param array $filters Finding filters.
+	 * @param int   $page Page number.
+	 * @param int   $per_page Page size.
+	 * @return array{items:array,total:int,pages:int}
+	 */
+	public function paginate_by_audit( $audit_id, array $filters, $page = 1, $per_page = 20 ) {
+		$page     = max( 1, absint( $page ) );
+		$per_page = min( 50, max( 1, absint( $per_page ) ) );
+		$where    = array( 'audit_id = %d' );
+		$args     = array( absint( $audit_id ) );
+		$allowed  = array(
+			'priority'       => Priority::all(),
+			'current_status' => FindingStatus::all(),
+			'review_state'   => ReviewState::all(),
+			'wcag_level'     => array( 'A', 'AA', 'AAA' ),
+		);
+		foreach ( $allowed as $key => $values ) {
+			if ( ! empty( $filters[ $key ] ) ) {
+				$where[] = "{$key} = %s";
+				$args[]  = PersistenceValidator::one_of( $filters[ $key ], $values, $key );
+			}
+		}
+		if ( ! empty( $filters['search'] ) ) {
+			$where[] = '(summary_snapshot LIKE %s OR rule_id LIKE %s)';
+			$like    = '%' . $this->database->esc_like( substr( (string) $filters['search'], 0, 100 ) ) . '%';
+			$args[]  = $like;
+			$args[]  = $like;
+		}
+		$where_sql = implode( ' AND ', $where );
+		$total     = (int) $this->database->get_var( $this->database->prepare( "SELECT COUNT(*) FROM {$this->tables->findings()} WHERE {$where_sql}", $args ) );
+		$items     = $this->database->get_results( $this->database->prepare( "SELECT * FROM {$this->tables->findings()} WHERE {$where_sql} ORDER BY FIELD(priority, 'high', 'medium', 'low'), id ASC LIMIT %d OFFSET %d", array_merge( $args, array( $per_page, ( $page - 1 ) * $per_page ) ) ), ARRAY_A );
+		return array(
+			'items' => $items,
+			'total' => $total,
+			'pages' => max( 1, (int) ceil( $total / $per_page ) ),
+		);
+	}
 	/**
 	 * Create a grouped finding and its initial Open history record.
 	 *

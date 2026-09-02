@@ -116,7 +116,7 @@ final class ScanRestController {
 		return $this->respond(
 			function () use ( $request ) {
 				$result                = $this->complete->complete( $request->get_param( 'session' ), get_current_user_id() );
-				$result['destination'] = admin_url( 'admin.php?page=elavira-scan-result&audit=' . $result['audit_id'] );
+				$result['destination'] = admin_url( 'admin.php?page=elavira-report&audit=' . $result['audit_id'] );
 				return $result;
 			}
 		);

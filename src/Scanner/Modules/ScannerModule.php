@@ -18,7 +18,6 @@ use Elavira\Rules\Normalization\RuleResultNormalizer;
 use Elavira\Scanner\Application\CompleteScan;
 use Elavira\Scanner\Application\StartSinglePageScan;
 use Elavira\Scanner\Application\SubmitScanBatch;
-use Elavira\Scanner\Admin\ScanResultPage;
 use Elavira\Scanner\Frontend\ScanPage;
 use Elavira\Scanner\Http\ScanRestController;
 use Elavira\Scanner\Persistence\ScanSessionRepository;
@@ -32,7 +31,6 @@ final class ScannerModule implements Module {
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'template_redirect', array( $this, 'protect_cache' ), 1 );
-		add_action( 'admin_menu', array( $this, 'register_admin' ) );
 	}
 
 	/** Build and register REST routes when WordPress initializes REST. @return void */
@@ -63,10 +61,5 @@ final class ScannerModule implements Module {
 	public function protect_cache() {
 		$sessions = new ScanSessionRepository( $GLOBALS['wpdb'] );
 		( new ScanPage( new SessionGuard( $GLOBALS['wpdb'], $sessions, new AuditRepository( $GLOBALS['wpdb'] ), new AuditUrlRepository( $GLOBALS['wpdb'] ) ), new CanonicalUrl() ) )->protect_cache();
-	}
-
-	/** Register the minimal completion destination. @return void */
-	public function register_admin() {
-		( new ScanResultPage( new AuditRepository( $GLOBALS['wpdb'] ), new FindingRepository( $GLOBALS['wpdb'] ) ) )->register();
 	}
 }

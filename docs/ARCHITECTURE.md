@@ -193,6 +193,33 @@ Completion is a separate idempotent request. It transitions the Audit URL,
 Audit, and session only after accepted batches have committed. Browser silence
 never implies success. Safe failure codes cover scanner errors, readiness
 timeout, transport or validation failure, result limits, and session expiry.
-Raw SQL, paths, request bodies, and stack traces are not stored or returned. A
-temporary authenticated completion page reports only the audit label and
-grouped finding count pending the full Reports implementation.
+Raw SQL, paths, request bodies, and stack traces are not stored or returned.
+Successful completion redirects to the authenticated report, where grouped
+findings and their captured evidence are available to the audit owner.
+
+## Core Guided Decisions
+
+Guided Decisions are server-owned, deterministic decision-support graphs for
+findings whose accessibility meaning depends on context or human judgment.
+Definitions live under `src/GuidedDecisions`, use stable identifiers in the
+form `elavira.decision.<semantic_name>`, and have separate semantic and
+editorial versions. The semantic version changes when questions, answer
+meaning, branching, rule compatibility, outcomes, or workflow recommendations
+change materially. Copy-only changes advance the editorial version.
+
+Every definition declares exact compatible rule ID/version pairs. Historical
+findings receive a decision action only when that exact pair is registered;
+current decisions are never silently applied to incompatible historical rule
+versions. PHP validates the complete graph when it is registered and remains
+authoritative for answer validation, branch targets, and outcomes.
+
+Intermediate answers use signed, request-bound state and are replayed through
+the trusted graph on every request. They do not update the finding. On explicit
+completion, Elavira stores the decision ID/version, validated answers, outcome,
+recommendation, actor, and completion time in `elavira_guided_decisions`.
+Optional workflow changes reuse the existing finding-status service and history;
+Verified remains reserved for subsequent audit evidence.
+
+Guided Decisions assist human judgment and never establish WCAG conformance,
+remediate the website, or convert uncertainty into an automatic pass or failure.
+The user must explicitly choose whether to keep or change the workflow state.
