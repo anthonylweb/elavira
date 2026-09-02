@@ -18,6 +18,8 @@ final class FakeWpdb {
 	public $tables              = array();
 	public $queries             = array();
 	public $fail_table_creation = false;
+	public $fail_next_insert    = false;
+	private $transaction_tables = null;
 
 	public function get_charset_collate() {
 		return 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
@@ -42,10 +44,21 @@ final class FakeWpdb {
 
 	public function insert( $table, array $data, array $formats = array() ) {
 		unset( $formats );
+		if ( $this->fail_next_insert ) {
+			$this->fail_next_insert = false;
+			return false;
+		}
 
 		if ( ! isset( $this->tables[ $table ] ) ) {
 			$this->last_error = 'Missing table';
 			return false;
+		}
+		if ( substr( $table, -13 ) === 'scan_batches' ) {
+			foreach ( $this->tables[ $table ] as $row ) {
+				if ( (int) $row['session_id'] === (int) $data['session_id'] && $row['batch_key'] === $data['batch_key'] ) {
+					return false;
+				}
+			}
 		}
 
 		$this->insert_id                            = count( $this->tables[ $table ] ) + 1;
@@ -70,6 +83,14 @@ final class FakeWpdb {
 
 	public function query( $query ) {
 		$this->queries[] = $query;
+		if ( 'START TRANSACTION' === $query ) {
+			$this->transaction_tables = $this->tables;
+		} elseif ( 'ROLLBACK' === $query && null !== $this->transaction_tables ) {
+			$this->tables             = $this->transaction_tables;
+			$this->transaction_tables = null;
+		} elseif ( 'COMMIT' === $query ) {
+			$this->transaction_tables = null;
+		}
 		return true;
 	}
 
@@ -88,9 +109,19 @@ final class FakeWpdb {
 	public function get_row( $prepared, $output = null ) {
 		unset( $output );
 		$table = $this->table_from_query( $prepared['query'] );
-		$id    = (int) $prepared['args'][0];
-
-		return $this->tables[ $table ][ $id ] ?? null;
+		preg_match_all( '/(?:WHERE|AND)\s+([a-z_]+)\s*=\s*%[ds]/', $prepared['query'], $matches );
+		foreach ( $this->tables[ $table ] ?? array() as $row ) {
+			$matches_row = true;
+			foreach ( $matches[1] as $index => $field ) {
+				if ( ! array_key_exists( $field, $row ) || (string) $row[ $field ] !== (string) $prepared['args'][ $index ] ) {
+					$matches_row = false;
+				}
+			}
+			if ( $matches_row ) {
+				return $row;
+			}
+		}
+		return null;
 	}
 
 	public function get_results( $prepared, $output = null ) {

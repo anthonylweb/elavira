@@ -17,6 +17,15 @@ use Throwable;
  * Records status transitions without erasing prior workflow history.
  */
 final class FindingStatusHistoryRepository extends Repository {
+	/** Return bounded status history for all findings in an audit.
+	 *
+	 * @param int $audit_id Audit ID.
+	 * @return array[]
+	 */
+	public function find_by_audit( $audit_id ) {
+		$query = "SELECT h.*, f.rule_id, f.summary_snapshot FROM {$this->tables->finding_status_history()} h INNER JOIN {$this->tables->findings()} f ON f.id = h.finding_id WHERE f.audit_id = %d ORDER BY h.created_at ASC, h.id ASC LIMIT 5000";
+		return $this->database->get_results( $this->database->prepare( $query, absint( $audit_id ) ), ARRAY_A );
+	}
 	/**
 	 * Record a status transition.
 	 *
@@ -86,7 +95,7 @@ final class FindingStatusHistoryRepository extends Repository {
 	 */
 	public function find_by_finding( $finding_id ) {
 		return $this->database->get_results(
-			$this->database->prepare( "SELECT * FROM {$this->tables->finding_status_history()} WHERE finding_id = %d ORDER BY created_at ASC, id ASC", absint( $finding_id ) ),
+			$this->database->prepare( "SELECT * FROM {$this->tables->finding_status_history()} WHERE finding_id = %d ORDER BY created_at ASC, id ASC LIMIT 500", absint( $finding_id ) ),
 			ARRAY_A
 		);
 	}

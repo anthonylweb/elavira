@@ -72,6 +72,21 @@ final class TableNames {
 		return $this->prefix . 'finding_status_history';
 	}
 
+	/** Return the completed Guided Decisions table name. @return string */
+	public function guided_decisions() {
+		return $this->prefix . 'guided_decisions';
+	}
+
+	/** Return the short-lived scan sessions table name. @return string */
+	public function scan_sessions() {
+		return $this->prefix . 'scan_sessions';
+	}
+
+	/** Return the accepted scan batches table name. @return string */
+	public function scan_batches() {
+		return $this->prefix . 'scan_batches';
+	}
+
 	/**
 	 * Return every Core audit table.
 	 *
@@ -84,6 +99,9 @@ final class TableNames {
 			$this->findings(),
 			$this->occurrences(),
 			$this->finding_status_history(),
+			$this->guided_decisions(),
+			$this->scan_sessions(),
+			$this->scan_batches(),
 		);
 	}
 }

@@ -9,6 +9,8 @@ namespace Elavira\Core\Lifecycle;
 
 use Elavira\Core\Capabilities\CapabilityInstaller;
 use Elavira\Core\Migrations\CoreAuditSchema;
+use Elavira\Core\Migrations\CoreScanSessionSchema;
+use Elavira\Core\Migrations\GuidedDecisionSchema;
 use Elavira\Core\Migrations\MigrationRunner;
 use Elavira\Core\Version\VersionManager;
 
@@ -25,7 +27,11 @@ final class Installer {
 		$versions = new VersionManager();
 		$runner   = new MigrationRunner(
 			$versions,
-			array( new CoreAuditSchema( $GLOBALS['wpdb'] ) )
+			array(
+				new CoreAuditSchema( $GLOBALS['wpdb'] ),
+				new CoreScanSessionSchema( $GLOBALS['wpdb'] ),
+				new GuidedDecisionSchema( $GLOBALS['wpdb'] ),
+			)
 		);
 
 		$runner->run( ELAVIRA_SCHEMA_VERSION );

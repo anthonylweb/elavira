@@ -1,0 +1,165 @@
+.elavira-reports {
+	max-width: 90rem;
+}
+
+.elavira-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 0.5rem 1rem;
+	margin: 1rem 0;
+	padding: 1rem;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+}
+
+.elavira-filters label,
+.elavira-reports form > label {
+	display: block;
+	font-weight: 600;
+}
+
+.elavira-summary dl,
+.elavira-evidence dl {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+	gap: 1rem;
+}
+
+.elavira-summary dl > div,
+.elavira-evidence dl > div,
+.elavira-occurrences > li {
+	padding: 1rem;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.elavira-summary dt,
+.elavira-evidence dt {
+	font-weight: 600;
+}
+
+.elavira-summary dd,
+.elavira-evidence dd {
+	margin: 0.25rem 0 0;
+	overflow-wrap: anywhere;
+}
+
+.elavira-evidence code {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.elavira-disclaimer {
+	padding: 1rem;
+	border-inline-start: 4px solid #2271b1;
+	background: #fff;
+}
+
+.elavira-finding-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1.5rem;
+	padding: 1rem;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	list-style: none;
+}
+
+.elavira-responsive-table .description {
+	display: block;
+	margin-top: 0.25rem;
+	font-weight: 400;
+}
+
+.elavira-pagination .page-numbers {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	list-style: none;
+	padding: 0;
+}
+
+.elavira-reports :focus-visible {
+	outline: 3px solid #1d4ed8;
+	outline-offset: 2px;
+}
+
+.elavira-decision-form,
+.elavira-decision-answers {
+	max-width: 52rem;
+	padding: 1rem;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+}
+
+.elavira-decision-form fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.elavira-decision-form legend {
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.elavira-decision-form label {
+	display: block;
+	margin: 0.75rem 0;
+}
+
+.elavira-decision-answers div + div {
+	margin-top: 1rem;
+}
+
+.elavira-decision-answers dt {
+	font-weight: 600;
+}
+
+.elavira-decision-answers dd {
+	margin: 0.25rem 0 0;
+}
+
+@media (max-width: 782px) {
+	.elavira-responsive-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.elavira-responsive-table,
+	.elavira-responsive-table tbody,
+	.elavira-responsive-table tr,
+	.elavira-responsive-table th,
+	.elavira-responsive-table td {
+		display: block;
+		width: auto;
+	}
+
+	.elavira-responsive-table tr {
+		margin-bottom: 1rem;
+		border: 1px solid #c3c4c7;
+	}
+
+	.elavira-responsive-table th,
+	.elavira-responsive-table td {
+		display: grid;
+		grid-template-columns: minmax(7rem, 35%) 1fr;
+		gap: 0.75rem;
+		border: 0;
+		border-bottom: 1px solid #dcdcde;
+		overflow-wrap: anywhere;
+	}
+
+	.elavira-responsive-table [data-label]::before {
+		content: attr(data-label);
+		font-weight: 600;
+	}
+}

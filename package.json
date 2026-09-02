@@ -1,0 +1,8 @@
+{
+  "name": "elavira-scanner",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/js/*.test.js",
+    "lint": "node --check assets/js/scanner.js"
+  }
+}
