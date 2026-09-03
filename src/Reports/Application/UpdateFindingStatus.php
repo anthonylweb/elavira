@@ -61,7 +61,7 @@ final class UpdateFindingStatus {
 		if ( $status === $finding['current_status'] ) {
 			throw new InvalidArgumentException( 'Choose a status different from the current status.' );
 		}
-		return $this->history->record(
+		$history_id = $this->history->record(
 			array(
 				'finding_id'      => $finding_id,
 				'status'          => $status,
@@ -70,5 +70,7 @@ final class UpdateFindingStatus {
 				'source_audit_id' => 0,
 			)
 		);
+		do_action( 'elavira_finding_status_changed', (int) $finding['audit_id'], (int) $finding_id, $status );
+		return $history_id;
 	}
 }

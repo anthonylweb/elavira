@@ -101,9 +101,20 @@ final class FakeWpdb {
 		}
 
 		$table = $this->table_from_query( $prepared['query'] );
-		$id    = (int) $prepared['args'][0];
+		$field = preg_match( '/WHERE ([a-z_]+)\s*=\s*%[ds]/', $prepared['query'], $match ) ? $match[1] : 'id';
+		$value = $prepared['args'][0];
+		$rows  = array_filter(
+			$this->tables[ $table ] ?? array(),
+			static function ( $row ) use ( $field, $value ) {
+				return isset( $row[ $field ] ) && (string) $row[ $field ] === (string) $value;
+			}
+		);
+		if ( false !== stripos( $prepared['query'], 'COUNT(*)' ) ) {
+			return count( $rows );
+		}
 
-		return isset( $this->tables[ $table ][ $id ] ) ? $id : null;
+		$row = reset( $rows );
+		return $row ? $row['id'] : null;
 	}
 
 	public function get_row( $prepared, $output = null ) {

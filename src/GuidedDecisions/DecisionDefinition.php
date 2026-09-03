@@ -23,15 +23,21 @@ final class DecisionDefinition {
 	 * @throws InvalidArgumentException When the graph is invalid.
 	 */
 	public function __construct( array $data ) {
-		$required = array( 'id', 'version', 'editorial_version', 'title', 'purpose', 'rules', 'start', 'steps', 'outcomes' );
+		$data['learn_topics'] = $data['learn_topics'] ?? array();
+		$required             = array( 'id', 'version', 'editorial_version', 'title', 'purpose', 'rules', 'start', 'steps', 'outcomes' );
 		if ( array() !== array_diff( $required, array_keys( $data ) ) ) {
 			throw new InvalidArgumentException( 'Guided Decision definition is incomplete.' );
 		}
 		if ( ! preg_match( '/^elavira\.decision\.[a-z][a-z0-9_]*$/', $data['id'] ) || ! preg_match( '/^[0-9]+\.[0-9]+\.[0-9]+$/', $data['version'] ) ) {
 			throw new InvalidArgumentException( 'Guided Decision identity is invalid.' );
 		}
-		if ( ! isset( $data['steps'][ $data['start'] ] ) || empty( $data['rules'] ) || empty( $data['outcomes'] ) ) {
+		if ( ! isset( $data['steps'][ $data['start'] ] ) || ( empty( $data['rules'] ) && empty( $data['learn_topics'] ) ) || empty( $data['outcomes'] ) ) {
 			throw new InvalidArgumentException( 'Guided Decision graph is incomplete.' );
+		}
+		foreach ( $data['learn_topics'] as $topic_id ) {
+			if ( ! is_string( $topic_id ) || ! preg_match( '/^[a-z][a-z0-9_]*$/', $topic_id ) ) {
+				throw new InvalidArgumentException( 'Guided Decision Learn topic is invalid.' );
+			}
 		}
 		$this->validate_graph( $data );
 		$this->data = $data;

@@ -17,6 +17,7 @@ use Elavira\GuidedDecisions\DecisionNavigator;
 use Elavira\GuidedDecisions\DecisionRegistry;
 use Elavira\GuidedDecisions\DecisionRepository;
 use Elavira\GuidedDecisions\DecisionState;
+use Elavira\Learn\Admin\LearnPage;
 use Elavira\Reports\Application\UpdateFindingStatus;
 use InvalidArgumentException;
 use Throwable;
@@ -54,6 +55,7 @@ final class DecisionPage {
 		<h1><?php echo esc_html( $decision->get( 'title' ) ); ?></h1>
 		<?php $this->notice(); ?>
 		<p><?php echo esc_html( $decision->get( 'purpose' ) ); ?></p>
+		<?php $this->learn_link( $finding ); ?>
 		<p class="elavira-disclaimer"><?php echo esc_html__( 'Elavira assists your judgment but cannot determine the final accessibility outcome automatically. Completing this review does not verify or remediate the finding.', 'elavira' ); ?></p>
 		<?php $this->answer_summary( $result['answers'] ); ?>
 		<?php if ( $result['complete'] ) : ?>
@@ -63,6 +65,20 @@ final class DecisionPage {
 		<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/** Link to background education without interrupting the decision flow. @param array $finding Finding. @return void */
+	private function learn_link( array $finding ) {
+		try {
+			$editorial = $this->services['rules']->get( $finding['rule_id'], $finding['rule_version'] )->editorial();
+			$topic     = ! empty( $editorial['learn_topic'] ) ? $this->services['learn']->find( $editorial['learn_topic'] ) : null;
+			if ( $topic ) {
+				/* translators: %s: Learn topic title. */
+				echo '<p><a href="' . esc_url( LearnPage::url( $topic->get( 'id' ) ) ) . '">' . esc_html( sprintf( __( 'Why this matters: %s', 'elavira' ), $topic->get( 'title' ) ) ) . '</a></p>';
+			}
+		} catch ( \InvalidArgumentException $error ) {
+			return;
+		}
 	}
 
 	/** Process answer, back, and restart requests without persistence. @return void */

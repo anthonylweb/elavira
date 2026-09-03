@@ -18,7 +18,9 @@ use Elavira\GuidedDecisions\CoreDecisionRegistry;
 use Elavira\GuidedDecisions\DecisionNavigator;
 use Elavira\GuidedDecisions\DecisionRepository;
 use Elavira\GuidedDecisions\DecisionState;
+use Elavira\Learn\CoreTopicRegistry;
 use Elavira\Reports\Application\UpdateFindingStatus;
+use Elavira\Rules\CoreRuleRegistry;
 
 /** Registers the isolated Core Guided Decision routes. */
 final class GuidedDecisionsModule implements Module {
@@ -57,6 +59,8 @@ final class GuidedDecisionsModule implements Module {
 					'state'      => new DecisionState(),
 					'repository' => new DecisionRepository( $database ),
 					'status'     => new UpdateFindingStatus( $findings, $history ),
+					'rules'      => CoreRuleRegistry::create(),
+					'learn'      => CoreTopicRegistry::create(),
 				)
 			);
 		}

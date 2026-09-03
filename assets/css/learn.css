@@ -1,0 +1,106 @@
+.elavira-learn {
+	max-width: 72rem;
+}
+
+.elavira-learn-intro,
+.elavira-learn-summary,
+.elavira-learn-detail article {
+	max-width: 70ch;
+}
+
+.elavira-learn-nav ul,
+.elavira-directory,
+.elavira-wcag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.elavira-learn-nav li,
+.elavira-directory > li,
+.elavira-wcag-list > li {
+	margin: 0;
+}
+
+.elavira-directory > li,
+.elavira-wcag-list > li {
+	flex: 1 1 18rem;
+	min-width: 0;
+}
+
+.elavira-directory article,
+.elavira-wcag-list article,
+.elavira-start-here {
+	box-sizing: border-box;
+	padding: 1rem;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.elavira-learn > section {
+	margin-top: 2rem;
+}
+
+.elavira-learn-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: end;
+	margin: 1.5rem 0;
+}
+
+.elavira-learn-filters label {
+	font-weight: 600;
+}
+
+.elavira-topic-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+	gap: 1rem;
+	padding: 0;
+}
+
+.elavira-topic-grid > li {
+	display: block;
+	margin: 0;
+}
+
+.elavira-topic-grid article {
+	height: 100%;
+	box-sizing: border-box;
+	padding: 1rem;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.elavira-topic-category {
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.elavira-learn-detail section,
+.elavira-learn-detail nav {
+	margin-top: 2rem;
+}
+
+.elavira-learn-detail pre {
+	max-width: 100%;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+@media (max-width: 480px) {
+	.elavira-learn-filters > * {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	.elavira-directory > li,
+	.elavira-wcag-list > li {
+		flex-basis: 100%;
+	}
+}

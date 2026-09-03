@@ -125,6 +125,7 @@ final class CompleteScan {
 			$this->database->query( 'ROLLBACK' );
 			throw $error;
 		}
+		do_action( 'elavira_audit_completed', (int) $session['audit_id'] );
 		return array(
 			'audit_id'      => (int) $session['audit_id'],
 			'finding_count' => count( $findings ),

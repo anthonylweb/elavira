@@ -77,6 +77,21 @@ final class TableNames {
 		return $this->prefix . 'guided_decisions';
 	}
 
+	/** Return the statements table name. @return string */
+	public function statements() {
+		return $this->prefix . 'statements';
+	}
+
+	/** Return the statement recommendations table name. @return string */
+	public function statement_recommendations() {
+		return $this->prefix . 'statement_recommendations';
+	}
+
+	/** Return the statement revisions table name. @return string */
+	public function statement_revisions() {
+		return $this->prefix . 'statement_revisions';
+	}
+
 	/** Return the short-lived scan sessions table name. @return string */
 	public function scan_sessions() {
 		return $this->prefix . 'scan_sessions';
@@ -100,6 +115,9 @@ final class TableNames {
 			$this->occurrences(),
 			$this->finding_status_history(),
 			$this->guided_decisions(),
+			$this->statements(),
+			$this->statement_recommendations(),
+			$this->statement_revisions(),
 			$this->scan_sessions(),
 			$this->scan_batches(),
 		);

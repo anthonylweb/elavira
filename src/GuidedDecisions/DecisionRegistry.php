@@ -43,4 +43,9 @@ final class DecisionRegistry {
 		}
 		return null;
 	}
+
+	/** Return every actually registered decision. @return DecisionDefinition[] */
+	public function all() {
+		return array_values( $this->definitions );
+	}
 }

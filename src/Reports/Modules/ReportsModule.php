@@ -15,11 +15,13 @@ use Elavira\Findings\Persistence\FindingStatusHistoryRepository;
 use Elavira\Findings\Persistence\OccurrenceRepository;
 use Elavira\GuidedDecisions\CoreDecisionRegistry;
 use Elavira\GuidedDecisions\DecisionRepository;
+use Elavira\Learn\CoreTopicRegistry;
 use Elavira\Reports\Admin\ReportsPage;
 use Elavira\Reports\Application\HistoricalRuleResolver;
 use Elavira\Reports\Application\UpdateFindingStatus;
 use Elavira\Reports\Export\XlsxExporter;
 use Elavira\Rules\CoreRuleRegistry;
+use Elavira\Statement\RecommendationRepository;
 
 /** Registers reports independently from scanner execution. */
 final class ReportsModule implements Module {
@@ -63,7 +65,7 @@ final class ReportsModule implements Module {
 			$findings    = new FindingRepository( $database );
 			$occurrences = new OccurrenceRepository( $database );
 			$history     = new FindingStatusHistoryRepository( $database );
-			$this->page  = new ReportsPage( $audits, $urls, $findings, $occurrences, $history, new HistoricalRuleResolver( CoreRuleRegistry::create() ), new UpdateFindingStatus( $findings, $history ), new XlsxExporter(), CoreDecisionRegistry::create(), new DecisionRepository( $database ) );
+			$this->page  = new ReportsPage( $audits, $urls, $findings, $occurrences, $history, new HistoricalRuleResolver( CoreRuleRegistry::create() ), new UpdateFindingStatus( $findings, $history ), new XlsxExporter(), CoreDecisionRegistry::create(), new DecisionRepository( $database ), new RecommendationRepository( $database ), CoreTopicRegistry::create() );
 		}
 		return $this->page;
 	}

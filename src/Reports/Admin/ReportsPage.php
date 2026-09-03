@@ -19,9 +19,12 @@ use Elavira\Findings\Values\Priority;
 use Elavira\Findings\Values\ReviewState;
 use Elavira\GuidedDecisions\DecisionRegistry;
 use Elavira\GuidedDecisions\DecisionRepository;
+use Elavira\Learn\Admin\LearnPage;
+use Elavira\Learn\TopicRegistry;
 use Elavira\Reports\Application\HistoricalRuleResolver;
 use Elavira\Reports\Application\UpdateFindingStatus;
 use Elavira\Reports\Export\XlsxExporter;
+use Elavira\Statement\RecommendationRepository;
 use Throwable;
 
 /** Owns the Audits, report, and finding-detail admin routes. */
@@ -69,6 +72,16 @@ final class ReportsPage {
 	 * @var DecisionRepository
 	 */
 	private $decision_history;
+	/** Statement recommendations.
+	 *
+	 * @var RecommendationRepository
+	 */
+	private $statement_recommendations;
+	/** Learn topics.
+	 *
+	 * @var TopicRegistry
+	 */
+	private $learn;
 
 	/**
 	 * Create the reports page controller.
@@ -83,18 +96,22 @@ final class ReportsPage {
 	 * @param XlsxExporter                   $xlsx Workbook exporter.
 	 * @param DecisionRegistry               $decisions Guided Decision registry.
 	 * @param DecisionRepository             $decision_history Completed decision history.
+	 * @param RecommendationRepository       $statement_recommendations Statement recommendations.
+	 * @param TopicRegistry                  $learn Learn topics.
 	 */
-	public function __construct( AuditRepository $audits, AuditUrlRepository $urls, FindingRepository $findings, OccurrenceRepository $occurrences, FindingStatusHistoryRepository $history, HistoricalRuleResolver $rules, UpdateFindingStatus $status, XlsxExporter $xlsx, DecisionRegistry $decisions, DecisionRepository $decision_history ) {
-		$this->audits           = $audits;
-		$this->urls             = $urls;
-		$this->findings         = $findings;
-		$this->occurrences      = $occurrences;
-		$this->history          = $history;
-		$this->rules            = $rules;
-		$this->status           = $status;
-		$this->xlsx             = $xlsx;
-		$this->decisions        = $decisions;
-		$this->decision_history = $decision_history;
+	public function __construct( AuditRepository $audits, AuditUrlRepository $urls, FindingRepository $findings, OccurrenceRepository $occurrences, FindingStatusHistoryRepository $history, HistoricalRuleResolver $rules, UpdateFindingStatus $status, XlsxExporter $xlsx, DecisionRegistry $decisions, DecisionRepository $decision_history, RecommendationRepository $statement_recommendations, TopicRegistry $learn ) {
+		$this->audits                    = $audits;
+		$this->urls                      = $urls;
+		$this->findings                  = $findings;
+		$this->occurrences               = $occurrences;
+		$this->history                   = $history;
+		$this->rules                     = $rules;
+		$this->status                    = $status;
+		$this->xlsx                      = $xlsx;
+		$this->decisions                 = $decisions;
+		$this->decision_history          = $decision_history;
+		$this->statement_recommendations = $statement_recommendations;
+		$this->learn                     = $learn;
 	}
 
 	/** Register stable admin routes. @return void */
@@ -200,9 +217,13 @@ final class ReportsPage {
 		$summary = $this->summarize_findings( $this->findings->summarize_by_audit( $audit['id'] ) );
 		?>
 		<div class="wrap elavira-reports"><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-audits' ) ); ?>">&larr; <?php echo esc_html__( 'All audits', 'elavira' ); ?></a></p><h1><?php echo esc_html__( 'Audit Report', 'elavira' ); ?></h1><h2><?php echo esc_html( $audit['label'] ); ?></h2>
+		<?php
+		if ( $this->statement_recommendations->pending_for_audit( $audit['id'] ) ) :
+			?>
+			<div class="notice notice-info inline"><p><?php echo esc_html__( 'This audit identified findings that may affect your Accessibility Statement.', 'elavira' ); ?> <a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-statement' ) ); ?>"><?php echo esc_html__( 'Review statement recommendations', 'elavira' ); ?></a></p></div><?php endif; ?>
 		<div class="elavira-summary" aria-label="<?php echo esc_attr__( 'Audit summary', 'elavira' ); ?>"><dl><div><dt><?php echo esc_html__( 'Page scanned', 'elavira' ); ?></dt><dd><?php echo isset( $urls[0] ) ? '<a href="' . esc_url( $urls[0]['canonical_url'] ) . '">' . esc_html( $urls[0]['canonical_url'] ) . '</a>' : esc_html__( 'Unavailable', 'elavira' ); ?></dd></div><div><dt><?php echo esc_html__( 'Status', 'elavira' ); ?></dt><dd><?php echo esc_html( $this->label( $audit['status'] ) ); ?></dd></div><div><dt><?php echo esc_html__( 'WCAG target', 'elavira' ); ?></dt><dd><?php echo esc_html( $this->target_label( $audit['wcag_target'] ) ); ?></dd></div><div><dt><?php echo esc_html__( 'Scanner / ruleset', 'elavira' ); ?></dt><dd><code><?php echo esc_html( $audit['scanner_version'] . ' / ' . $audit['ruleset_version'] ); ?></code></dd></div></dl></div>
 		<h3><?php echo esc_html__( 'Finding summary', 'elavira' ); ?></h3><ul class="elavira-finding-meta"><li><strong><?php echo esc_html__( 'Grouped findings:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['findings'] ) ); ?></li><li><strong><?php echo esc_html__( 'Occurrences:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['occurrences'] ) ); ?></li><li><strong><?php echo esc_html__( 'High priority:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['high'] ) ); ?></li><li><strong><?php echo esc_html__( 'Needs review:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['needs_review'] ) ); ?></li><li><strong><?php echo esc_html__( 'Open:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['open'] ) ); ?></li></ul>
-		<p class="elavira-disclaimer"><strong><?php echo esc_html__( 'Plugin findings, not an accessibility score:', 'elavira' ); ?></strong> <?php echo esc_html__( 'Priority is an internal organizational recommendation, not an official WCAG severity or conformance grade. Automated testing is incomplete.', 'elavira' ); ?></p>
+		<p class="elavira-disclaimer"><strong><?php echo esc_html__( 'Plugin findings, not an accessibility score:', 'elavira' ); ?></strong> <?php echo esc_html__( 'Priority is an internal organizational recommendation, not an official WCAG severity or conformance grade. Automated testing is incomplete.', 'elavira' ); ?> <a href="<?php echo esc_url( LearnPage::url( 'understanding_audit_results' ) ); ?>"><?php echo esc_html__( 'Learn how to interpret audit results', 'elavira' ); ?></a>.</p>
 		<?php
 		if ( AuditStatus::COMPLETED !== $audit['status'] ) :
 			?>
@@ -262,6 +283,7 @@ final class ReportsPage {
 		endif;
 		?>
 		<?php $this->guided_decision_action( $finding ); ?>
+		<?php $this->learn_action( $resolved ); ?>
 		<?php $this->guided_decision_history( $finding_id ); ?>
 		<?php
 		$this->section( __( 'What Elavira found', 'elavira' ), $editorial['summary'] ?? $finding['summary_snapshot'] );
@@ -314,6 +336,20 @@ final class ReportsPage {
 		?>
 			</tbody></table></div>
 			<?php
+	}
+
+	/** Render contextual education only for an exact historical rule definition.
+	 *
+	 * @param array $resolved Rule resolution.
+	 * @return void
+	 */
+	private function learn_action( array $resolved ) {
+		$id    = $resolved['available'] ? ( $resolved['editorial']['learn_topic'] ?? '' ) : '';
+		$topic = $id ? $this->learn->find( $id ) : null;
+		if ( $topic ) {
+			/* translators: %s: Learn topic title. */
+			echo '<p><a class="button" href="' . esc_url( LearnPage::url( $id ) ) . '">' . esc_html( sprintf( __( 'Learn about %s', 'elavira' ), $topic->get( 'title' ) ) ) . '</a></p>';
+		}
 	}
 
 	/** Handle a nonce-protected status update. @return void */

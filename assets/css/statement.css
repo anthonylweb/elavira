@@ -1,0 +1,48 @@
+.elavira-statement-admin,
+.elavira-statement-preview {
+	max-width: 72rem;
+}
+
+.elavira-statement-form > label,
+.elavira-statement-form fieldset > label,
+.elavira-recommendation label {
+	display: block;
+	font-weight: 600;
+	margin-top: 1rem;
+}
+
+.elavira-statement-form input:not([type="hidden"]),
+.elavira-statement-form select,
+.elavira-statement-form textarea,
+.elavira-recommendation textarea,
+.elavira-recommendation select {
+	box-sizing: border-box;
+	max-width: 100%;
+	width: 42rem;
+}
+
+.elavira-statement-form fieldset,
+.elavira-recommendation {
+	border: 1px solid #c3c4c7;
+	margin: 1.5rem 0;
+	padding: 1rem;
+}
+
+.elavira-statement-form legend {
+	font-size: 1.2rem;
+	font-weight: 600;
+	padding: 0 .35rem;
+}
+
+.elavira-recommendation:focus-within {
+	border-color: #2271b1;
+}
+
+@media (max-width: 480px) {
+	.elavira-statement-form .button,
+	.elavira-recommendation .button {
+		display: block;
+		margin: .5rem 0;
+		width: 100%;
+	}
+}
