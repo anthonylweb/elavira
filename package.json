@@ -3,6 +3,6 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/js/*.test.js",
-    "lint": "node --check assets/js/scanner.js"
+    "lint": "node --check assets/js/scanner.js && node --check assets/js/toolbar.js"
   }
 }

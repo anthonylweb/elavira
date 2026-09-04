@@ -80,11 +80,15 @@ final class StartSinglePageScan {
 	 * @param string $wcag_target   WCAG target.
 	 * @return array
 	 * @throws RuntimeException When the user lacks authorization.
+	 * @throws \InvalidArgumentException When the target level is unsupported.
 	 * @throws Throwable When authorization, validation, or persistence fails.
 	 */
 	public function start( $requested_url, $wcag_target = '2.2_AA' ) {
 		if ( ! current_user_can( Capability::RUN_AUDITS ) ) {
 			throw new RuntimeException( 'You are not allowed to run accessibility audits.' );
+		}
+		if ( ! in_array( $wcag_target, array( '2.2_A', '2.2_AA' ), true ) ) {
+			throw new \InvalidArgumentException( 'Choose WCAG 2.2 Level A or Level AA.' );
 		}
 
 		$user_id   = get_current_user_id();

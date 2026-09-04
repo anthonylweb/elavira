@@ -116,8 +116,7 @@ final class ReportsPage {
 
 	/** Register stable admin routes. @return void */
 	public function register() {
-		add_menu_page( __( 'Elavira Audits', 'elavira' ), __( 'Elavira', 'elavira' ), Capability::VIEW_REPORTS, 'elavira-audits', array( $this, 'render_history' ), 'dashicons-universal-access-alt', 58 );
-		add_submenu_page( 'elavira-audits', __( 'Audits', 'elavira' ), __( 'Audits', 'elavira' ), Capability::VIEW_REPORTS, 'elavira-audits', array( $this, 'render_history' ) );
+		add_submenu_page( 'elavira-dashboard', __( 'Audits', 'elavira' ), __( 'Audits', 'elavira' ), Capability::VIEW_REPORTS, 'elavira-audits', array( $this, 'render_history' ), 10 );
 		add_submenu_page( null, __( 'Elavira Audit Report', 'elavira' ), __( 'Audit Report', 'elavira' ), Capability::VIEW_REPORTS, 'elavira-report', array( $this, 'render_report' ) );
 		add_submenu_page( null, __( 'Elavira Finding', 'elavira' ), __( 'Finding', 'elavira' ), Capability::VIEW_REPORTS, 'elavira-finding', array( $this, 'render_finding' ) );
 	}
@@ -156,6 +155,10 @@ final class ReportsPage {
 		?>
 		<div class="wrap elavira-reports"><h1><?php echo esc_html__( 'Accessibility Audits', 'elavira' ); ?></h1>
 		<p><?php echo esc_html__( 'Historical reports from your rendered single-page audits. Automated checks do not evaluate every accessibility requirement.', 'elavira' ); ?></p>
+		<?php
+		if ( current_user_can( Capability::RUN_AUDITS ) ) :
+			?>
+			<p><a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-run-audit' ) ); ?>"><?php echo esc_html__( 'Run Audit', 'elavira' ); ?></a></p><?php endif; ?>
 		<form method="get" class="elavira-filters"><input type="hidden" name="page" value="elavira-audits">
 		<label for="elavira-audit-status"><?php echo esc_html__( 'Audit status', 'elavira' ); ?></label><select id="elavira-audit-status" name="status"><option value=""><?php echo esc_html__( 'All statuses', 'elavira' ); ?></option><?php $this->options( AuditStatus::all(), $status ); ?></select>
 		<label for="elavira-wcag-target"><?php echo esc_html__( 'WCAG target', 'elavira' ); ?></label><select id="elavira-wcag-target" name="wcag_target"><option value=""><?php echo esc_html__( 'All targets', 'elavira' ); ?></option><?php $this->options( array( '2.2_A', '2.2_AA' ), $target ); ?></select>

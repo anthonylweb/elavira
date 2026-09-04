@@ -12,6 +12,7 @@ use Elavira\Scanner\Application\CompleteScan;
 use Elavira\Scanner\Application\StartSinglePageScan;
 use Elavira\Scanner\Application\SubmitScanBatch;
 use Elavira\Scanner\ScanLimits;
+use Elavira\Settings\CoreSettings;
 use Throwable;
 use WP_Error;
 use WP_REST_Request;
@@ -87,7 +88,7 @@ final class ScanRestController {
 		return $this->respond(
 			function () use ( $request ) {
 				$target = $request->get_param( 'wcag_target' );
-				return $this->start->start( $request->get_param( 'url' ), $target ? $target : '2.2_AA' );
+				return $this->start->start( $request->get_param( 'url' ), $target ? $target : CoreSettings::get()['default_wcag_target'] );
 			}
 		);
 	}

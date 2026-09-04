@@ -23,13 +23,13 @@ final class LearnModule implements Module {
 
 	/** Register hooks. @return void */
 	public function register() {
-		add_action( 'admin_menu', array( $this, 'register_admin' ) );
+		add_action( 'admin_menu', array( $this, 'register_admin' ), 20 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 	}
 
 	/** Register routes. @return void */
 	public function register_admin() {
-		add_submenu_page( 'elavira-audits', __( 'Elavira Learn', 'elavira' ), __( 'Learn', 'elavira' ), 'read', 'elavira-learn', array( $this, 'landing' ) );
+		add_submenu_page( 'elavira-dashboard', __( 'Elavira Learn', 'elavira' ), __( 'Learn', 'elavira' ), 'read', 'elavira-learn', array( $this, 'landing' ), 40 );
 		add_submenu_page( null, __( 'Elavira Learn Topic', 'elavira' ), __( 'Learn Topic', 'elavira' ), 'read', 'elavira-learn-topic', array( $this, 'detail' ) );
 	}
 

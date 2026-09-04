@@ -1,11 +1,58 @@
 # Elavira
 
-Elavira is a WordPress accessibility auditing and guidance plugin. The current
-implementation contains the Phase 1 application foundation only.
+Elavira is a WordPress accessibility auditing and guidance plugin. Core Phase 1
+provides rendered single-page audits, grouped findings and reports, Guided
+Decisions, a bundled Learn library, a structured Accessibility Statement, and
+an optional visitor preferences toolbar.
+
+Elavira follows **Detect → Explain → Recommend → User acts → Re-audit →
+Verify**. It does not automatically modify site content, markup, styles,
+accessibility attributes, themes, plugins, or configuration. Automated testing
+is incomplete and Elavira does not guarantee accessibility or WCAG conformance.
+
+## Requirements and installation
+
+- WordPress 6.4 or later.
+- PHP 7.4 or later.
+
+Install the production plugin ZIP through **Plugins → Add New Plugin → Upload
+Plugin**, then activate Elavira. Site administrators receive the Core
+capabilities during activation. The release ZIP includes the generated Composer
+autoloader; site owners do not need Composer.
+
+The PHP and WordPress minimums above are the current executable package
+requirements. A supported browser matrix has not yet been formally defined and
+must be established before a compatibility claim is published.
+
+## Core scanner limitations
+
+Core scans one public URL at a time in the signed-in user's browser. Keep the
+scan page open until it finishes. The scanner evaluates the rendered DOM after a
+bounded stabilization period, but cannot detect every accessibility issue or
+replace manual and assistive-technology testing. Core does not perform
+site-wide scans, use a remote browser service, or continue scans as background
+jobs after the browser session is abandoned.
+
+## Privacy and stored data
+
+Audit records, findings, evidence, workflow history, Guided Decision history,
+and Accessibility Statement data are stored in this WordPress site's database.
+Core does not send scans to a remote Elavira browser service. Scanner evidence
+is bounded and does not include form values, cookies, authentication tokens, or
+full-page HTML snapshots.
+
+When enabled, the visitor toolbar offers reversible presentation preferences;
+it is not remediation and does not make an inaccessible site conformant.
+Preferences remain in that visitor's browser storage and do not create a
+disability or diagnosis profile in WordPress.
+
+Deactivation preserves Elavira data and settings. A destructive uninstall
+policy is not currently defined, so this build does not automatically remove
+Core records or associated WordPress pages on uninstall.
 
 ## Development
 
-Install development dependencies and run the complete foundation check:
+Install development dependencies and run the complete project check:
 
 ```sh
 composer install

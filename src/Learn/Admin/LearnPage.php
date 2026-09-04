@@ -35,7 +35,7 @@ final class LearnPage {
 
 	/** Register routes. @return void */
 	public function register() {
-		add_submenu_page( 'elavira-audits', __( 'Elavira Learn', 'elavira' ), __( 'Learn', 'elavira' ), 'read', 'elavira-learn', array( $this, 'landing' ) );
+		add_submenu_page( 'elavira-dashboard', __( 'Elavira Learn', 'elavira' ), __( 'Learn', 'elavira' ), 'read', 'elavira-learn', array( $this, 'landing' ) );
 		add_submenu_page( null, __( 'Elavira Learn Topic', 'elavira' ), __( 'Learn Topic', 'elavira' ), 'read', 'elavira-learn-topic', array( $this, 'detail' ) );
 	}
 

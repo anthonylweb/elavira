@@ -46,6 +46,24 @@ final class MigrationRunnerTest extends TestCase {
 
 		$this->assertSame( '0.1.0', get_option( VersionManager::SCHEMA_VERSION_OPTION ) );
 	}
+
+	public function test_does_not_advance_schema_version_when_a_migration_fails() {
+		$runner = new MigrationRunner(
+			new VersionManager(),
+			array(
+				new FailingMigration( '0.1.0' ),
+			)
+		);
+
+		try {
+			$runner->run( '0.1.0' );
+			$this->fail( 'The migration failure was not propagated.' );
+		} catch ( \RuntimeException $exception ) {
+			$this->assertSame( 'Migration failed.', $exception->getMessage() );
+		}
+
+		$this->assertSame( '0.0.0', get_option( VersionManager::SCHEMA_VERSION_OPTION, '0.0.0' ) );
+	}
 }
 
 final class RecordingMigration implements Migration {
@@ -63,5 +81,21 @@ final class RecordingMigration implements Migration {
 
 	public function up() {
 		$this->history[] = $this->migration_version;
+	}
+}
+
+final class FailingMigration implements Migration {
+	private $migration_version;
+
+	public function __construct( $version ) {
+		$this->migration_version = $version;
+	}
+
+	public function version() {
+		return $this->migration_version;
+	}
+
+	public function up() {
+		throw new \RuntimeException( 'Migration failed.' );
 	}
 }

@@ -28,7 +28,7 @@ final class StatementPage {
 
 	/** Register Statement screens. @return void */
 	public function register() {
-		add_submenu_page( 'elavira-audits', __( 'Accessibility Statement', 'elavira' ), __( 'Statement', 'elavira' ), Capability::MANAGE_STATEMENT, 'elavira-statement', array( $this, 'render' ) );
+		add_submenu_page( 'elavira-dashboard', __( 'Accessibility Statement', 'elavira' ), __( 'Statement', 'elavira' ), Capability::MANAGE_STATEMENT, 'elavira-statement', array( $this, 'render' ), 20 );
 		add_submenu_page( null, __( 'Preview Accessibility Statement', 'elavira' ), __( 'Statement Preview', 'elavira' ), Capability::MANAGE_STATEMENT, 'elavira-statement-preview', array( $this, 'preview' ) );
 	}
 

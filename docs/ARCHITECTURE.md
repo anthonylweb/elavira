@@ -144,6 +144,17 @@ limits, persistence orchestration, and browser execution.
 
 ## Core single-page browser scan execution
 
+Authorized users launch a Core audit from the Dashboard, Audits history, a
+published viewable content editor, or a singular public page's admin bar through
+the canonical `elavira-run-audit` admin route. The server-rendered form requires
+`elavira_run_audits`, a WordPress nonce, one current-site public URL, and a WCAG
+2.2 A or AA target (defaulted from Core Audit Defaults). It then delegates to the
+same `StartSinglePageScan` application service used by REST initiation. That
+service canonicalizes the URL and atomically creates the Audit, Audit URL, and
+short-lived session before redirecting the current tab to the credential-bearing
+public page. The existing scoped frontend scanner owns progress, persistence,
+failure handling, and the final handoff to the full Audit Report.
+
 Core scan initiation is an authorized application service requiring
 `elavira_run_audits`. It accepts only HTTP(S) URLs on the exact scheme, host, and
 port of `home_url()`, removes the Elavira credential parameter, canonicalizes
@@ -309,3 +320,63 @@ resource. These additions remain static and do not add persistence or migrations
 `LearnModule` registers menu callbacks without constructing the content registries.
 It builds them lazily only when a Learn route renders or enqueues its scoped asset,
 so long-form bundled content is not instantiated on unrelated WordPress requests.
+
+## Core Visitor Accessibility Toolbar
+
+The `src/Toolbar` module provides the Phase 1 visitor preference interface and
+the minimum capability-protected admin configuration needed to enable it,
+choose its corner position, and enable individual optional controls. Configuration
+uses the single bounded `elavira_toolbar_settings` WordPress option; it introduces
+no custom table or visitor account dependency.
+
+When enabled (or explicitly previewed by an authorized administrator), the module
+loads its independent `toolbar.css` and `toolbar.js` assets and renders one modal
+dialog at the end of the public page. Opening moves focus into the dialog, Tab is
+contained, Escape and the Close button dismiss it, and focus returns to the
+trigger. The public Accessibility Statement is linked when a published Statement
+exists and otherwise remains unchanged.
+
+Visitor choices are stored only in browser `localStorage` under
+`elaviraToolbarPreferences`. The payload contains presentation values, never a
+disability, diagnosis, account identifier, or analytics event, and is not sent to
+WordPress. A small early inline bootstrap applies validated enabled root states to
+reduce flash. The main script revalidates all stored values, ignores disabled or
+unknown controls, applies changes immediately, and removes the stored record on
+Reset.
+
+Preference effects use namespaced `elavira-pref-*` classes and one text-scale
+custom property on the document root. Toolbar component rules are entirely scoped;
+page-facing overrides exist only while their corresponding explicit state is
+active. **Default** means the theme's native styling and behavior, including its
+own operating-system preference handling. The toolbar is a reversible browsing
+preference layer—not remediation, an accessibility overlay claim, or evidence of
+WCAG conformance—and scanner execution remains independent.
+
+## Core Dashboard and Settings
+
+The Core administration root is `elavira-dashboard`, with ordered destinations
+for Dashboard, Audits, Statement, Toolbar, Learn, and Settings. Existing feature
+slugs remain stable. Dashboard access uses `elavira_view_reports`; Settings uses
+`elavira_manage_settings`, while Statement and Toolbar continue enforcing their
+own management capabilities.
+
+The Dashboard performs one bounded five-row Audit query and summarizes grouped
+Finding states only for the latest owned Audit. “Open,” “Addressed,” “Accepted
+Limitation,” human-review state, and High/Medium/Low priority remain distinct.
+It also reads the single site Statement, counts pending recommendations using one
+aggregate query, reports the existing Toolbar option, and obtains the seven-item
+Guided Decision inventory from its registry. It never calculates a score or
+describes historical Finding totals as current site conformance.
+
+`src/Settings` owns the small, non-autoloaded `elavira_core_settings` option.
+It contains only the future-audit WCAG target, actionable admin-notice preference,
+and admin-bar shortcut visibility. The default target is WCAG 2.2 AA and is read
+only when a new scan request omits an explicit target; historical Audit snapshots
+are never rewritten. Toolbar configuration remains feature-owned in
+`elavira_toolbar_settings` and is linked rather than duplicated.
+
+The server-rendered Settings tabs are General, Audit Defaults, and Data & Privacy.
+Core health checks are limited to required database tables, schema currency, and
+the local browser-scanner asset, with safe actionable messages. Content/URL rules,
+developer diagnostics, permission management, retention controls, queues, and
+remote-worker health remain absent because they are Premium boundaries.

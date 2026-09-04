@@ -78,13 +78,24 @@ final class SinglePageScanTest extends TestCase {
 		} catch ( RuntimeException $error ) {
 			$this->assertNotEmpty( $error->getMessage() ); }
 		$GLOBALS['elavira_test_capabilities'][ Capability::RUN_AUDITS ] = true;
-		foreach ( array( 'https://other.example/', 'ftp://example.com/file', 'https://example.com/wp-admin/' ) as $url ) {
+		foreach ( array( 'https://other.example/', 'ftp://example.com/file', 'https://example.com/wp-admin/', 'https://example.com/wp-login.php', 'https://example.com/wp-json/', 'https://example.com/wp-cron.php', 'https://example.com/xmlrpc.php' ) as $url ) {
 			try {
 				$this->start->start( $url );
 				$this->fail();
 			} catch ( InvalidArgumentException $error ) {
 				$this->assertNotEmpty( $error->getMessage() ); }
 		}
+	}
+
+	public function test_per_audit_target_override_is_validated_and_snapshotted() {
+		$token   = $this->token( $this->start->start( 'https://example.com/page/', '2.2_A' ) );
+		$session = $this->sessions->find_by_token( $token );
+		$audit   = $this->audits->find( $session['audit_id'] );
+		$this->assertSame( '2.2_A', $session['wcag_target'] );
+		$this->assertSame( '2.2_A', $audit['wcag_target'] );
+		$this->assertStringStartsWith( 'Single-page audit', $audit['label'] );
+		$this->expectException( InvalidArgumentException::class );
+		$this->start->start( 'https://example.com/page/', '2.2_AAA' );
 	}
 
 	public function test_rejects_a_known_private_wordpress_object() {
