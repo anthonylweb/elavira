@@ -51,3 +51,4 @@ wp-config.php
 # Composer autoloader generated with `composer install --no-dev`.
 /vendor/
 /.phpunit.result.cache
+/dist
