@@ -7,6 +7,8 @@
 
 namespace Elavira\Findings\Persistence;
 
+// phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.FunctionCommentThrowTag, Generic.Files.LineLength
+
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Core\Database\Repository;
 use InvalidArgumentException;
@@ -69,15 +71,33 @@ final class OccurrenceRepository extends Repository {
 		return $this->insert(
 			$this->tables->occurrences(),
 			array(
-				'finding_id'    => $finding_id,
-				'audit_url_id'  => $audit_url_id,
-				'target_json'   => PersistenceValidator::json( $data['target'] ?? array(), PersistenceValidator::TARGET_MAX_BYTES, 'target' ),
-				'evidence_json' => PersistenceValidator::json( $data['evidence'] ?? array(), PersistenceValidator::EVIDENCE_MAX_BYTES, 'evidence' ),
-				'element_json'  => PersistenceValidator::json( $data['element'] ?? array(), PersistenceValidator::ELEMENT_MAX_BYTES, 'element metadata' ),
-				'created_at'    => $this->now(),
+				'finding_id'                    => $finding_id,
+				'audit_url_id'                  => $audit_url_id,
+				'target_json'                   => PersistenceValidator::json( $data['target'] ?? array(), PersistenceValidator::TARGET_MAX_BYTES, 'target' ),
+				'evidence_json'                 => PersistenceValidator::json( $data['evidence'] ?? array(), PersistenceValidator::EVIDENCE_MAX_BYTES, 'evidence' ),
+				'element_json'                  => PersistenceValidator::json( $data['element'] ?? array(), PersistenceValidator::ELEMENT_MAX_BYTES, 'element metadata' ),
+				'target_fingerprint'            => $this->fingerprint( $data['target_fingerprint'] ?? '' ),
+				'material_evidence_fingerprint' => $this->fingerprint( $data['material_evidence_fingerprint'] ?? '' ),
+				'reviewed_exception_id'         => absint( $data['reviewed_exception_id'] ?? 0 ),
+				'superseded_by_occurrence_id'   => absint( $data['superseded_by_occurrence_id'] ?? 0 ),
+				'diagnostic_json'               => PersistenceValidator::json( $data['diagnostics'] ?? array(), PersistenceValidator::EVIDENCE_MAX_BYTES, 'diagnostics' ),
+				'created_at'                    => $this->now(),
 			),
-			array( '%d', '%d', '%s', '%s', '%s', '%s' )
+			array( '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s' )
 		);
+	}
+
+	/** Find an occurrence by ID. @return array|null */
+	public function find( $occurrence_id ) {
+		return $this->database->get_row( $this->database->prepare( "SELECT * FROM {$this->tables->occurrences()} WHERE id = %d", absint( $occurrence_id ) ), ARRAY_A );
+	}
+
+	/** Validate a fingerprint, allowing empty only for pre-migration compatibility. @return string */
+	private function fingerprint( $value ) {
+		if ( '' !== $value && ( ! is_string( $value ) || ! preg_match( '/^[a-f0-9]{64}$/', $value ) ) ) {
+			throw new InvalidArgumentException( 'An occurrence fingerprint is invalid.' );
+		}
+		return $value;
 	}
 
 	/**

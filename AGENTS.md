@@ -6,6 +6,8 @@ Before making code changes, read:
 
 1. `/docs/TECH_SPEC.md`
 2. `/docs/ENGINEERING_GUIDELINES.md`
+3. `/docs/PHASE1_RULESET.md`
+4. `/docs/ARCHITECTURE.md` when the task changes data flow, persistence, scanner boundaries, or Core/Premium extension points
 
 Then inspect the existing implementation relevant to the requested task.
 
@@ -13,6 +15,8 @@ These documents are authoritative:
 
 - `TECH_SPEC.md` defines **what Elavira Phase 1 should do**.
 - `ENGINEERING_GUIDELINES.md` defines **how Elavira should be engineered**.
+- `PHASE1_RULESET.md` defines the **approved initial production accessibility ruleset, outcome semantics, and review/suppression behavior**.
+- `ARCHITECTURE.md` records the **current implementation architecture and extension boundaries**.
 
 ## Working rules
 
@@ -61,6 +65,16 @@ Preserve the Phase 1 workflow:
 Elavira does not automatically modify content, markup, CSS, accessibility attributes, themes, plugins, or configuration in response to findings.
 
 Human judgment remains authoritative. Guided Decisions support judgment; they do not replace it.
+
+Scanner outcomes are not interchangeable with WCAG conformance. Preserve these rule-result meanings:
+
+- **Pass** — this individual Elavira check found no issue; it does not establish that the whole WCAG success criterion or page passed.
+- **Automatic Failure** — Elavira has sufficient objective evidence for the mapped accessibility failure.
+- **Potential Issue** — Elavira found an objectively suspicious condition but context is required.
+- **Human Review** — a person must make the accessibility determination; Elavira provides evidence, testing guidance, and possible remediation.
+- **Not Evaluated** — Elavira cannot responsibly evaluate the condition.
+
+Priority is separate from result type. A Human Review may be High priority.
 
 Automated testing is incomplete by definition.
 
@@ -118,3 +132,42 @@ Before finishing, review the change against:
 - Automated and manual testing needs
 
 Report material assumptions, unresolved conflicts, known limitations, and any follow-up work rather than hiding them.
+## Initial production ruleset boundary
+
+The approved initial production ruleset is limited to:
+
+1. Links & Navigation
+2. Headings & Document Structure
+3. Forms & Controls
+4. Keyboard Accessibility
+5. Focus
+6. Color & Contrast
+7. Names, Roles & States
+8. ARIA Usage
+9. Images & Alternative Text
+
+Do not add unrelated scanner categories merely to increase rule count.
+
+Special requirements:
+
+- Keyboard and focus findings are human-authoritative. The scanner may identify risk patterns, explain likely impact, provide a test procedure, and suggest remediation, but DOM inspection alone must not declare keyboard/focus accessibility.
+- Contrast may be an Automatic Failure only when effective rendered colors and applicability can be determined reliably. Indeterminate contrast becomes Human Review; never guess.
+- Invalid ARIA is not automatically a WCAG failure. Declare Automatic Failure only when the resulting accessibility condition required by the mapped success criterion can be established.
+- Missing or multiple H1 elements receive a strong **Structural Warning / Human Review** treatment. They are not automatic WCAG failures. Explain that Elavira strongly recommends a clear primary document heading as a document-structure best practice without claiming that WCAG or HTML requires exactly one H1.
+- Avoid duplicate user-facing findings when one underlying accessibility problem is observed by overlapping Forms, Names/Roles/States, or ARIA rules. Preserve evidence while applying explicit grouping/supersession behavior.
+- Images/alternative text are intentionally narrow in this release. Do not generate or approve alternative text automatically.
+
+## Finding review decisions
+
+Preserve historical findings and status history. Add and support **Reviewed — Not an Issue** as a human decision meaning that the reported condition was reviewed in context and determined not to be an accessibility issue in the current implementation.
+
+This is distinct from:
+
+- **Addressed** — remediation work was performed; not proof of resolution.
+- **Accepted Limitation** — a known accessibility issue is intentionally retained.
+- **Verified** — reserved for subsequent verification; users do not manually assert it.
+- **Needs Review** — human evaluation remains outstanding.
+
+A Reviewed — Not an Issue decision may create a persistent reviewed exception so the same materially unchanged condition does not keep appearing as an active issue in later audits. Exceptions must be auditable, reversible, version-aware, and based on more than a fragile CSS selector.
+
+Resetting reviewed exceptions clears future suppression only. It must not delete historical audits, findings, decisions, or status history.

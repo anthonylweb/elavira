@@ -75,6 +75,27 @@ final class StatementSchemaTest extends TestCase {
 		$this->assertSame( 1, $row['finding_id'] );
 	}
 
+	public function test_reviewed_not_an_issue_does_not_generate_a_statement_recommendation() {
+		$this->database->create_table( $this->tables->audit_urls() );
+		$this->database->create_table( $this->tables->guided_decisions() );
+		$this->database->insert( $this->tables->audits(), array() );
+		$audit_id = $this->database->insert_id;
+		$this->database->insert(
+			$this->tables->findings(),
+			array(
+				'audit_id'         => $audit_id,
+				'rule_id'          => 'elavira.link.purpose_review',
+				'rule_version'     => '1.0.0',
+				'group_key'        => 'link',
+				'current_status'   => 'reviewed_not_issue',
+				'category'         => 'potential_issue',
+				'summary_snapshot' => 'The link was acceptable in context.',
+			)
+		);
+		( new RecommendationGenerator( $this->database, new RecommendationRepository( $this->database ), CoreDecisionRegistry::create() ) )->generate( $audit_id );
+		$this->assertCount( 0, $this->database->tables[ $this->tables->statement_recommendations() ] );
+	}
+
 	public function test_compatible_guided_decision_can_generate_human_review_recommendation() {
 		$this->database->create_table( $this->tables->audit_urls() );
 		$this->database->create_table( $this->tables->guided_decisions() );

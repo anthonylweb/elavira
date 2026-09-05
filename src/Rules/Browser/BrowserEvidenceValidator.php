@@ -7,6 +7,8 @@
 
 namespace Elavira\Rules\Browser;
 
+// phpcs:disable Squiz.Commenting.FunctionComment
+
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Rules\Evidence\EvidenceSchema;
 use Elavira\Rules\Evidence\FieldDefinition;
@@ -96,8 +98,9 @@ final class BrowserEvidenceValidator {
 		}
 
 		$rule     = $this->registry->get( $payload['rule_id'], $payload['rule_version'] );
-		$outcome  = PersistenceValidator::one_of( $payload['outcome'], RuleOutcome::all(), 'rule outcome' );
+		$outcome  = PersistenceValidator::one_of( $payload['outcome'], RuleOutcome::accepted(), 'rule outcome' );
 		$grouping = $payload['grouping'] ?? array();
+		$outcome  = $this->canonical_outcome( $rule->evaluation_type(), $outcome );
 
 		$this->validate_outcome( $rule->evaluation_type(), $outcome );
 
@@ -120,16 +123,31 @@ final class BrowserEvidenceValidator {
 	 * @throws InvalidArgumentException When the outcome conflicts with evaluation certainty.
 	 */
 	private function validate_outcome( $evaluation, $outcome ) {
-		if ( RuleOutcome::PASS === $outcome ) {
+		if ( in_array( $outcome, array( RuleOutcome::PASS, RuleOutcome::NOT_EVALUATED ), true ) ) {
 			return;
 		}
 
-		if ( EvaluationType::AUTOMATIC_FAILURE === $evaluation && RuleOutcome::FAILURE !== $outcome ) {
+		if ( EvaluationType::AUTOMATIC_FAILURE === $evaluation && RuleOutcome::AUTOMATIC_FAILURE !== $outcome ) {
 			throw new InvalidArgumentException( 'Automatic rules require failure or pass outcomes.' );
 		}
 
-		if ( EvaluationType::AUTOMATIC_FAILURE !== $evaluation && RuleOutcome::REVIEW_REQUIRED !== $outcome ) {
+		if ( EvaluationType::POTENTIAL_ISSUE === $evaluation && RuleOutcome::POTENTIAL_ISSUE !== $outcome ) {
+			throw new InvalidArgumentException( 'Potential-issue rules require a potential-issue outcome.' );
+		}
+
+		if ( EvaluationType::HUMAN_REVIEW === $evaluation && RuleOutcome::HUMAN_REVIEW !== $outcome ) {
 			throw new InvalidArgumentException( 'Review rules cannot claim a definitive failure.' );
 		}
+	}
+
+	/** Translate only the two documented pre-expansion transport values. */
+	private function canonical_outcome( $evaluation, $outcome ) {
+		if ( RuleOutcome::LEGACY_FAILURE === $outcome ) {
+			return RuleOutcome::AUTOMATIC_FAILURE;
+		}
+		if ( RuleOutcome::LEGACY_REVIEW_REQUIRED === $outcome ) {
+			return EvaluationType::POTENTIAL_ISSUE === $evaluation ? RuleOutcome::POTENTIAL_ISSUE : RuleOutcome::HUMAN_REVIEW;
+		}
+		return $outcome;
 	}
 }

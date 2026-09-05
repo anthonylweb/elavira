@@ -13,6 +13,7 @@ use Elavira\Rules\Browser\BrowserEvidenceValidator;
 use Elavira\Rules\CoreRuleRegistry;
 use Elavira\Rules\Normalization\RuleResultNormalizer;
 use Elavira\Rules\Values\FindingClassification;
+use Elavira\Rules\Values\RuleOutcome;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -25,11 +26,16 @@ final class BrowserEvidenceContractTest extends TestCase {
 		$this->normalizer = new RuleResultNormalizer();
 	}
 
+	public function test_expanded_rule_result_vocabulary_is_complete() {
+		$this->assertSame( array( RuleOutcome::PASS, RuleOutcome::AUTOMATIC_FAILURE, RuleOutcome::POTENTIAL_ISSUE, RuleOutcome::HUMAN_REVIEW, RuleOutcome::NOT_EVALUATED ), RuleOutcome::all() );
+	}
+
 	public function test_automatic_failure_uses_only_registered_trusted_metadata() {
 		$normalized = $this->normalizer->normalize( $this->validator->validate( $this->image_payload() ) )->to_array();
 
 		$this->assertTrue( $normalized['creates_finding'] );
 		$this->assertSame( FindingClassification::DETECTED_FAILURE, $normalized['classification'] );
+		$this->assertSame( RuleOutcome::AUTOMATIC_FAILURE, $normalized['outcome'] );
 		$this->assertSame( Priority::HIGH, $normalized['priority'] );
 		$this->assertSame( ReviewState::NOT_REQUIRED, $normalized['review_state'] );
 		$this->assertSame( '1.1.1', $normalized['wcag_criterion'] );
@@ -59,6 +65,7 @@ final class BrowserEvidenceContractTest extends TestCase {
 		$normalized = $this->normalizer->normalize( $this->validator->validate( $payload ) )->to_array();
 
 		$this->assertSame( FindingClassification::POTENTIAL_ISSUE, $normalized['classification'] );
+		$this->assertSame( RuleOutcome::POTENTIAL_ISSUE, $normalized['outcome'] );
 		$this->assertSame( ReviewState::NEEDS_REVIEW, $normalized['review_state'] );
 		$this->assertSame( Priority::MEDIUM, $normalized['priority'] );
 	}
@@ -96,6 +103,21 @@ final class BrowserEvidenceContractTest extends TestCase {
 
 		$this->assertFalse( $result->creates_finding() );
 		$this->assertNull( $result->grouping_key() );
+	}
+
+	public function test_not_evaluated_is_valid_and_does_not_create_a_finding() {
+		$payload            = $this->image_payload();
+		$payload['outcome'] = RuleOutcome::NOT_EVALUATED;
+		$result             = $this->normalizer->normalize( $this->validator->validate( $payload ) );
+		$this->assertFalse( $result->creates_finding() );
+		$this->assertSame( RuleOutcome::NOT_EVALUATED, $result->to_array()['outcome'] );
+	}
+
+	public function test_canonical_outcome_must_match_registered_evaluation_type() {
+		$payload            = $this->image_payload();
+		$payload['outcome'] = RuleOutcome::HUMAN_REVIEW;
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
 	}
 
 	/**

@@ -82,6 +82,25 @@ final class FakeWpdb {
 	}
 
 	public function query( $query ) {
+		if ( is_array( $query ) ) {
+			$sql  = $query['query'];
+			$args = $query['args'];
+			if ( 0 === strpos( $sql, 'UPDATE ' ) && false !== strpos( $sql, 'reviewed_exceptions' ) ) {
+				$table = preg_match( '/UPDATE ([^\s]+)/', $sql, $match ) ? $match[1] : '';
+				$count = 0;
+				foreach ( $this->tables[ $table ] ?? array() as $id => $row ) {
+					$page_matches = false === strpos( $sql, 'canonical_url_hash = %s' ) || (string) $row['canonical_url_hash'] === (string) $args[2];
+					if ( 1 === (int) $row['active'] && $page_matches ) {
+						$this->tables[ $table ][ $id ]['active']           = 0;
+						$this->tables[ $table ][ $id ]['reset_at']         = $args[0];
+						$this->tables[ $table ][ $id ]['reset_by_user_id'] = $args[1];
+						++$count;
+					}
+				}
+				return $count;
+			}
+			$query = $sql;
+		}
 		$this->queries[] = $query;
 		if ( 'START TRANSACTION' === $query ) {
 			$this->transaction_tables = $this->tables;
@@ -98,6 +117,10 @@ final class FakeWpdb {
 		if ( 0 === strpos( $prepared['query'], 'SHOW TABLES LIKE' ) ) {
 			$table = $prepared['args'][0];
 			return isset( $this->tables[ $table ] ) ? $table : null;
+		}
+		if ( 0 === strpos( $prepared['query'], 'SHOW COLUMNS FROM' ) ) {
+			$column = $prepared['args'][0];
+			return false !== strpos( $this->schema_sql, "\n\t\t{$column} " ) ? $column : null;
 		}
 
 		$table = $this->table_from_query( $prepared['query'] );

@@ -7,6 +7,8 @@
 
 namespace Elavira\Rules;
 
+// phpcs:disable Squiz.Commenting.FunctionComment
+
 use InvalidArgumentException;
 
 /**
@@ -60,6 +62,11 @@ final class RuleRegistry {
 	 */
 	public function all() {
 		return array_values( $this->rules );
+	}
+
+	/** Determine declared precedence for exact registered rule versions. @return bool */
+	public function supersedes( $primary_id, $primary_version, $diagnostic_id ) {
+		return in_array( $diagnostic_id, $this->get( $primary_id, $primary_version )->supersedes(), true );
 	}
 
 	/** Build the registry key.

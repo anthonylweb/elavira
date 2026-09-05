@@ -13,6 +13,7 @@ use Elavira\Core\Migrations\CoreScanSessionSchema;
 use Elavira\Core\Migrations\GuidedDecisionSchema;
 use Elavira\Core\Migrations\MigrationRunner;
 use Elavira\Core\Migrations\StatementSchema;
+use Elavira\Core\Migrations\RulesetFoundationSchema;
 use Elavira\Core\Version\VersionManager;
 
 /**
@@ -33,6 +34,7 @@ final class Installer {
 				new CoreScanSessionSchema( $GLOBALS['wpdb'] ),
 				new GuidedDecisionSchema( $GLOBALS['wpdb'] ),
 				new StatementSchema( $GLOBALS['wpdb'] ),
+				new RulesetFoundationSchema( $GLOBALS['wpdb'] ),
 			)
 		);
 

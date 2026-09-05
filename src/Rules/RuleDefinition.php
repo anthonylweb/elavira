@@ -96,6 +96,19 @@ final class RuleDefinition {
 				PersistenceValidator::identifier( $data[ $optional ], $optional );
 			}
 		}
+		if ( isset( $data['supersedes'] ) ) {
+			if ( ! is_array( $data['supersedes'] ) ) {
+				throw new InvalidArgumentException( 'Rule supersession metadata is invalid.' );
+			}
+			foreach ( $data['supersedes'] as $rule_id ) {
+				if ( ! is_string( $rule_id ) || ! preg_match( '/^elavira\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/', $rule_id ) || $rule_id === $data['id'] ) {
+					throw new InvalidArgumentException( 'A superseded rule ID is invalid.' );
+				}
+			}
+			$data['supersedes'] = array_values( array_unique( $data['supersedes'] ) );
+		} else {
+			$data['supersedes'] = array();
+		}
 
 		$this->data = $data;
 	}
@@ -148,6 +161,11 @@ final class RuleDefinition {
 	/** Get the grouping strategy. @return GroupingStrategy */
 	public function grouping_strategy() {
 		return $this->data['grouping_strategy'];
+	}
+
+	/** Get lower-level rule IDs this rule may supersede on the same trusted target. @return string[] */
+	public function supersedes() {
+		return $this->data['supersedes'];
 	}
 
 	/**

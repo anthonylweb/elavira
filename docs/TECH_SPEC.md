@@ -176,13 +176,63 @@ Every report and XLSX export must explain that Priority is an internal organizat
 - Contextual Learn links.
 - Status management does not modify the website.
 
-## 6.2 Status model
+## 6.2 Status and review-decision model
 
-- **Open.**
+Finding workflow and scanner outcome are separate concepts.
+
+### Scanner outcome
+
+Each rule evaluation uses one of these semantic outcomes:
+
+- **Pass** — the individual Elavira check found no issue. It does not establish that the complete WCAG success criterion or page passed.
+- **Automatic Failure** — Elavira has sufficient objective evidence to establish the accessibility failure represented by the mapped rule.
+- **Potential Issue** — Elavira found an objectively suspicious condition, but context is required before declaring an accessibility failure.
+- **Human Review** — a person must evaluate the condition. Elavira supplies evidence, testing guidance, and possible remediation.
+- **Not Evaluated** — Elavira cannot responsibly evaluate the condition.
+
+Priority remains separate from outcome. High, Medium, and Low are Elavira organizational priorities; Review is not a severity.
+
+### Finding workflow
+
+- **Open** — unresolved finding.
 - **Addressed** — user indicates remediation work has been performed; not proof of resolution.
-- **Verified** — subsequent audit confirms the detectable condition is no longer present.
-- **Accepted Limitation** — intentionally retained and eligible for Statement workflow.
-- **Needs Review** is treated as an evaluation state/category and may be supported by a Guided Decision.
+- **Verified** — a subsequent audit verifies that a detectable condition is no longer present. Users cannot manually set Verified.
+- **Accepted Limitation** — a known accessibility issue is intentionally retained and may participate in Accessibility Statement workflow.
+- **Needs Review** — human evaluation remains outstanding.
+- **Reviewed — Not an Issue** — a human reviewed the reported condition in context and determined that it is acceptable and is not an accessibility issue in the current implementation.
+
+Reviewed — Not an Issue is not equivalent to Accepted Limitation.
+
+### Reviewed exceptions and future audits
+
+When a user marks an eligible Potential Issue or Human Review finding **Reviewed — Not an Issue**, Elavira may persist a reviewed exception so that the same materially unchanged condition is not repeatedly presented as an active issue in future audits.
+
+A reviewed exception must:
+
+- Be an explicit human decision.
+- Remain auditable and discoverable.
+- Preserve the original finding and status history.
+- Be scoped at minimum by stable rule ID, rule version, canonical page, stable target fingerprint, and material evidence fingerprint or an equivalently robust domain identity.
+- Never rely only on a CSS selector.
+- Stop suppressing when the rule version, page, target, or material evidence changes enough that the prior decision is no longer safely applicable.
+- Never suppress a different rule merely because it affects the same element.
+- Be applied server-side from trusted normalized evidence, not from a browser-provided suppression key.
+- Be reversible.
+
+Normal active-finding views should exclude matched reviewed exceptions by default while providing an auditable way to view reviewed/suppressed decisions.
+
+### Reset Reviewed Exceptions
+
+Core provides a deliberate **Reset Reviewed Exceptions** action with at least:
+
+- **This page**
+- **All reviewed exceptions**
+
+Reset removes future suppression decisions only. It does not delete or rewrite historical audits, findings, Guided Decision history, status history, reports, or statement history.
+
+The confirmation must clearly explain that future audits will evaluate those conditions again.
+
+This provides a safe fresh-review workflow after a redesign without destroying historical records.
 
 ## 6.3 Guided Decision system
 
@@ -389,9 +439,14 @@ Settings use tabs. Feature-specific configuration remains in its feature area ra
 
 ## 12.2 Rule architecture
 
-- Accessibility checks should map **rule → WCAG criterion → level → principle → explanation → recommendation → WordPress guidance → developer guidance → optional Guided Decision**.
-- Store rule/version metadata with audit results so historical reports remain interpretable after rules evolve.
-- Separate scanner evidence from editorial guidance so copy can improve without corrupting historical scan facts.
+- Stable rule IDs and explicit rule/scanner-contract versions are required.
+- Browser JavaScript returns bounded structured evidence; WordPress owns WCAG mappings, priority, classification, explanations, recommendations, WordPress guidance, developer guidance, and Guided Decision associations.
+- Historical rule/editorial versions must remain resolvable where required to explain historical findings accurately.
+- Rule grouping and cross-rule supersession are server-authoritative.
+- Browser-provided grouping or suppression identities are not trusted.
+- The approved initial production rule inventory and classification requirements are defined in `/docs/PHASE1_RULESET.md`.
+- Do not equate invalid markup with a WCAG failure unless the rule can establish the accessibility condition required by the mapped success criterion.
+- Do not equate an individual rule Pass with complete success-criterion or page conformance.
 
 ## 12.3 Permissions architecture
 
@@ -449,6 +504,19 @@ Define granular WordPress capabilities in the underlying architecture from the b
 - Core remains fully functional without Premium, remote browser workers, a persistent site-wide queue, or external scanning services.
 - No audit finding triggers an automated remediation change anywhere in Phase 1.
 - Site-wide auditing and remote browser-worker execution are not required for Core Phase 1 acceptance and must not be silently implemented as Core dependencies.
+
+Additional ruleset/review acceptance criteria:
+
+- The initial production rule categories and semantics match `/docs/PHASE1_RULESET.md`.
+- Keyboard and focus findings remain human-authoritative.
+- Contrast failures are automatic only when the effective rendered comparison is determinate and applicable.
+- Missing/multiple H1 findings are prominent Structural Warnings/Human Review, not automatic WCAG failures.
+- `Reviewed — Not an Issue` is distinct from `Accepted Limitation`.
+- Eligible reviewed decisions can suppress the same materially unchanged condition on future audits without deleting history.
+- Reviewed-exception matching is server-authoritative, version-aware, page-aware, target-aware, and evidence-aware; selector-only suppression is prohibited.
+- Users can reset reviewed exceptions for a page or globally without deleting audit/report/history data.
+- Cross-rule grouping/supersession prevents avoidable duplicate active findings while retaining diagnostic evidence.
+
 # 15. Deferred Roadmap / Explicit Non-goals
 
 Phase 1 should resist scope expansion. The following are intentionally deferred or reserved for later evaluation.

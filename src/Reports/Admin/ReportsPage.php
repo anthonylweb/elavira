@@ -7,6 +7,9 @@
 
 namespace Elavira\Reports\Admin;
 
+// phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.VariableComment, Generic.Files.LineLength
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only query parameters are validated below; mutations verify nonces in their handlers.
+
 use Elavira\Audit\Persistence\AuditRepository;
 use Elavira\Audit\Persistence\AuditUrlRepository;
 use Elavira\Audit\Values\AuditStatus;
@@ -14,6 +17,7 @@ use Elavira\Core\Capabilities\Capability;
 use Elavira\Findings\Persistence\FindingRepository;
 use Elavira\Findings\Persistence\FindingStatusHistoryRepository;
 use Elavira\Findings\Persistence\OccurrenceRepository;
+use Elavira\Findings\Persistence\ReviewedExceptionRepository;
 use Elavira\Findings\Values\FindingStatus;
 use Elavira\Findings\Values\Priority;
 use Elavira\Findings\Values\ReviewState;
@@ -82,6 +86,8 @@ final class ReportsPage {
 	 * @var TopicRegistry
 	 */
 	private $learn;
+	/** Reviewed-exception persistence. @var ReviewedExceptionRepository|null */
+	private $exceptions;
 
 	/**
 	 * Create the reports page controller.
@@ -99,7 +105,7 @@ final class ReportsPage {
 	 * @param RecommendationRepository       $statement_recommendations Statement recommendations.
 	 * @param TopicRegistry                  $learn Learn topics.
 	 */
-	public function __construct( AuditRepository $audits, AuditUrlRepository $urls, FindingRepository $findings, OccurrenceRepository $occurrences, FindingStatusHistoryRepository $history, HistoricalRuleResolver $rules, UpdateFindingStatus $status, XlsxExporter $xlsx, DecisionRegistry $decisions, DecisionRepository $decision_history, RecommendationRepository $statement_recommendations, TopicRegistry $learn ) {
+	public function __construct( AuditRepository $audits, AuditUrlRepository $urls, FindingRepository $findings, OccurrenceRepository $occurrences, FindingStatusHistoryRepository $history, HistoricalRuleResolver $rules, UpdateFindingStatus $status, XlsxExporter $xlsx, DecisionRegistry $decisions, DecisionRepository $decision_history, RecommendationRepository $statement_recommendations, TopicRegistry $learn, ?ReviewedExceptionRepository $exceptions = null ) {
 		$this->audits                    = $audits;
 		$this->urls                      = $urls;
 		$this->findings                  = $findings;
@@ -112,6 +118,7 @@ final class ReportsPage {
 		$this->decision_history          = $decision_history;
 		$this->statement_recommendations = $statement_recommendations;
 		$this->learn                     = $learn;
+		$this->exceptions                = $exceptions;
 	}
 
 	/** Register stable admin routes. @return void */
@@ -203,9 +210,11 @@ final class ReportsPage {
 			'review_state'   => isset( $_GET['review_state'] ) ? sanitize_key( wp_unslash( $_GET['review_state'] ) ) : '',
 			'wcag_level'     => isset( $_GET['wcag_level'] ) ? sanitize_text_field( wp_unslash( $_GET['wcag_level'] ) ) : '',
 			'search'         => isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '',
+			'visibility'     => isset( $_GET['visibility'] ) ? sanitize_key( wp_unslash( $_GET['visibility'] ) ) : 'active',
 		);
 		$page    = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Remaining query parameters are read-only and individually validated.
 		foreach ( array(
 			'priority'       => Priority::all(),
 			'current_status' => FindingStatus::all(),
@@ -216,11 +225,18 @@ final class ReportsPage {
 				$filters[ $key ] = '';
 			}
 		}
+		if ( ! in_array( $filters['visibility'], array( 'active', 'reviewed', 'all' ), true ) ) {
+			$filters['visibility'] = 'active';
+		}
 		$result  = $this->findings->paginate_by_audit( $audit['id'], $filters, $page, 20 );
 		$summary = $this->summarize_findings( $this->findings->summarize_by_audit( $audit['id'] ) );
 		?>
 		<div class="wrap elavira-reports"><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-audits' ) ); ?>">&larr; <?php echo esc_html__( 'All audits', 'elavira' ); ?></a></p><h1><?php echo esc_html__( 'Audit Report', 'elavira' ); ?></h1><h2><?php echo esc_html( $audit['label'] ); ?></h2>
 		<?php
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only feedback after a nonce-protected action.
+		if ( isset( $_GET['elavira_notice'] ) && 'exceptions_reset' === sanitize_key( wp_unslash( $_GET['elavira_notice'] ) ) ) {
+			echo '<div class="notice notice-success inline"><p>' . esc_html__( 'Reviewed exceptions reset. Historical reports and decisions were preserved.', 'elavira' ) . '</p></div>';
+		}
 		if ( $this->statement_recommendations->pending_for_audit( $audit['id'] ) ) :
 			?>
 			<div class="notice notice-info inline"><p><?php echo esc_html__( 'This audit identified findings that may affect your Accessibility Statement.', 'elavira' ); ?> <a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-statement' ) ); ?>"><?php echo esc_html__( 'Review statement recommendations', 'elavira' ); ?></a></p></div><?php endif; ?>
@@ -228,6 +244,9 @@ final class ReportsPage {
 		<h3><?php echo esc_html__( 'Finding summary', 'elavira' ); ?></h3><ul class="elavira-finding-meta"><li><strong><?php echo esc_html__( 'Grouped findings:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['findings'] ) ); ?></li><li><strong><?php echo esc_html__( 'Occurrences:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['occurrences'] ) ); ?></li><li><strong><?php echo esc_html__( 'High priority:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['high'] ) ); ?></li><li><strong><?php echo esc_html__( 'Needs review:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['needs_review'] ) ); ?></li><li><strong><?php echo esc_html__( 'Open:', 'elavira' ); ?></strong> <?php echo esc_html( number_format_i18n( $summary['open'] ) ); ?></li></ul>
 		<p class="elavira-disclaimer"><strong><?php echo esc_html__( 'Plugin findings, not an accessibility score:', 'elavira' ); ?></strong> <?php echo esc_html__( 'Priority is an internal organizational recommendation, not an official WCAG severity or conformance grade. Automated testing is incomplete.', 'elavira' ); ?> <a href="<?php echo esc_url( LearnPage::url( 'understanding_audit_results' ) ); ?>"><?php echo esc_html__( 'Learn how to interpret audit results', 'elavira' ); ?></a>.</p>
 		<?php
+		if ( current_user_can( Capability::MANAGE ) && $this->exceptions ) {
+			$this->reset_controls( $audit, $urls );
+		}
 		if ( AuditStatus::COMPLETED !== $audit['status'] ) :
 			?>
 			<div class="notice notice-warning inline"><p><?php echo esc_html__( 'This audit did not complete. Any partial data must not be treated as a complete report.', 'elavira' ); ?></p></div>
@@ -289,6 +308,7 @@ final class ReportsPage {
 		<?php $this->learn_action( $resolved ); ?>
 		<?php $this->guided_decision_history( $finding_id ); ?>
 		<?php
+		$this->section( __( 'Rule result', 'elavira' ), $this->result_description( $finding['result_type'] ?? $finding['category'] ) );
 		$this->section( __( 'What Elavira found', 'elavira' ), $editorial['summary'] ?? $finding['summary_snapshot'] );
 		if ( $resolved['available'] ) {
 			$this->section( __( 'Why it matters', 'elavira' ), $editorial['why_it_matters'] );
@@ -379,6 +399,30 @@ final class ReportsPage {
 		exit;
 	}
 
+	/** Handle a nonce-protected reviewed-exception reset. @return void */
+	public function reset_exceptions() {
+		if ( ! is_user_logged_in() || ! current_user_can( Capability::MANAGE ) || ! $this->exceptions ) {
+			wp_die( esc_html__( 'You are not allowed to reset reviewed exceptions.', 'elavira' ), '', array( 'response' => 403 ) );
+		}
+		$scope    = isset( $_POST['reset_scope'] ) ? sanitize_key( wp_unslash( $_POST['reset_scope'] ) ) : '';
+		$audit_id = isset( $_POST['audit'] ) ? absint( $_POST['audit'] ) : 0;
+		check_admin_referer( 'elavira_reset_reviewed_exceptions_' . $scope . '_' . $audit_id );
+		if ( 'page' === $scope ) {
+			$audit = $this->audits->find( $audit_id );
+			$urls  = $audit ? $this->urls->find_by_audit( $audit_id ) : array();
+			if ( ! $audit || get_current_user_id() !== (int) $audit['owner_user_id'] || empty( $urls[0]['canonical_url_hash'] ) ) {
+				wp_die( esc_html__( 'This audited page is not available.', 'elavira' ), '', array( 'response' => 404 ) );
+			}
+			$this->exceptions->reset_page( $urls[0]['canonical_url_hash'], get_current_user_id() );
+		} elseif ( 'all' === $scope ) {
+			$this->exceptions->reset_all( get_current_user_id() );
+		} else {
+			wp_die( esc_html__( 'Choose a valid reset scope.', 'elavira' ), '', array( 'response' => 400 ) );
+		}
+		wp_safe_redirect( add_query_arg( 'elavira_notice', 'exceptions_reset', admin_url( 'admin.php?page=elavira-report&audit=' . $audit_id ) ) );
+		exit;
+	}
+
 	/** Stream an authorized completed-audit workbook. @return void */
 	public function export() {
 		$this->authorize_view();
@@ -457,6 +501,9 @@ final class ReportsPage {
 	 * @return string
 	 */
 	private function label( $value ) {
+		if ( FindingStatus::REVIEWED_NOT_ISSUE === $value ) {
+			return __( 'Reviewed — Not an Issue', 'elavira' );
+		}
 		return ucwords( str_replace( '_', ' ', (string) $value ) );
 	}
 	/** Create a WCAG target label.
@@ -466,6 +513,16 @@ final class ReportsPage {
 	 */
 	private function target_label( $value ) {
 		return '2.2_AA' === $value ? __( 'WCAG 2.2 Level AA', 'elavira' ) : __( 'WCAG 2.2 Level A', 'elavira' );
+	}
+	/** Explain scanner result without implying criterion or page conformance. @return string */
+	private function result_description( $value ) {
+		$descriptions = array(
+			'automatic_failure' => __( 'Automatic Failure — Elavira has sufficient objective evidence for this individual mapped accessibility failure.', 'elavira' ),
+			'potential_issue'   => __( 'Potential Issue — an objectively suspicious condition exists, but context is required.', 'elavira' ),
+			'human_review'      => __( 'Human Review — a person must make the accessibility determination.', 'elavira' ),
+			'detected_failure'  => __( 'Automatic Failure — Elavira has sufficient objective evidence for this individual mapped accessibility failure.', 'elavira' ),
+		);
+		return $descriptions[ $value ] ?? __( 'The exact historical rule-result description is unavailable.', 'elavira' );
 	}
 	/** Render select options.
 	 *
@@ -605,6 +662,18 @@ final class ReportsPage {
 		echo '</ol></section>';
 	}
 
+	/** Render deliberate reset controls with consequences in visible text. */
+	private function reset_controls( array $audit, array $urls ) {
+		?>
+		<section><h3><?php echo esc_html__( 'Reset Reviewed Exceptions', 'elavira' ); ?></h3><p><?php echo esc_html__( 'This removes prior decisions telling Elavira not to flag previously reviewed conditions. Existing audit reports and finding history will not be deleted. Future audits will evaluate those conditions again.', 'elavira' ); ?></p>
+		<?php
+		if ( ! empty( $urls ) ) :
+			?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="elavira_reset_reviewed_exceptions"><input type="hidden" name="reset_scope" value="page"><input type="hidden" name="audit" value="<?php echo esc_attr( $audit['id'] ); ?>"><?php wp_nonce_field( 'elavira_reset_reviewed_exceptions_page_' . absint( $audit['id'] ) ); ?><button class="button" type="submit"><?php echo esc_html__( 'Reset for this page', 'elavira' ); ?></button></form><?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="elavira_reset_reviewed_exceptions"><input type="hidden" name="reset_scope" value="all"><input type="hidden" name="audit" value="<?php echo esc_attr( $audit['id'] ); ?>"><?php wp_nonce_field( 'elavira_reset_reviewed_exceptions_all_' . absint( $audit['id'] ) ); ?><button class="button" type="submit"><?php echo esc_html__( 'Reset all reviewed exceptions', 'elavira' ); ?></button></form></section>
+		<?php
+	}
+
 	/** Render finding filters.
 	 *
 	 * @param int   $audit_id Audit ID.
@@ -612,7 +681,7 @@ final class ReportsPage {
 	 */
 	private function finding_filters( $audit_id, array $filters ) {
 		?>
-		<form method="get" class="elavira-filters"><input type="hidden" name="page" value="elavira-report"><input type="hidden" name="audit" value="<?php echo esc_attr( $audit_id ); ?>"><label for="elavira-search"><?php echo esc_html__( 'Search findings', 'elavira' ); ?></label><input id="elavira-search" name="s" type="search" value="<?php echo esc_attr( $filters['search'] ); ?>"><label for="elavira-priority"><?php echo esc_html__( 'Priority', 'elavira' ); ?></label><select id="elavira-priority" name="priority"><option value=""><?php echo esc_html__( 'All priorities', 'elavira' ); ?></option><?php $this->options( Priority::all(), $filters['priority'] ); ?></select><label for="elavira-finding-status"><?php echo esc_html__( 'Workflow status', 'elavira' ); ?></label><select id="elavira-finding-status" name="finding_status"><option value=""><?php echo esc_html__( 'All statuses', 'elavira' ); ?></option><?php $this->options( FindingStatus::all(), $filters['current_status'] ); ?></select><label for="elavira-review-state"><?php echo esc_html__( 'Review state', 'elavira' ); ?></label><select id="elavira-review-state" name="review_state"><option value=""><?php echo esc_html__( 'All review states', 'elavira' ); ?></option><?php $this->options( ReviewState::all(), $filters['review_state'] ); ?></select><label for="elavira-wcag-level"><?php echo esc_html__( 'WCAG level', 'elavira' ); ?></label><select id="elavira-wcag-level" name="wcag_level"><option value=""><?php echo esc_html__( 'All levels', 'elavira' ); ?></option><?php $this->options( array( 'A', 'AA', 'AAA' ), $filters['wcag_level'] ); ?></select><button class="button" type="submit"><?php echo esc_html__( 'Filter findings', 'elavira' ); ?></button></form>
+		<form method="get" class="elavira-filters"><input type="hidden" name="page" value="elavira-report"><input type="hidden" name="audit" value="<?php echo esc_attr( $audit_id ); ?>"><label for="elavira-visibility"><?php echo esc_html__( 'Finding view', 'elavira' ); ?></label><select id="elavira-visibility" name="visibility"><?php $this->options( array( 'active', 'reviewed', 'all' ), $filters['visibility'] ); ?></select><label for="elavira-search"><?php echo esc_html__( 'Search findings', 'elavira' ); ?></label><input id="elavira-search" name="s" type="search" value="<?php echo esc_attr( $filters['search'] ); ?>"><label for="elavira-priority"><?php echo esc_html__( 'Priority', 'elavira' ); ?></label><select id="elavira-priority" name="priority"><option value=""><?php echo esc_html__( 'All priorities', 'elavira' ); ?></option><?php $this->options( Priority::all(), $filters['priority'] ); ?></select><label for="elavira-finding-status"><?php echo esc_html__( 'Workflow status', 'elavira' ); ?></label><select id="elavira-finding-status" name="finding_status"><option value=""><?php echo esc_html__( 'All statuses', 'elavira' ); ?></option><?php $this->options( FindingStatus::all(), $filters['current_status'] ); ?></select><label for="elavira-review-state"><?php echo esc_html__( 'Review state', 'elavira' ); ?></label><select id="elavira-review-state" name="review_state"><option value=""><?php echo esc_html__( 'All review states', 'elavira' ); ?></option><?php $this->options( ReviewState::all(), $filters['review_state'] ); ?></select><label for="elavira-wcag-level"><?php echo esc_html__( 'WCAG level', 'elavira' ); ?></label><select id="elavira-wcag-level" name="wcag_level"><option value=""><?php echo esc_html__( 'All levels', 'elavira' ); ?></option><?php $this->options( array( 'A', 'AA', 'AAA' ), $filters['wcag_level'] ); ?></select><button class="button" type="submit"><?php echo esc_html__( 'Filter findings', 'elavira' ); ?></button></form>
 		<?php
 	}
 	/** Render grouped findings.
@@ -640,7 +709,7 @@ final class ReportsPage {
 	 */
 	private function status_form( array $finding ) {
 		?>
-		<section><h2><?php echo esc_html__( 'Update workflow status', 'elavira' ); ?></h2><p><?php echo esc_html__( 'Status changes record workflow decisions and do not modify the website. Verified can only be established by a subsequent audit.', 'elavira' ); ?></p><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="elavira_update_finding"><input type="hidden" name="finding" value="<?php echo esc_attr( $finding['id'] ); ?>"><?php wp_nonce_field( 'elavira_update_finding_' . absint( $finding['id'] ) ); ?><label for="elavira-new-status"><?php echo esc_html__( 'New status', 'elavira' ); ?></label><select id="elavira-new-status" name="finding_status" required><option value=""><?php echo esc_html__( 'Choose a status', 'elavira' ); ?></option><?php $this->options( array( FindingStatus::OPEN, FindingStatus::ADDRESSED, FindingStatus::ACCEPTED_LIMITATION, FindingStatus::NEEDS_REVIEW ), '' ); ?></select><label for="elavira-status-reason"><?php echo esc_html__( 'Reason or note (optional)', 'elavira' ); ?></label><textarea id="elavira-status-reason" name="reason" rows="4" maxlength="1000"></textarea><p class="description"><?php echo esc_html__( 'Accepted Limitation records an intentional decision. It does not fix the issue or establish conformance.', 'elavira' ); ?></p><button class="button button-primary" type="submit"><?php echo esc_html__( 'Save status', 'elavira' ); ?></button></form></section>
+		<section><h2><?php echo esc_html__( 'Update workflow status', 'elavira' ); ?></h2><p><?php echo esc_html__( 'Status changes record workflow decisions and do not modify the website. Verified can only be established by a subsequent audit.', 'elavira' ); ?></p><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="elavira_update_finding"><input type="hidden" name="finding" value="<?php echo esc_attr( $finding['id'] ); ?>"><?php wp_nonce_field( 'elavira_update_finding_' . absint( $finding['id'] ) ); ?><label for="elavira-new-status"><?php echo esc_html__( 'New status', 'elavira' ); ?></label><select id="elavira-new-status" name="finding_status" required><option value=""><?php echo esc_html__( 'Choose a status', 'elavira' ); ?></option><?php $this->options( array_merge( array( FindingStatus::OPEN, FindingStatus::ADDRESSED, FindingStatus::ACCEPTED_LIMITATION, FindingStatus::NEEDS_REVIEW ), in_array( $finding['category'], array( 'potential_issue', 'human_review' ), true ) ? array( FindingStatus::REVIEWED_NOT_ISSUE ) : array() ), '' ); ?></select><label for="elavira-status-reason"><?php echo esc_html__( 'Reason or note (optional)', 'elavira' ); ?></label><textarea id="elavira-status-reason" name="reason" rows="4" maxlength="1000"></textarea><p class="description"><?php echo esc_html__( 'Reviewed — Not an Issue records that a human found this condition acceptable in context; it is different from retaining a known issue as an Accepted Limitation.', 'elavira' ); ?></p><button class="button button-primary" type="submit"><?php echo esc_html__( 'Save status', 'elavira' ); ?></button></form></section>
 		<?php
 	}
 }

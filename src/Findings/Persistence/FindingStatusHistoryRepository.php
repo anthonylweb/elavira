@@ -7,6 +7,8 @@
 
 namespace Elavira\Findings\Persistence;
 
+// phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.FunctionCommentThrowTag
+
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Core\Database\Repository;
 use Elavira\Findings\Values\FindingStatus;
@@ -38,6 +40,19 @@ final class FindingStatusHistoryRepository extends Repository {
 	 * @throws Throwable When a transactional operation fails unexpectedly.
 	 */
 	public function record( array $data ) {
+		$this->database->query( 'START TRANSACTION' );
+		try {
+			$history_id = $this->record_in_transaction( $data );
+			$this->database->query( 'COMMIT' );
+			return $history_id;
+		} catch ( Throwable $error ) {
+			$this->database->query( 'ROLLBACK' );
+			throw $error;
+		}
+	}
+
+	/** Record while the caller owns the transaction. @param array $data Transition. @return int */
+	public function record_in_transaction( array $data ) {
 		$finding_id = $this->require_parent( $this->tables->findings(), $data['finding_id'] ?? 0, 'finding' );
 		$status     = PersistenceValidator::one_of( $data['status'] ?? '', FindingStatus::all(), 'finding status' );
 		$source_id  = absint( $data['source_audit_id'] ?? 0 );
@@ -46,45 +61,35 @@ final class FindingStatusHistoryRepository extends Repository {
 			$this->require_parent( $this->tables->audits(), $source_id, 'source audit' );
 		}
 
-		$now = $this->now();
-		$this->database->query( 'START TRANSACTION' );
+		$now        = $this->now();
+		$history_id = $this->insert(
+			$this->tables->finding_status_history(),
+			array(
+				'finding_id'      => $finding_id,
+				'status'          => $status,
+				'actor_user_id'   => absint( $data['actor_user_id'] ?? 0 ),
+				'reason'          => PersistenceValidator::text( $data['reason'] ?? '', 1000, 'status reason', true ),
+				'source_audit_id' => $source_id,
+				'created_at'      => $now,
+			),
+			array( '%d', '%s', '%d', '%s', '%d', '%s' )
+		);
 
-		try {
-			$history_id = $this->insert(
-				$this->tables->finding_status_history(),
-				array(
-					'finding_id'      => $finding_id,
-					'status'          => $status,
-					'actor_user_id'   => absint( $data['actor_user_id'] ?? 0 ),
-					'reason'          => PersistenceValidator::text( $data['reason'] ?? '', 1000, 'status reason', true ),
-					'source_audit_id' => $source_id,
-					'created_at'      => $now,
-				),
-				array( '%d', '%s', '%d', '%s', '%d', '%s' )
-			);
+		$updated = $this->database->update(
+			$this->tables->findings(),
+			array(
+				'current_status' => $status,
+				'updated_at'     => $now,
+			),
+			array( 'id' => $finding_id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
 
-			$updated = $this->database->update(
-				$this->tables->findings(),
-				array(
-					'current_status' => $status,
-					'updated_at'     => $now,
-				),
-				array( 'id' => $finding_id ),
-				array( '%s', '%s' ),
-				array( '%d' )
-			);
-
-			if ( false === $updated ) {
-				throw new RuntimeException( 'Elavira could not update the current finding status.' );
-			}
-
-			$this->database->query( 'COMMIT' );
-
-			return $history_id;
-		} catch ( Throwable $error ) {
-			$this->database->query( 'ROLLBACK' );
-			throw $error;
+		if ( false === $updated ) {
+			throw new RuntimeException( 'Elavira could not update the current finding status.' );
 		}
+		return $history_id;
 	}
 
 	/**

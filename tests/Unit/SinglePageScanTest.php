@@ -66,7 +66,7 @@ final class SinglePageScanTest extends TestCase {
 		$this->assertNotSame( $first, $second );
 		$session = $this->sessions->find_by_token( $first );
 		$this->assertSame( 7, (int) $session['owner_user_id'] );
-		$this->assertSame( 'core-rules-1.0.0', $session['ruleset_version'] );
+		$this->assertSame( 'core-rules-1.1.0', $session['ruleset_version'] );
 		$this->assertSame( 'https://example.com/article/?a=1&b=2', $session['canonical_url'] );
 	}
 

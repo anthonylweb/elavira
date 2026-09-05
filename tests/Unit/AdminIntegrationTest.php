@@ -68,4 +68,13 @@ final class AdminIntegrationTest extends TestCase {
 		foreach ( array( 'elavira-dashboard', 'elavira-audits', 'elavira-statement', 'elavira-toolbar', 'elavira-learn', 'elavira-settings' ) as $slug ) {
 			$this->assertStringContainsString( $slug, $sources ); }
 	}
+
+	public function test_reviewed_exception_reset_is_capability_and_nonce_protected() {
+		$page   = file_get_contents( dirname( __DIR__, 2 ) . '/src/Reports/Admin/ReportsPage.php' );
+		$module = file_get_contents( dirname( __DIR__, 2 ) . '/src/Reports/Modules/ReportsModule.php' );
+		$this->assertStringContainsString( 'current_user_can( Capability::MANAGE )', $page );
+		$this->assertStringContainsString( "check_admin_referer( 'elavira_reset_reviewed_exceptions_'", $page );
+		$this->assertStringContainsString( 'admin_post_elavira_reset_reviewed_exceptions', $module );
+		$this->assertStringContainsString( 'Existing audit reports and finding history will not be deleted.', $page );
+	}
 }

@@ -814,3 +814,102 @@ Before considering work complete, verify:
 ## Reusable instruction for implementation tasks
 
 > Read the Elavira Engineering Guidelines and Phase 1 Technical Specification before modifying code. Inspect the existing implementation first. Treat both documents as authoritative constraints. Do not invent product behavior. Do not weaken accessibility, security, WordPress best practices, or established Core/Premium boundaries to simplify implementation. If the requested task conflicts with either source of truth, identify the conflict before changing code.
+## 51. Rule-result semantics
+
+Scanner result type, priority, and finding workflow are separate domain concepts.
+
+Supported rule-result meanings:
+
+- **Pass** — the individual check found no issue; never represent this as proof that an entire WCAG criterion or page passed.
+- **Automatic Failure** — objective evidence is sufficient for the mapped accessibility failure.
+- **Potential Issue** — a suspicious condition is objectively present, but context is required.
+- **Human Review** — a person must make the accessibility determination.
+- **Not Evaluated** — the scanner cannot responsibly evaluate the condition.
+
+Do not promote a Potential Issue or Human Review to Automatic Failure merely because doing so simplifies reporting.
+
+## 52. Human-authoritative keyboard and focus rules
+
+Keyboard and focus rules in the initial production ruleset are review-assistance rules.
+
+The scanner may:
+
+- Detect suspicious DOM/CSS/configuration patterns.
+- Identify the affected target.
+- Explain the possible barrier.
+- Provide a reproducible keyboard/focus test.
+- Provide possible remediation approaches.
+
+The scanner must not claim that a keyboard trap, complete keyboard inoperability, logical focus order failure, focus visibility failure, or focus-obscuring failure has been conclusively established solely from static/rendered DOM inspection.
+
+## 53. Determinate contrast
+
+Automatic contrast failure requires a reliable rendered comparison and reliable applicability determination.
+
+When gradients, images, transparency, opacity, compositing, overlays, pseudo-elements, state-dependent presentation, or uncertain component boundaries prevent a trustworthy result, classify the condition for Human Review.
+
+Never manufacture or guess a contrast ratio.
+
+## 54. H1 structural warnings
+
+Missing H1 and multiple H1 conditions are intentionally prominent document-structure warnings, but they are not automatic WCAG failures.
+
+Editorial guidance may strongly recommend a clear primary page heading as a document-structure best practice. Do not claim that WCAG or HTML requires exactly one H1.
+
+## 55. ARIA consequence model
+
+Invalid ARIA is not automatically a WCAG failure.
+
+A rule may produce Automatic Failure only when Elavira can establish the resulting accessibility condition required by the mapped WCAG success criterion, such as a required accessible name, role, state, property, or relationship becoming unavailable.
+
+Otherwise classify the invalid/suspicious ARIA condition as Potential Issue or Human Review as defined by the rule.
+
+## 56. Cross-rule grouping and supersession
+
+Overlapping rules must not create avoidable duplicate active findings for one underlying accessibility problem.
+
+Server-side normalization may:
+
+- Group equivalent occurrences.
+- Attach lower-level diagnostic evidence to a more meaningful finding.
+- Supersede a generic rule with a more specific rule for the same underlying condition.
+
+Requirements:
+
+- Preserve enough evidence for diagnosis and historical integrity.
+- Make precedence deterministic and testable.
+- Never accept browser-authored grouping, precedence, or suppression decisions as authoritative.
+- Do not silently discard distinct accessibility problems merely because they affect the same element.
+
+## 57. Reviewed exceptions
+
+`Reviewed — Not an Issue` is a human review decision, not a scanner conclusion.
+
+Persistent reviewed exceptions must:
+
+- Be created only through an authorized, nonce-protected user action.
+- Be derived from trusted persisted rule/evidence data.
+- Be scoped by stable rule ID/version, canonical page, stable target identity, and material evidence identity or a demonstrably equivalent robust fingerprint.
+- Never rely solely on CSS selector text.
+- Be invalidated or bypassed when material identity changes.
+- Remain auditable.
+- Be reversible.
+- Preserve all historical findings/status records.
+- Avoid leaking sensitive page content into fingerprints or logs.
+
+Resetting exceptions changes future suppression behavior only and must not delete audit history.
+
+## 58. Round-based ruleset implementation
+
+Do not implement the entire expanded production ruleset as one undifferentiated change.
+
+Approved implementation sequence:
+
+1. Result model; Reviewed — Not an Issue; reviewed-exception persistence/reset; grouping/supersession framework.
+2. Links + Headings/Document Structure.
+3. Forms + Names/Roles/States + ARIA.
+4. Keyboard + Focus.
+5. Color + Contrast.
+6. Images + cross-rule integration + full regression.
+
+A later round may refine the sequence only with explicit product direction.

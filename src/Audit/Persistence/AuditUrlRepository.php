@@ -7,6 +7,8 @@
 
 namespace Elavira\Audit\Persistence;
 
+// phpcs:disable Squiz.Commenting.FunctionComment
+
 use Elavira\Audit\Values\AuditUrlStatus;
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Core\Database\Repository;
@@ -65,6 +67,11 @@ final class AuditUrlRepository extends Repository {
 			$this->database->prepare( "SELECT * FROM {$this->tables->audit_urls()} WHERE audit_id = %d ORDER BY id ASC", absint( $audit_id ) ),
 			ARRAY_A
 		);
+	}
+
+	/** Find one audited canonical page. @return array|null */
+	public function find( $audit_url_id ) {
+		return $this->database->get_row( $this->database->prepare( "SELECT * FROM {$this->tables->audit_urls()} WHERE id = %d", absint( $audit_url_id ) ), ARRAY_A );
 	}
 
 	/**

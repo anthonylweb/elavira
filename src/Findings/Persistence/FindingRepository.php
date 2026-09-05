@@ -7,11 +7,14 @@
 
 namespace Elavira\Findings\Persistence;
 
+// phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.FunctionCommentThrowTag, Generic.Files.LineLength
+
 use Elavira\Core\Database\PersistenceValidator;
 use Elavira\Core\Database\Repository;
 use Elavira\Findings\Values\FindingStatus;
 use Elavira\Findings\Values\Priority;
 use Elavira\Findings\Values\ReviewState;
+use Elavira\Rules\Values\RuleOutcome;
 use RuntimeException;
 use Throwable;
 
@@ -25,7 +28,7 @@ final class FindingRepository extends Repository {
 	 * @return array
 	 */
 	public function summarize_by_audit( $audit_id ) {
-		$query = "SELECT priority, current_status, review_state, COUNT(*) AS finding_count, SUM(occurrence_count) AS occurrence_count FROM {$this->tables->findings()} WHERE audit_id = %d GROUP BY priority, current_status, review_state";
+		$query = "SELECT priority, current_status, review_state, COUNT(*) AS finding_count, SUM(active_occurrence_count) AS occurrence_count FROM {$this->tables->findings()} WHERE audit_id = %d AND current_status <> 'reviewed_not_issue' AND active_occurrence_count > 0 GROUP BY priority, current_status, review_state";
 		return $this->database->get_results( $this->database->prepare( $query, absint( $audit_id ) ), ARRAY_A );
 	}
 
@@ -51,7 +54,16 @@ final class FindingRepository extends Repository {
 		$per_page = min( 50, max( 1, absint( $per_page ) ) );
 		$where    = array( 'audit_id = %d' );
 		$args     = array( absint( $audit_id ) );
-		$allowed  = array(
+		$view     = isset( $filters['visibility'] ) ? $filters['visibility'] : 'active';
+		if ( 'active' === $view ) {
+			$where[] = 'current_status <> %s';
+			$args[]  = FindingStatus::REVIEWED_NOT_ISSUE;
+			$where[] = 'active_occurrence_count > 0';
+		} elseif ( 'reviewed' === $view ) {
+			$where[] = '(current_status = %s OR (active_occurrence_count = 0 AND reviewed_occurrence_count > 0))';
+			$args[]  = FindingStatus::REVIEWED_NOT_ISSUE;
+		}
+		$allowed = array(
 			'priority'       => Priority::all(),
 			'current_status' => FindingStatus::all(),
 			'review_state'   => ReviewState::all(),
@@ -107,30 +119,35 @@ final class FindingRepository extends Repository {
 	 * @return int
 	 */
 	public function create_in_transaction( array $data ) {
-		$audit_id   = $this->require_parent( $this->tables->audits(), $data['audit_id'] ?? 0, 'audit' );
-		$now        = $this->now();
-		$finding_id = $this->insert(
+		$audit_id    = $this->require_parent( $this->tables->audits(), $data['audit_id'] ?? 0, 'audit' );
+		$now         = $this->now();
+		$result_type = $data['result_type'] ?? $this->legacy_result_type( $data['category'] ?? '' );
+		$finding_id  = $this->insert(
 			$this->tables->findings(),
 			array(
-				'audit_id'            => $audit_id,
-				'rule_id'             => PersistenceValidator::identifier( $data['rule_id'] ?? '', 'rule ID' ),
-				'rule_version'        => PersistenceValidator::identifier( $data['rule_version'] ?? '', 'rule version' ),
-				'group_key'           => PersistenceValidator::identifier( $data['group_key'] ?? '', 'group key' ),
-				'category'            => PersistenceValidator::one_of( $data['category'] ?? '', array( 'detected_failure', 'potential_issue', 'human_review' ), 'finding category' ),
-				'priority'            => PersistenceValidator::one_of( $data['priority'] ?? '', Priority::all(), 'priority' ),
-				'review_state'        => PersistenceValidator::one_of( $data['review_state'] ?? '', ReviewState::all(), 'review state' ),
-				'current_status'      => FindingStatus::OPEN,
-				'wcag_criterion'      => PersistenceValidator::text( $data['wcag_criterion'] ?? '', 32, 'WCAG criterion' ),
-				'wcag_level'          => PersistenceValidator::one_of( $data['wcag_level'] ?? '', array( 'A', 'AA', 'AAA' ), 'WCAG level' ),
-				'wcag_principle'      => PersistenceValidator::text( $data['wcag_principle'] ?? '', 32, 'WCAG principle' ),
-				'editorial_version'   => PersistenceValidator::identifier( $data['editorial_version'] ?? '', 'editorial version' ),
-				'summary_snapshot'    => PersistenceValidator::text( $data['summary_snapshot'] ?? '', 4096, 'summary snapshot', true ),
-				'affected_page_count' => absint( $data['affected_page_count'] ?? 0 ),
-				'occurrence_count'    => absint( $data['occurrence_count'] ?? 0 ),
-				'created_at'          => $now,
-				'updated_at'          => $now,
+				'audit_id'                    => $audit_id,
+				'rule_id'                     => PersistenceValidator::identifier( $data['rule_id'] ?? '', 'rule ID' ),
+				'rule_version'                => PersistenceValidator::identifier( $data['rule_version'] ?? '', 'rule version' ),
+				'group_key'                   => PersistenceValidator::identifier( $data['group_key'] ?? '', 'group key' ),
+				'result_type'                 => PersistenceValidator::one_of( $result_type, array( RuleOutcome::AUTOMATIC_FAILURE, RuleOutcome::POTENTIAL_ISSUE, RuleOutcome::HUMAN_REVIEW ), 'result type' ),
+				'category'                    => PersistenceValidator::one_of( $data['category'] ?? '', array( 'detected_failure', 'potential_issue', 'human_review' ), 'finding category' ),
+				'priority'                    => PersistenceValidator::one_of( $data['priority'] ?? '', Priority::all(), 'priority' ),
+				'review_state'                => PersistenceValidator::one_of( $data['review_state'] ?? '', ReviewState::all(), 'review state' ),
+				'current_status'              => FindingStatus::OPEN,
+				'wcag_criterion'              => PersistenceValidator::text( $data['wcag_criterion'] ?? '', 32, 'WCAG criterion' ),
+				'wcag_level'                  => PersistenceValidator::one_of( $data['wcag_level'] ?? '', array( 'A', 'AA', 'AAA' ), 'WCAG level' ),
+				'wcag_principle'              => PersistenceValidator::text( $data['wcag_principle'] ?? '', 32, 'WCAG principle' ),
+				'editorial_version'           => PersistenceValidator::identifier( $data['editorial_version'] ?? '', 'editorial version' ),
+				'summary_snapshot'            => PersistenceValidator::text( $data['summary_snapshot'] ?? '', 4096, 'summary snapshot', true ),
+				'affected_page_count'         => absint( $data['affected_page_count'] ?? 0 ),
+				'occurrence_count'            => absint( $data['occurrence_count'] ?? 0 ),
+				'active_occurrence_count'     => absint( $data['active_occurrence_count'] ?? $data['occurrence_count'] ?? 0 ),
+				'reviewed_occurrence_count'   => absint( $data['reviewed_occurrence_count'] ?? 0 ),
+				'diagnostic_occurrence_count' => absint( $data['diagnostic_occurrence_count'] ?? 0 ),
+				'created_at'                  => $now,
+				'updated_at'                  => $now,
 			),
-			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s' )
 		);
 		$this->insert(
 			$this->tables->finding_status_history(),
@@ -183,7 +200,7 @@ final class FindingRepository extends Repository {
 	 * @return void
 	 * @throws RuntimeException When the grouped finding or update is unavailable.
 	 */
-	public function increment_counts( $finding_id, $occurrences = 1 ) {
+	public function increment_counts( $finding_id, $occurrences = 1, $reviewed = false, $diagnostic_count = 0 ) {
 		$finding = $this->database->get_row( $this->database->prepare( "SELECT * FROM {$this->tables->findings()} WHERE id = %d", absint( $finding_id ) ), ARRAY_A );
 		if ( ! $finding ) {
 			throw new RuntimeException( 'Elavira could not find the grouped finding.' );
@@ -191,14 +208,44 @@ final class FindingRepository extends Repository {
 		$updated = $this->database->update(
 			$this->tables->findings(),
 			array(
-				'affected_page_count' => 1,
-				'occurrence_count'    => (int) $finding['occurrence_count'] + absint( $occurrences ),
-				'updated_at'          => $this->now(),
+				'affected_page_count'         => 1,
+				'occurrence_count'            => (int) $finding['occurrence_count'] + absint( $occurrences ),
+				'active_occurrence_count'     => (int) ( $finding['active_occurrence_count'] ?? $finding['occurrence_count'] ) + ( $reviewed ? 0 : absint( $occurrences ) ),
+				'reviewed_occurrence_count'   => (int) ( $finding['reviewed_occurrence_count'] ?? 0 ) + ( $reviewed ? absint( $occurrences ) : 0 ),
+				'diagnostic_occurrence_count' => (int) ( $finding['diagnostic_occurrence_count'] ?? 0 ) + absint( $diagnostic_count ),
+				'updated_at'                  => $this->now(),
 			),
 			array( 'id' => absint( $finding_id ) )
 		);
 		if ( false === $updated ) {
 			throw new RuntimeException( 'Elavira could not update finding counts.' );
 		}
+	}
+
+	/** Persist the independent human-review state. @return void */
+	public function update_review_state( $finding_id, $review_state ) {
+		$review_state = PersistenceValidator::one_of( $review_state, ReviewState::all(), 'review state' );
+		if ( false === $this->database->update(
+			$this->tables->findings(),
+			array(
+				'review_state' => $review_state,
+				'updated_at'   => $this->now(),
+			),
+			array( 'id' => absint( $finding_id ) ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		) ) {
+			throw new RuntimeException( 'Elavira could not update the finding review state.' );
+		}
+	}
+
+	/** Translate historical classification for direct repository callers. @return string */
+	private function legacy_result_type( $category ) {
+		$map = array(
+			'detected_failure' => RuleOutcome::AUTOMATIC_FAILURE,
+			'potential_issue'  => RuleOutcome::POTENTIAL_ISSUE,
+			'human_review'     => RuleOutcome::HUMAN_REVIEW,
+		);
+		return $map[ $category ] ?? '';
 	}
 }

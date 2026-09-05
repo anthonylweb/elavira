@@ -72,6 +72,11 @@ final class TableNames {
 		return $this->prefix . 'finding_status_history';
 	}
 
+	/** Return reviewed exception table name. @return string */
+	public function reviewed_exceptions() {
+		return $this->prefix . 'reviewed_exceptions';
+	}
+
 	/** Return the completed Guided Decisions table name. @return string */
 	public function guided_decisions() {
 		return $this->prefix . 'guided_decisions';
@@ -114,6 +119,7 @@ final class TableNames {
 			$this->findings(),
 			$this->occurrences(),
 			$this->finding_status_history(),
+			$this->reviewed_exceptions(),
 			$this->guided_decisions(),
 			$this->statements(),
 			$this->statement_recommendations(),

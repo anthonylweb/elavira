@@ -16,6 +16,7 @@ final class FindingStatus {
 	const VERIFIED            = 'verified';
 	const ACCEPTED_LIMITATION = 'accepted_limitation';
 	const NEEDS_REVIEW        = 'needs_review';
+	const REVIEWED_NOT_ISSUE  = 'reviewed_not_issue';
 
 	/**
 	 * Return all finding workflow statuses.
@@ -29,6 +30,7 @@ final class FindingStatus {
 			self::VERIFIED,
 			self::ACCEPTED_LIMITATION,
 			self::NEEDS_REVIEW,
+			self::REVIEWED_NOT_ISSUE,
 		);
 	}
 }

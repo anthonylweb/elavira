@@ -26,7 +26,7 @@ final class RuleResultNormalizer {
 	 */
 	public function normalize( BrowserRuleResult $result ) {
 		$rule            = $result->rule();
-		$creates_finding = RuleOutcome::PASS !== $result->outcome();
+		$creates_finding = in_array( $result->outcome(), array( RuleOutcome::AUTOMATIC_FAILURE, RuleOutcome::POTENTIAL_ISSUE, RuleOutcome::HUMAN_REVIEW ), true );
 		$mappings        = array_map(
 			static function ( $mapping ) {
 				return $mapping->to_array();

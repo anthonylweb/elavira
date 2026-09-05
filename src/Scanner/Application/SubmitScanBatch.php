@@ -7,14 +7,19 @@
 
 namespace Elavira\Scanner\Application;
 
+// phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.VariableComment, Generic.Commenting.DocComment.MissingShort, Generic.Files.LineLength
+
 use Elavira\Audit\Persistence\AuditRepository;
 use Elavira\Audit\Persistence\AuditUrlRepository;
 use Elavira\Audit\Values\AuditStatus;
 use Elavira\Audit\Values\AuditUrlStatus;
 use Elavira\Findings\Persistence\FindingRepository;
 use Elavira\Findings\Persistence\OccurrenceRepository;
+use Elavira\Findings\Persistence\ReviewedExceptionRepository;
+use Elavira\Findings\Identity\ReviewedConditionIdentity;
 use Elavira\Rules\Browser\BrowserEvidenceValidator;
 use Elavira\Rules\Normalization\RuleResultNormalizer;
+use Elavira\Rules\Grouping\SupersessionResolver;
 use Elavira\Scanner\Persistence\ScanSessionRepository;
 use Elavira\Scanner\ScanLimits;
 use Elavira\Scanner\Security\SessionGuard;
@@ -70,6 +75,12 @@ final class SubmitScanBatch {
 	 * @var AuditUrlRepository
 	 */
 	private $urls;
+	/** @var ReviewedExceptionRepository|null */
+	private $exceptions;
+	/** @var ReviewedConditionIdentity */
+	private $identity;
+	/** @var SupersessionResolver|null */
+	private $supersession;
 
 	/**
 	 * Construct the batch application service.
@@ -84,16 +95,19 @@ final class SubmitScanBatch {
 	 * @param AuditRepository          $audits      Audit repository.
 	 * @param AuditUrlRepository       $urls        Audit URL repository.
 	 */
-	public function __construct( $database, ScanSessionRepository $sessions, SessionGuard $guard, BrowserEvidenceValidator $validator, RuleResultNormalizer $normalizer, FindingRepository $findings, OccurrenceRepository $occurrences, AuditRepository $audits, AuditUrlRepository $urls ) {
-		$this->database    = $database;
-		$this->sessions    = $sessions;
-		$this->guard       = $guard;
-		$this->validator   = $validator;
-		$this->normalizer  = $normalizer;
-		$this->findings    = $findings;
-		$this->occurrences = $occurrences;
-		$this->audits      = $audits;
-		$this->urls        = $urls;
+	public function __construct( $database, ScanSessionRepository $sessions, SessionGuard $guard, BrowserEvidenceValidator $validator, RuleResultNormalizer $normalizer, FindingRepository $findings, OccurrenceRepository $occurrences, AuditRepository $audits, AuditUrlRepository $urls, ?ReviewedExceptionRepository $exceptions = null, ?ReviewedConditionIdentity $identity = null, ?SupersessionResolver $supersession = null ) {
+		$this->database     = $database;
+		$this->sessions     = $sessions;
+		$this->guard        = $guard;
+		$this->validator    = $validator;
+		$this->normalizer   = $normalizer;
+		$this->findings     = $findings;
+		$this->occurrences  = $occurrences;
+		$this->audits       = $audits;
+		$this->urls         = $urls;
+		$this->exceptions   = $exceptions;
+		$this->identity     = $identity ? $identity : new ReviewedConditionIdentity();
+		$this->supersession = $supersession;
 	}
 
 	/**
@@ -123,6 +137,9 @@ final class SubmitScanBatch {
 				throw new InvalidArgumentException( 'A result does not belong to this session ruleset.' );
 			}
 			$normalized[] = $this->normalizer->normalize( $this->validator->validate( $result ) )->to_array();
+		}
+		if ( $this->supersession ) {
+			$normalized = $this->supersession->resolve( $normalized );
 		}
 
 		$batch_key = hash( 'sha256', (string) wp_json_encode( $results ) );
@@ -164,24 +181,31 @@ final class SubmitScanBatch {
 				if ( ! $result['creates_finding'] ) {
 					continue;
 				}
-				$finding = $this->findings->find_group( $session['audit_id'], $result['rule_id'], $result['grouping_key'] );
+				$identity  = $this->identity->fingerprints( $result['target'], $result['evidence'], $result['element'] );
+				$audit_url = $this->urls->find( $session['audit_url_id'] );
+				$exception = ( $this->exceptions && $audit_url ) ? $this->exceptions->match( $result['rule_id'], $result['rule_version'], $audit_url['canonical_url_hash'], $identity['target'], $identity['evidence'] ) : null;
+				$finding   = $this->findings->find_group( $session['audit_id'], $result['rule_id'], $result['grouping_key'] );
 				if ( ! $finding ) {
 					$finding_id = $this->findings->create_in_transaction(
 						array(
-							'audit_id'            => $session['audit_id'],
-							'rule_id'             => $result['rule_id'],
-							'rule_version'        => $result['rule_version'],
-							'group_key'           => $result['grouping_key'],
-							'category'            => $result['classification'],
-							'priority'            => $result['priority'],
-							'review_state'        => $result['review_state'],
-							'wcag_criterion'      => $result['wcag_criterion'],
-							'wcag_level'          => $result['wcag_level'],
-							'wcag_principle'      => $result['wcag_principle'],
-							'editorial_version'   => $result['editorial_version'],
-							'summary_snapshot'    => $result['editorial']['summary'],
-							'affected_page_count' => 0,
-							'occurrence_count'    => 0,
+							'audit_id'                    => $session['audit_id'],
+							'rule_id'                     => $result['rule_id'],
+							'rule_version'                => $result['rule_version'],
+							'group_key'                   => $result['grouping_key'],
+							'result_type'                 => $result['outcome'],
+							'category'                    => $result['classification'],
+							'priority'                    => $result['priority'],
+							'review_state'                => $result['review_state'],
+							'wcag_criterion'              => $result['wcag_criterion'],
+							'wcag_level'                  => $result['wcag_level'],
+							'wcag_principle'              => $result['wcag_principle'],
+							'editorial_version'           => $result['editorial_version'],
+							'summary_snapshot'            => $result['editorial']['summary'],
+							'affected_page_count'         => 0,
+							'occurrence_count'            => 0,
+							'active_occurrence_count'     => 0,
+							'reviewed_occurrence_count'   => 0,
+							'diagnostic_occurrence_count' => 0,
 						)
 					);
 				} else {
@@ -189,14 +213,18 @@ final class SubmitScanBatch {
 				}
 				$this->occurrences->create(
 					array(
-						'finding_id'   => $finding_id,
-						'audit_url_id' => $session['audit_url_id'],
-						'target'       => $result['target'],
-						'evidence'     => $result['evidence'],
-						'element'      => $result['element'],
+						'finding_id'                    => $finding_id,
+						'audit_url_id'                  => $session['audit_url_id'],
+						'target'                        => $result['target'],
+						'evidence'                      => $result['evidence'],
+						'element'                       => $result['element'],
+						'target_fingerprint'            => $identity['target'],
+						'material_evidence_fingerprint' => $identity['evidence'],
+						'reviewed_exception_id'         => $exception['id'] ?? 0,
+						'diagnostics'                   => $result['diagnostics'] ?? array(),
 					)
 				);
-				$this->findings->increment_counts( $finding_id );
+				$this->findings->increment_counts( $finding_id, 1, (bool) $exception, count( $result['diagnostics'] ?? array() ) );
 			}
 			$this->sessions->record_batch( $session['id'], $batch_key, $count );
 			$total = (int) $session['total_results'] + $count;
