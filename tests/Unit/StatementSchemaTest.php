@@ -92,6 +92,15 @@ final class StatementSchemaTest extends TestCase {
 				'summary_snapshot' => 'The link was acceptable in context.',
 			)
 		);
+		$this->database->insert(
+			$this->tables->guided_decisions(),
+			array(
+				'finding_id'       => 1,
+				'decision_id'      => 'elavira.decision.link_purpose',
+				'decision_version' => '1.0.0',
+				'outcome_id'       => 'remediation_likely',
+			)
+		);
 		( new RecommendationGenerator( $this->database, new RecommendationRepository( $this->database ), CoreDecisionRegistry::create() ) )->generate( $audit_id );
 		$this->assertCount( 0, $this->database->tables[ $this->tables->statement_recommendations() ] );
 	}

@@ -161,3 +161,38 @@ Premium later adds:
 The remote worker remains an execution layer. WordPress owns Elavira product semantics.
 
 No Premium site-wide/remote implementation belongs in Round 1.
+
+## 9. Phase 1 ruleset Round 2
+
+Round 2 adds the production Links & Navigation and Headings & Document Structure
+browser checks on the Round 1 result, reviewed-exception, and supersession
+foundation. Current browser contracts are represented by ruleset snapshot
+`core-rules-1.2.0` and scanner snapshot `core-browser-1.1.0`.
+
+Three representative IDs remain stable to avoid duplicate historical findings:
+
+- `elavira.link.purpose_review` version `2.0.0` implements the conservative
+  ambiguous-link-name check requested as `elavira.links.ambiguous_purpose`.
+- `elavira.document.language_missing` version `2.0.0` implements the missing
+  document-language check requested as `elavira.document.missing_language`.
+- `elavira.heading.structure_review` version `2.0.0` implements the bounded
+  contextual check requested as `elavira.structure.heading_semantics_review`.
+
+Their version `1.0.0` definitions remain registered for historical report and
+Guided Decision resolution. New scan sessions select the later registered exact
+version. The Heading Structure and Link Purpose Guided Decisions list each
+compatible rule/version explicitly; compatibility remains exact rather than
+range-based.
+
+The contextual heading review uses the bounded absence of any visible semantic
+heading, or a semantic `main` region with no visible headings while headings exist
+elsewhere, as its triggers. It does not fire on every page. When a heading-free
+document also produces the more specific Missing H1 Structural Warning, Missing
+H1 supersedes the contextual observation and retains it as diagnostic evidence.
+Missing and multiple H1 results use the server-owned `structural_warning`
+presentation while remaining Human Review results, separate from Automatic
+Failure totals.
+
+No persistence migration is required for Round 2. All Potential Issue and Human
+Review occurrences use the existing exact reviewed-exception fingerprints.
+Rounds 3–6 remain unimplemented.

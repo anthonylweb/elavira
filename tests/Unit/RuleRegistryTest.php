@@ -23,9 +23,10 @@ final class RuleRegistryTest extends TestCase {
 	public function test_core_registry_contains_stable_representative_rules() {
 		$registry = CoreRuleRegistry::create();
 
-		$this->assertCount( 5, $registry->all() );
+		$this->assertCount( 15, $registry->all() );
 		$this->assertSame( '1.0.0', $registry->get( 'elavira.image.alt_missing', '1.0.0' )->version() );
 		$this->assertSame( EvaluationType::HUMAN_REVIEW, $registry->get( 'elavira.heading.structure_review', '1.0.0' )->evaluation_type() );
+		$this->assertSame( EvaluationType::HUMAN_REVIEW, $registry->get( 'elavira.heading.structure_review', '2.0.0' )->evaluation_type() );
 	}
 
 	public function test_registry_rejects_duplicate_rule_id_and_version() {

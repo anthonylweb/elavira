@@ -19,7 +19,22 @@
 		if ( aria ) { return aria; }
 		var references = ( node.getAttribute( 'aria-labelledby' ) || '' ).trim().split( /\s+/ ).filter( Boolean );
 		var referenced = references.map( function ( id ) { var source = doc.getElementById ? doc.getElementById( id ) : null; return source ? text( source ) : ''; } ).filter( Boolean ).join( ' ' );
-		return referenced || text( node );
+		if ( referenced ) { return referenced; }
+		var content = text( node );
+		if ( content ) { return content; }
+		var images = node.querySelectorAll ? node.querySelectorAll( 'img[alt]' ) : [];
+		var alternatives = Array.prototype.map.call( images, function ( image ) { return ( image.getAttribute( 'alt' ) || '' ).trim(); } ).filter( Boolean ).join( ' ' );
+		return alternatives || ( node.getAttribute( 'title' ) || '' ).trim();
+	}
+
+	function normalizeName( value ) {
+		return value.replace( /\s+/g, ' ' ).trim().toLowerCase().slice( 0, 256 );
+	}
+
+	function fingerprint( value ) {
+		var hash = 2166136261;
+		for ( var index = 0; index < value.length; index++ ) { hash ^= value.charCodeAt( index ); hash = Math.imul( hash, 16777619 ); }
+		return ( '00000000' + ( hash >>> 0 ).toString( 16 ) ).slice( -8 );
 	}
 
 	function visible( node ) {
@@ -48,9 +63,9 @@
 		return { target: { selector: selector( node ), tag_name: node.tagName.toLowerCase() }, element: { tag_name: node.tagName.toLowerCase() } };
 	}
 
-	function result( id, outcome, node, evidence, grouping ) {
+	function result( id, outcome, node, evidence, grouping, version ) {
 		var item = base( node );
-		return { rule_id: id, rule_version: '1.0.0', outcome: outcome, target: item.target, evidence: evidence, element: item.element, grouping: grouping || {} };
+		return { rule_id: id, rule_version: version || '1.0.0', outcome: outcome, target: item.target, evidence: evidence, element: item.element, grouping: grouping || {} };
 	}
 
 	function hasName( node, doc ) {
@@ -75,7 +90,16 @@
 	function destinationKind( node, location ) {
 		var href = node.getAttribute( 'href' ) || '';
 		if ( href.charAt( 0 ) === '#' ) { return 'fragment'; }
+		if ( /^(?:mailto|tel):/i.test( href ) ) { return 'other'; }
 		try { return new URL( href, location.href ).origin === location.origin ? 'internal' : 'external'; } catch ( error ) { return 'unknown'; }
+	}
+
+	function destinationKey( node, location ) {
+		try { return new URL( node.getAttribute( 'href' ) || '', location.href ).href; } catch ( error ) { return node.getAttribute( 'href' ) || ''; }
+	}
+
+	function validLanguageTag( value ) {
+		return /^(?:[A-Za-z]{2,8}|[ixIX])(?:-[A-Za-z0-9]{1,8})+$/.test( value ) || /^[A-Za-z]{2,8}$/.test( value );
 	}
 
 	function evaluate( doc ) {
@@ -89,21 +113,48 @@
 				item.element.input_type = ( node.type || '' ).slice( 0, 32 ); item.element.has_accessible_name = false; results.push( item );
 			}
 		} );
+		var namedLinks = [], linksByName = {};
 		Array.prototype.forEach.call( doc.querySelectorAll( 'a[href]' ), function ( node ) {
 			if ( ! visible( node ) ) { return; }
-			var value = accessibleText( node, doc ).toLowerCase(), state = '';
-			if ( ! value ) { state = 'empty'; } else if ( /^(?:click here|here|read more|more|learn more)$/.test( value ) ) { state = 'generic'; }
-			if ( state ) { results.push( result( 'elavira.link.purpose_review', 'review_required', node, { text_state: state, destination_kind: destinationKind( node, doc.location ) }, { text_state: state } ) ); }
+			var value = normalizeName( accessibleText( node, doc ) );
+			if ( ! value ) {
+				results.push( result( 'elavira.links.missing_accessible_name', 'automatic_failure', node, { accessible_name_state: 'missing' } ) );
+				return;
+			}
+			var labels = { 'click here': 'click_here', here: 'here', 'read more': 'read_more', more: 'more', 'learn more': 'learn_more' };
+			if ( labels[ value ] ) { results.push( result( 'elavira.link.purpose_review', 'potential_issue', node, { label_kind: labels[ value ], destination_kind: destinationKind( node, doc.location ) }, { label_kind: labels[ value ] }, '2.0.0' ) ); }
+			var entry = { node: node, name: value, destination: destinationKey( node, doc.location ) };
+			namedLinks.push( entry );
+			linksByName[ value ] = linksByName[ value ] || {};
+			linksByName[ value ][ entry.destination ] = true;
 		} );
+		Array.prototype.forEach.call( namedLinks, function ( entry ) {
+			var destinations = Object.keys( linksByName[ entry.name ] );
+			if ( destinations.length > 1 ) {
+				var nameKey = fingerprint( entry.name );
+				results.push( result( 'elavira.links.identical_name_different_destination', 'potential_issue', entry.node, { name_fingerprint: nameKey, destination_fingerprint: fingerprint( entry.destination ), destination_kind: destinationKind( entry.node, doc.location ), destination_state: 'different' }, { name_fingerprint: nameKey } ) );
+			}
+		} );
+		var headings = Array.prototype.filter.call( doc.querySelectorAll( 'h1,h2,h3,h4,h5,h6' ), visible );
+		var h1Count = headings.filter( function ( node ) { return node.tagName.toLowerCase() === 'h1'; } ).length;
+		if ( h1Count === 0 ) { results.push( result( 'elavira.structure.missing_h1', 'human_review', doc.documentElement, { h1_count: 0 } ) ); }
+		if ( h1Count > 1 ) { results.push( result( 'elavira.structure.multiple_h1', 'human_review', doc.documentElement, { h1_state: 'multiple' } ) ); }
+		if ( headings.length === 0 ) { results.push( result( 'elavira.heading.structure_review', 'human_review', doc.documentElement, { issue: 'no_visible_headings' }, {}, '2.0.0' ) ); }
+		else {
+			var main = doc.querySelector ? doc.querySelector( 'main' ) : null;
+			var mainHeadings = main && main.querySelectorAll ? Array.prototype.filter.call( main.querySelectorAll( 'h1,h2,h3,h4,h5,h6' ), visible ) : [];
+			if ( main && mainHeadings.length === 0 ) { results.push( result( 'elavira.heading.structure_review', 'human_review', main, { issue: 'main_without_heading' }, {}, '2.0.0' ) ); }
+		}
 		var previous = 0;
-		Array.prototype.forEach.call( doc.querySelectorAll( 'h1,h2,h3,h4,h5,h6' ), function ( node ) {
-			if ( ! visible( node ) ) { return; }
+		Array.prototype.forEach.call( headings, function ( node ) {
 			var current = parseInt( node.tagName.slice( 1 ), 10 );
-			if ( previous && current > previous + 1 ) { results.push( result( 'elavira.heading.structure_review', 'review_required', node, { current_level: current, previous_level: previous, issue: 'skipped_level' }, { issue: 'skipped_level' } ) ); }
+			if ( ! normalizeName( accessibleText( node, doc ) ) ) { results.push( result( 'elavira.structure.empty_heading', 'potential_issue', node, { heading_level: current } ) ); }
+			if ( previous && current > previous + 1 ) { results.push( result( 'elavira.structure.heading_level_jump', 'potential_issue', node, { current_level: current, previous_level: previous }, { current_level: current, previous_level: previous } ) ); }
 			previous = current;
 		} );
 		var html = doc.documentElement, language = html.getAttribute( 'lang' );
-		if ( language === null || language.trim() === '' ) { results.push( result( 'elavira.document.language_missing', 'failure', html, { language_state: language === null ? 'missing' : 'empty' } ) ); }
+		if ( language === null || language.trim() === '' ) { results.push( result( 'elavira.document.language_missing', 'automatic_failure', html, { language_state: language === null ? 'missing' : 'empty' }, {}, '2.0.0' ) ); }
+		else if ( ! validLanguageTag( language.trim() ) ) { results.push( result( 'elavira.document.invalid_language', 'automatic_failure', html, { language_state: 'invalid', declared_language: language.trim().slice( 0, 64 ) } ) ); }
 		return results;
 	}
 

@@ -56,6 +56,27 @@
 	background: #fff;
 }
 
+.elavira-structural-warning {
+	max-width: 52rem;
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 2px solid #996800;
+	background: #fff8e5;
+}
+
+.elavira-structural-warning p {
+	margin-bottom: 0;
+}
+
+.elavira-structural-warning-label {
+	display: inline-block;
+	margin-inline-start: 0.5rem;
+	padding: 0.125rem 0.375rem;
+	border: 1px solid currentColor;
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
 .elavira-finding-meta {
 	display: flex;
 	flex-wrap: wrap;

@@ -66,7 +66,11 @@ final class SinglePageScanTest extends TestCase {
 		$this->assertNotSame( $first, $second );
 		$session = $this->sessions->find_by_token( $first );
 		$this->assertSame( 7, (int) $session['owner_user_id'] );
-		$this->assertSame( 'core-rules-1.1.0', $session['ruleset_version'] );
+		$this->assertSame( 'core-rules-1.2.0', $session['ruleset_version'] );
+		$allowed = json_decode( $session['allowed_rules_json'], true );
+		$this->assertSame( '2.0.0', $allowed['elavira.link.purpose_review'] );
+		$this->assertSame( '2.0.0', $allowed['elavira.heading.structure_review'] );
+		$this->assertSame( '2.0.0', $allowed['elavira.document.language_missing'] );
 		$this->assertSame( 'https://example.com/article/?a=1&b=2', $session['canonical_url'] );
 	}
 

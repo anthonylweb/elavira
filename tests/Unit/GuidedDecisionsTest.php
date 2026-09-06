@@ -147,7 +147,8 @@ final class GuidedDecisionsTest extends TestCase {
 	public function test_registry_resolves_exact_rule_version_only() {
 		$registry = CoreDecisionRegistry::create();
 		$this->assertSame( 'elavira.decision.link_purpose', $registry->for_rule( 'elavira.link.purpose_review', '1.0.0' )->get( 'id' ) );
-		$this->assertNull( $registry->for_rule( 'elavira.link.purpose_review', '2.0.0' ) );
+		$this->assertSame( 'elavira.decision.link_purpose', $registry->for_rule( 'elavira.link.purpose_review', '2.0.0' )->get( 'id' ) );
+		$this->assertNull( $registry->for_rule( 'elavira.link.purpose_review', '9.0.0' ) );
 	}
 
 	public function test_duplicate_decision_is_rejected() {

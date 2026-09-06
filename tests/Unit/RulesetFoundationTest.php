@@ -203,6 +203,32 @@ final class RulesetFoundationTest extends TestCase {
 		$this->service()->update( $this->finding_id, FindingStatus::REVIEWED_NOT_ISSUE, '', 7 );
 	}
 
+	public function test_reviewed_structural_warning_matches_only_unchanged_evidence() {
+		$finding                                     = &$this->database->tables[ ( new TableNames( 'wp_' ) )->findings() ][ $this->finding_id ];
+		$finding['rule_id']                          = 'elavira.structure.missing_h1';
+		$finding['category']                         = 'human_review';
+		$finding['result_type']                      = RuleOutcome::HUMAN_REVIEW;
+		$finding['review_state']                     = 'needs_review';
+		$occurrence                                  = &$this->database->tables[ ( new TableNames( 'wp_' ) )->occurrences() ][1];
+		$occurrence['evidence_json']                 = wp_json_encode( array( 'h1_count' => 0 ) );
+		$occurrence['target_json']                   = wp_json_encode(
+			array(
+				'tag_name' => 'html',
+				'selector' => 'html',
+			)
+		);
+		$occurrence['element_json']                  = wp_json_encode( array( 'tag_name' => 'html' ) );
+		$fingerprints                                = $this->identity->fingerprints( json_decode( $occurrence['target_json'], true ), json_decode( $occurrence['evidence_json'], true ), json_decode( $occurrence['element_json'], true ) );
+		$occurrence['target_fingerprint']            = $fingerprints['target'];
+		$occurrence['material_evidence_fingerprint'] = $fingerprints['evidence'];
+
+		$this->service()->update( $this->finding_id, FindingStatus::REVIEWED_NOT_ISSUE, 'Reviewed structure.', 7 );
+		$exception = $this->exceptions->find_by_source_finding( $this->finding_id )[0];
+		$this->assertNotNull( $this->exceptions->match( $finding['rule_id'], $finding['rule_version'], $this->url_hash, $exception['target_fingerprint'], $exception['material_evidence_fingerprint'] ) );
+		$changed = $this->identity->fingerprints( json_decode( $occurrence['target_json'], true ), array( 'h1_count' => 1 ), json_decode( $occurrence['element_json'], true ) );
+		$this->assertNull( $this->exceptions->match( $finding['rule_id'], $finding['rule_version'], $this->url_hash, $changed['target'], $changed['evidence'] ) );
+	}
+
 	private function service() {
 		return new UpdateFindingStatus( $this->findings, $this->history, $this->database, $this->occurrences, $this->urls, $this->exceptions, $this->identity );
 	}

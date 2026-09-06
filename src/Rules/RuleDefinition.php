@@ -96,6 +96,8 @@ final class RuleDefinition {
 				PersistenceValidator::identifier( $data[ $optional ], $optional );
 			}
 		}
+		$data['presentation'] = $data['presentation'] ?? 'default';
+		PersistenceValidator::one_of( $data['presentation'], array( 'default', 'structural_warning' ), 'rule presentation' );
 		if ( isset( $data['supersedes'] ) ) {
 			if ( ! is_array( $data['supersedes'] ) ) {
 				throw new InvalidArgumentException( 'Rule supersession metadata is invalid.' );
@@ -184,6 +186,7 @@ final class RuleDefinition {
 			'developer_guidance' => $this->data['developer_guidance'],
 			'learn_topic'        => $this->data['learn_topic'] ?? null,
 			'guided_decision'    => $this->data['guided_decision'] ?? null,
+			'presentation'       => $this->data['presentation'],
 		);
 	}
 

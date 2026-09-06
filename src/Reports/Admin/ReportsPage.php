@@ -289,6 +289,9 @@ final class ReportsPage {
 		?>
 		<div class="wrap elavira-reports"><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-report&audit=' . absint( $audit['id'] ) ) ); ?>">&larr; <?php echo esc_html__( 'Back to audit report', 'elavira' ); ?></a></p><h1><?php echo esc_html( $editorial['title'] ); ?></h1>
 		<?php $this->status_notice(); ?>
+		<?php if ( 'structural_warning' === ( $editorial['presentation'] ?? '' ) ) : ?>
+			<div class="elavira-structural-warning" role="note"><strong><?php echo esc_html__( 'Structural Warning', 'elavira' ); ?></strong><p><?php echo esc_html__( 'This finding requires human review and is not an Automatic Failure.', 'elavira' ); ?></p></div>
+		<?php endif; ?>
 		<ul class="elavira-finding-meta"><li><strong><?php echo esc_html__( 'Workflow status:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></li><li><strong><?php echo esc_html__( 'Priority:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['priority'] ) ); ?></li><li><strong><?php echo esc_html__( 'Review classification:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></li><li><strong><?php echo esc_html__( 'WCAG:', 'elavira' ); ?></strong> <?php echo esc_html( $finding['wcag_criterion'] . ' Level ' . $finding['wcag_level'] . ' — ' . $this->label( $finding['wcag_principle'] ) ); ?></li></ul>
 		<?php
 		if ( ! $resolved['available'] ) :
@@ -696,7 +699,11 @@ final class ReportsPage {
 		foreach ( $items as $finding ) :
 			$resolved = $this->rules->resolve( $finding );
 			?>
-	<tr><th scope="row" data-label="<?php echo esc_attr__( 'Issue', 'elavira' ); ?>"><?php echo esc_html( $resolved['editorial']['title'] ); ?><span class="description"><?php echo esc_html( $finding['summary_snapshot'] ); ?></span></th><td data-label="<?php echo esc_attr__( 'Priority', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['priority'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Workflow status', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Review state', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Occurrences', 'elavira' ); ?>"><?php echo esc_html( number_format_i18n( $finding['occurrence_count'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'WCAG', 'elavira' ); ?>"><?php echo esc_html( $finding['wcag_criterion'] . ' ' . $finding['wcag_level'] ); ?></td><td data-label="<?php echo esc_attr__( 'Action', 'elavira' ); ?>"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-finding&finding=' . absint( $finding['id'] ) . '&audit=' . absint( $audit_id ) ) ); ?>"><?php echo esc_html__( 'View finding', 'elavira' ); ?></a></td></tr>
+	<tr><th scope="row" data-label="<?php echo esc_attr__( 'Issue', 'elavira' ); ?>"><?php echo esc_html( $resolved['editorial']['title'] ); ?>
+			<?php
+			if ( 'structural_warning' === ( $resolved['editorial']['presentation'] ?? '' ) ) :
+				?>
+		<span class="elavira-structural-warning-label"><?php echo esc_html__( 'Structural Warning', 'elavira' ); ?></span><?php endif; ?><span class="description"><?php echo esc_html( $finding['summary_snapshot'] ); ?></span></th><td data-label="<?php echo esc_attr__( 'Priority', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['priority'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Workflow status', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Review state', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Occurrences', 'elavira' ); ?>"><?php echo esc_html( number_format_i18n( $finding['occurrence_count'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'WCAG', 'elavira' ); ?>"><?php echo esc_html( $finding['wcag_criterion'] . ' ' . $finding['wcag_level'] ); ?></td><td data-label="<?php echo esc_attr__( 'Action', 'elavira' ); ?>"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-finding&finding=' . absint( $finding['id'] ) . '&audit=' . absint( $audit_id ) ) ); ?>"><?php echo esc_html__( 'View finding', 'elavira' ); ?></a></td></tr>
 			<?php
 		endforeach;
 		?>

@@ -13,7 +13,7 @@ The most recent hardening run completed with:
 
 The failed item was corrected. No Blocker/High implementation defect was confirmed in that run.
 
-However, **the initial production accessibility ruleset is not yet implemented**. The existing scanner still contains only the representative rules used to prove the scanner architecture. Therefore the current package must not be treated as the final release candidate.
+However, **the initial production accessibility ruleset is not yet complete**. The Round 1 foundation and Round 2 Links/Structure rules are implemented; Rounds 3–6 remain. Therefore the current package must not be treated as the final release candidate.
 
 ## Completed foundations
 
@@ -33,8 +33,8 @@ However, **the initial production accessibility ruleset is not yet implemented**
 
 Implementation sequence:
 
-1. Result model + Reviewed — Not an Issue + reviewed-exception persistence/reset + grouping/supersession framework.
-2. Links + Headings/Document Structure.
+1. Completed — Result model + Reviewed — Not an Issue + reviewed-exception persistence/reset + grouping/supersession framework.
+2. Completed — Links + Headings/Document Structure.
 3. Forms + Names/Roles/States + ARIA.
 4. Keyboard + Focus.
 5. Color + Contrast.

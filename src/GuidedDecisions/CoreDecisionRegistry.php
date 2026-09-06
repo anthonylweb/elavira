@@ -85,6 +85,14 @@ final class CoreDecisionRegistry {
 						'id'      => 'elavira.link.purpose_review',
 						'version' => '1.0.0',
 					),
+					array(
+						'id'      => 'elavira.link.purpose_review',
+						'version' => '2.0.0',
+					),
+					array(
+						'id'      => 'elavira.links.identical_name_different_destination',
+						'version' => '1.0.0',
+					),
 				),
 				'start'             => 'purpose_clear',
 				'steps'             => array(
@@ -113,6 +121,26 @@ final class CoreDecisionRegistry {
 				'rules'             => array(
 					array(
 						'id'      => 'elavira.heading.structure_review',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.heading.structure_review',
+						'version' => '2.0.0',
+					),
+					array(
+						'id'      => 'elavira.structure.missing_h1',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.structure.multiple_h1',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.structure.heading_level_jump',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.structure.empty_heading',
 						'version' => '1.0.0',
 					),
 				),
