@@ -156,6 +156,17 @@ This category is deliberately narrow.
 
 Elavira must not generate, approve, or claim correctness of alternative text automatically.
 
+Round 6 implements these semantics using the preserved
+`elavira.image.alt_missing` version `1.0.0` plus
+`elavira.images.alt_quality_review`, `elavira.images.filename_alt`, and
+`elavira.images.long_alt_review`, each at version `1.0.0`. General quality review
+requires a concrete functional-image or figure-caption context. Filename matching
+requires a bounded image-extension or camera-filename form. Extended-alt review
+uses a product heuristic of at least 180 characters, 30 words, and two sentence
+boundaries only to locate Human Review candidates; it is not a WCAG threshold and
+does not establish that the alternative is incorrect. Empty alternatives are not
+flagged by these quality rules.
+
 ## 5. Finding workflow
 
 Workflow statuses:

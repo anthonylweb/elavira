@@ -67,10 +67,6 @@ final class RuleDefinition {
 		PersistenceValidator::one_of( $data['priority'], Priority::all(), 'priority' );
 		$this->validate_classification( $data['evaluation_type'], $data['classification'] );
 
-		if ( array() === $data['wcag'] ) {
-			throw new InvalidArgumentException( 'A rule requires at least one WCAG mapping.' );
-		}
-
 		foreach ( $data['wcag'] as $mapping ) {
 			if ( ! $mapping instanceof WcagMapping ) {
 				throw new InvalidArgumentException( 'Invalid rule WCAG mapping.' );

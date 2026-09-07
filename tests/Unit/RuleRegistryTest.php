@@ -23,7 +23,7 @@ final class RuleRegistryTest extends TestCase {
 	public function test_core_registry_contains_stable_representative_rules() {
 		$registry = CoreRuleRegistry::create();
 
-		$this->assertCount( 15, $registry->all() );
+		$this->assertCount( 52, $registry->all() );
 		$this->assertSame( '1.0.0', $registry->get( 'elavira.image.alt_missing', '1.0.0' )->version() );
 		$this->assertSame( EvaluationType::HUMAN_REVIEW, $registry->get( 'elavira.heading.structure_review', '1.0.0' )->evaluation_type() );
 		$this->assertSame( EvaluationType::HUMAN_REVIEW, $registry->get( 'elavira.heading.structure_review', '2.0.0' )->evaluation_type() );
@@ -66,6 +66,13 @@ final class RuleRegistryTest extends TestCase {
 	public function test_wcag_mapping_rejects_unsupported_level_and_criterion() {
 		$this->expectException( InvalidArgumentException::class );
 		new WcagMapping( 'not-a-criterion', 'AAA', 'perceivable' );
+	}
+
+	public function test_best_practice_rule_may_be_explicitly_unmapped() {
+		$data         = $this->rule_data();
+		$data['wcag'] = array();
+		$rule         = new RuleDefinition( $data );
+		$this->assertSame( array(), $rule->wcag() );
 	}
 
 	private function rule( $version = '1.0.0' ) {

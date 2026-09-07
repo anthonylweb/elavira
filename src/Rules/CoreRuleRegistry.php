@@ -30,6 +30,18 @@ final class CoreRuleRegistry {
 		foreach ( self::rules() as $rule ) {
 			$registry->register( $rule );
 		}
+		foreach ( RoundThreeRuleDefinitions::all() as $rule ) {
+			$registry->register( $rule );
+		}
+		foreach ( RoundFourRuleDefinitions::all() as $rule ) {
+			$registry->register( $rule );
+		}
+		foreach ( RoundFiveRuleDefinitions::all() as $rule ) {
+			$registry->register( $rule );
+		}
+		foreach ( RoundSixRuleDefinitions::all() as $rule ) {
+			$registry->register( $rule );
+		}
 
 		return $registry;
 	}
@@ -51,6 +63,7 @@ final class CoreRuleRegistry {
 			self::link_name_missing(),
 			self::link_purpose_ambiguous(),
 			self::identical_link_name_different_destination(),
+			self::identical_link_name_different_destination( '2.0.0', true ),
 			self::missing_h1(),
 			self::multiple_h1(),
 			self::heading_level_jump(),
@@ -58,6 +71,7 @@ final class CoreRuleRegistry {
 			self::heading_semantics_review(),
 			self::page_language_missing_current(),
 			self::page_language_invalid(),
+			self::page_language_invalid_current(),
 		);
 	}
 
@@ -311,13 +325,28 @@ final class CoreRuleRegistry {
 		);
 	}
 
-	/** Define repeated link names with different destinations. @return RuleDefinition */
-	private static function identical_link_name_different_destination() {
+	/**
+	 * Define repeated link names with different destinations.
+	 *
+	 * @param string $version         Rule contract version.
+	 * @param bool   $include_excerpt Whether bounded name evidence is required.
+	 * @return RuleDefinition
+	 */
+	private static function identical_link_name_different_destination( $version = '1.0.0', $include_excerpt = false ) {
+		$evidence = array(
+			'name_fingerprint'        => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16 ),
+			'destination_fingerprint' => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16 ),
+			'destination_kind'        => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16, array( 'internal', 'external', 'fragment', 'other', 'unknown' ) ),
+			'destination_state'       => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16, array( 'different' ) ),
+		);
+		if ( $include_excerpt ) {
+			$evidence = array( 'accessible_name_excerpt' => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 512 ) ) + $evidence;
+		}
 		return new RuleDefinition(
 			array(
 				'id'                 => 'elavira.links.identical_name_different_destination',
-				'version'            => '1.0.0',
-				'editorial_version'  => '1.0.0',
+				'version'            => $version,
+				'editorial_version'  => $version,
 				'title'              => __( 'Identical link names lead to different destinations', 'elavira' ),
 				'description'        => __( 'Rendered links share the same normalized accessible name but lead to materially different destinations.', 'elavira' ),
 				'evaluation_type'    => EvaluationType::POTENTIAL_ISSUE,
@@ -331,14 +360,7 @@ final class CoreRuleRegistry {
 				'developer_guidance' => __( 'Compare computed accessible names and resolved destinations, preserving meaningful query and fragment differences.', 'elavira' ),
 				'learn_topic'        => 'links_navigation',
 				'guided_decision'    => 'link_purpose',
-				'evidence_schema'    => self::schema(
-					array(
-						'name_fingerprint'        => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16 ),
-						'destination_fingerprint' => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16 ),
-						'destination_kind'        => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16, array( 'internal', 'external', 'fragment', 'other', 'unknown' ) ),
-						'destination_state'       => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16, array( 'different' ) ),
-					)
-				),
+				'evidence_schema'    => self::schema( $evidence ),
 				'grouping_schema'    => self::schema( array( 'name_fingerprint' => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16 ) ) ),
 				'grouping_strategy'  => new InputGrouping(),
 			)
@@ -506,6 +528,23 @@ final class CoreRuleRegistry {
 			array(
 				'language_state'    => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 16, array( 'invalid' ) ),
 				'declared_language' => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 64 ),
+			)
+		);
+	}
+
+	/** Define current registry-backed primary-language validation. @return RuleDefinition */
+	private static function page_language_invalid_current() {
+		return self::language_rule(
+			'elavira.document.invalid_language',
+			'2.0.0',
+			__( 'Page language tag is invalid', 'elavira' ),
+			__( 'The rendered document declares a language tag whose primary language subtag is malformed or is not registered by IANA.', 'elavira' ),
+			__( 'The page language declaration is invalid.', 'elavira' ),
+			__( 'Correct the language tag using a registered primary language subtag. Elavira does not infer whether the declaration matches the page prose.', 'elavira' ),
+			array(
+				'language_state'    => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 24, array( 'malformed', 'unknown_primary' ) ),
+				'declared_language' => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 256 ),
+				'primary_subtag'    => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 32 ),
 			)
 		);
 	}

@@ -32,6 +32,7 @@ final class CoreHealth {
 			}
 		}
 		$schema_current = defined( 'ELAVIRA_SCHEMA_VERSION' ) && version_compare( ( new VersionManager() )->schema_version(), ELAVIRA_SCHEMA_VERSION, '>=' );
+		$scanner_assets = is_readable( $root . '/assets/js/scanner.js' ) && is_readable( $root . '/assets/js/language-primary-subtags.js' ) && is_readable( $root . '/assets/js/aria-vocabulary.js' );
 		return array(
 			array(
 				'label'   => __( 'Database persistence', 'elavira' ),
@@ -45,8 +46,8 @@ final class CoreHealth {
 			),
 			array(
 				'label'   => __( 'Browser scanner assets', 'elavira' ),
-				'healthy' => is_readable( $root . '/assets/js/scanner.js' ),
-				'message' => is_readable( $root . '/assets/js/scanner.js' ) ? __( 'The Core browser scanner asset is available.', 'elavira' ) : __( 'The browser scanner asset is missing. Reinstall the complete Elavira package.', 'elavira' ),
+				'healthy' => $scanner_assets,
+				'message' => $scanner_assets ? __( 'The Core browser scanner assets are available.', 'elavira' ) : __( 'A browser scanner asset is missing. Reinstall the complete Elavira package.', 'elavira' ),
 			),
 		);
 	}

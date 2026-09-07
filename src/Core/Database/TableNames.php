@@ -107,6 +107,11 @@ final class TableNames {
 		return $this->prefix . 'scan_batches';
 	}
 
+	/** Return staged normalized scan observations table name. @return string */
+	public function scan_observations() {
+		return $this->prefix . 'scan_observations';
+	}
+
 	/**
 	 * Return every Core audit table.
 	 *
@@ -126,6 +131,7 @@ final class TableNames {
 			$this->statement_revisions(),
 			$this->scan_sessions(),
 			$this->scan_batches(),
+			$this->scan_observations(),
 		);
 	}
 }

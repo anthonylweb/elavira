@@ -105,6 +105,28 @@ final class StatementSchemaTest extends TestCase {
 		$this->assertCount( 0, $this->database->tables[ $this->tables->statement_recommendations() ] );
 	}
 
+	public function test_unmapped_best_practice_does_not_generate_a_statement_recommendation() {
+		$this->database->create_table( $this->tables->audit_urls() );
+		$this->database->create_table( $this->tables->guided_decisions() );
+		$this->database->insert( $this->tables->audits(), array() );
+		$audit_id = $this->database->insert_id;
+		$this->database->insert(
+			$this->tables->findings(),
+			array(
+				'audit_id'         => $audit_id,
+				'rule_id'          => 'elavira.aria.redundant_role',
+				'rule_version'     => '1.0.0',
+				'group_key'        => 'redundant-role',
+				'current_status'   => 'accepted_limitation',
+				'category'         => 'potential_issue',
+				'wcag_criterion'   => '',
+				'summary_snapshot' => 'A native element repeats its implicit role.',
+			)
+		);
+		( new RecommendationGenerator( $this->database, new RecommendationRepository( $this->database ), CoreDecisionRegistry::create() ) )->generate( $audit_id );
+		$this->assertCount( 0, $this->database->tables[ $this->tables->statement_recommendations() ] );
+	}
+
 	public function test_compatible_guided_decision_can_generate_human_review_recommendation() {
 		$this->database->create_table( $this->tables->audit_urls() );
 		$this->database->create_table( $this->tables->guided_decisions() );
@@ -135,6 +157,41 @@ final class StatementSchemaTest extends TestCase {
 		$row = reset( $this->database->tables[ $this->tables->statement_recommendations() ] );
 		$this->assertSame( 'human_review', $row['kind'] );
 		$this->assertSame( 1, $row['guided_decision_id'] );
+	}
+
+	public function test_image_review_requires_compatible_human_decision_before_statement_recommendation() {
+		$this->database->create_table( $this->tables->audit_urls() );
+		$this->database->create_table( $this->tables->guided_decisions() );
+		$this->database->insert( $this->tables->audits(), array() );
+		$audit_id = $this->database->insert_id;
+		$this->database->insert(
+			$this->tables->findings(),
+			array(
+				'audit_id'         => $audit_id,
+				'rule_id'          => 'elavira.images.alt_quality_review',
+				'rule_version'     => '1.0.0',
+				'group_key'        => 'image-review',
+				'current_status'   => 'needs_review',
+				'category'         => 'human_review',
+				'wcag_criterion'   => '1.1.1',
+				'summary_snapshot' => 'Review this text alternative in context.',
+			)
+		);
+		$repository = new RecommendationRepository( $this->database );
+		$generator  = new RecommendationGenerator( $this->database, $repository, CoreDecisionRegistry::create() );
+		$generator->generate( $audit_id );
+		$this->assertCount( 0, $this->database->tables[ $this->tables->statement_recommendations() ] );
+		$this->database->insert(
+			$this->tables->guided_decisions(),
+			array(
+				'finding_id'       => 1,
+				'decision_id'      => 'elavira.decision.alternative_text',
+				'decision_version' => '1.0.0',
+				'outcome_id'       => 'further_review',
+			)
+		);
+		$generator->generate( $audit_id );
+		$this->assertSame( 'human_review', reset( $this->database->tables[ $this->tables->statement_recommendations() ] )['kind'] );
 	}
 
 	public function test_zero_findings_and_incompatible_decisions_create_no_recommendation() {

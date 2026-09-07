@@ -13,7 +13,7 @@ The most recent hardening run completed with:
 
 The failed item was corrected. No Blocker/High implementation defect was confirmed in that run.
 
-However, **the initial production accessibility ruleset is not yet complete**. The Round 1 foundation and Round 2 Links/Structure rules are implemented; Rounds 3–6 remain. Therefore the current package must not be treated as the final release candidate.
+**Phase 1 production ruleset implementation is complete.** This does not make Elavira Phase 1 release-ready. The remaining hardening, manual accessibility, compatibility, and release-policy work below must still be completed before a final release candidate.
 
 ## Completed foundations
 
@@ -35,10 +35,10 @@ Implementation sequence:
 
 1. Completed — Result model + Reviewed — Not an Issue + reviewed-exception persistence/reset + grouping/supersession framework.
 2. Completed — Links + Headings/Document Structure.
-3. Forms + Names/Roles/States + ARIA.
-4. Keyboard + Focus.
-5. Color + Contrast.
-6. Images + cross-rule integration + full regression.
+3. Completed — Forms + Names/Roles/States + ARIA.
+4. Completed — Keyboard + Focus.
+5. Completed — Color + Contrast.
+6. Completed — Images + cross-rule integration + full regression.
 
 The approved rule semantics are in `PHASE1_RULESET.md`.
 
@@ -62,6 +62,8 @@ The approved rule semantics are in `PHASE1_RULESET.md`.
 - distribution channel and project licensing/notices
 - final public wording review
 - final packaging and checksum
+- live schema reconfirmation
+- Round 2–6 live browser smoke tests not already completed
 
 ## Previous RC artifact
 

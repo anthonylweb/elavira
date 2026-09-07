@@ -35,12 +35,12 @@ final class SupersessionResolver {
 		);
 		foreach ( $results as $index => &$result ) {
 			$result['diagnostics']         = $result['diagnostics'] ?? array();
-			$result['_target_fingerprint'] = $this->identity->fingerprints( $result['target'], $result['evidence'], $result['element'] )['target'];
+			$result['_target_fingerprint'] = $this->identity->cross_rule_target( $result['target'] );
 			foreach ( $results as $candidate_index => $candidate ) {
 				if ( $index === $candidate_index || empty( $candidate['creates_finding'] ) ) {
 					continue;
 				}
-				$candidate_target = $this->identity->fingerprints( $candidate['target'], $candidate['evidence'], $candidate['element'] )['target'];
+				$candidate_target = $this->identity->cross_rule_target( $candidate['target'] );
 				if ( $result['_target_fingerprint'] === $candidate_target && $this->rules->supersedes( $result['rule_id'], $result['rule_version'], $candidate['rule_id'] ) ) {
 					$result['diagnostics'][]                        = array(
 						'rule_id'      => $candidate['rule_id'],

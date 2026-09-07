@@ -16,6 +16,7 @@ use Elavira\Findings\Persistence\FindingStatusHistoryRepository;
 use Elavira\Findings\Values\FindingStatus;
 use Elavira\Reports\Application\HistoricalRuleResolver;
 use Elavira\Reports\Application\UpdateFindingStatus;
+use Elavira\Reports\Admin\ReportsPage;
 use Elavira\Reports\Export\XlsxExporter;
 use Elavira\Rules\CoreRuleRegistry;
 use Elavira\Tests\Support\FakeWpdb;
@@ -100,5 +101,20 @@ final class ReportsTest extends TestCase {
 			$this->assertStringStartsWith( "'", $exporter->safe_cell( $value ) );
 		}
 		$this->assertSame( 'ordinary text', $exporter->safe_cell( 'ordinary text' ) );
+	}
+
+	public function test_unmapped_best_practice_has_non_conformance_report_label() {
+		$page   = ( new \ReflectionClass( ReportsPage::class ) )->newInstanceWithoutConstructor();
+		$method = new \ReflectionMethod( ReportsPage::class, 'wcag_label' );
+		$this->assertSame(
+			'Best practice — no direct WCAG mapping',
+			$method->invoke(
+				$page,
+				array(
+					'wcag_criterion' => '',
+					'wcag_level'     => '',
+				)
+			)
+		);
 	}
 }

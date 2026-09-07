@@ -60,6 +60,12 @@ final class FakeWpdb {
 				}
 			}
 		}
+		if ( substr( $table, -17 ) === 'scan_observations' ) {
+			foreach ( $this->tables[ $table ] as $row ) {
+				if ( (int) $row['session_id'] === (int) $data['session_id'] && $row['batch_key'] === $data['batch_key'] && (int) $row['result_index'] === (int) $data['result_index'] ) {
+					return false; }
+			}
+		}
 
 		$this->insert_id                            = count( $this->tables[ $table ] ) + 1;
 		$data['id']                                 = $this->insert_id;
@@ -85,6 +91,14 @@ final class FakeWpdb {
 		if ( is_array( $query ) ) {
 			$sql  = $query['query'];
 			$args = $query['args'];
+			if ( 0 === strpos( $sql, 'DELETE FROM ' ) ) {
+				$table = preg_match( '/DELETE FROM ([^\s]+)/', $sql, $match ) ? $match[1] : '';
+				foreach ( $this->tables[ $table ] ?? array() as $id => $row ) {
+					if ( (int) $row['session_id'] === (int) $args[0] ) {
+						unset( $this->tables[ $table ][ $id ] ); }
+				}
+				return true;
+			}
 			if ( 0 === strpos( $sql, 'UPDATE ' ) && false !== strpos( $sql, 'reviewed_exceptions' ) ) {
 				$table = preg_match( '/UPDATE ([^\s]+)/', $sql, $match ) ? $match[1] : '';
 				$count = 0;

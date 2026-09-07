@@ -36,19 +36,21 @@ final class Round2RuleRegistryTest extends TestCase {
 		$current = array(
 			'elavira.links.missing_accessible_name' => '1.0.0',
 			'elavira.link.purpose_review'           => '2.0.0',
-			'elavira.links.identical_name_different_destination' => '1.0.0',
+			'elavira.links.identical_name_different_destination' => '2.0.0',
 			'elavira.structure.missing_h1'          => '1.0.0',
 			'elavira.structure.multiple_h1'         => '1.0.0',
 			'elavira.structure.heading_level_jump'  => '1.0.0',
 			'elavira.structure.empty_heading'       => '1.0.0',
 			'elavira.heading.structure_review'      => '2.0.0',
 			'elavira.document.language_missing'     => '2.0.0',
-			'elavira.document.invalid_language'     => '1.0.0',
+			'elavira.document.invalid_language'     => '2.0.0',
 		);
 		foreach ( $current as $id => $version ) {
 			$this->assertSame( $version, $this->rules->get( $id, $version )->version(), $id );
 		}
 		$this->assertSame( '1.0.0', $this->rules->get( 'elavira.link.purpose_review', '1.0.0' )->version() );
+		$this->assertSame( '1.0.0', $this->rules->get( 'elavira.links.identical_name_different_destination', '1.0.0' )->version() );
+		$this->assertSame( '1.0.0', $this->rules->get( 'elavira.document.invalid_language', '1.0.0' )->version() );
 		$this->assertSame( Priority::HIGH, $this->rules->get( 'elavira.document.language_missing', '1.0.0' )->priority() );
 	}
 
@@ -66,7 +68,7 @@ final class Round2RuleRegistryTest extends TestCase {
 			)
 		);
 
-		foreach ( array( array( 'elavira.link.purpose_review', '2.0.0' ), array( 'elavira.links.identical_name_different_destination', '1.0.0' ) ) as $identity ) {
+		foreach ( array( array( 'elavira.link.purpose_review', '2.0.0' ), array( 'elavira.links.identical_name_different_destination', '2.0.0' ) ) as $identity ) {
 			$rule = $this->rules->get( $identity[0], $identity[1] );
 			$this->assertSame( EvaluationType::POTENTIAL_ISSUE, $rule->evaluation_type() );
 			$this->assertSame( Priority::MEDIUM, $rule->priority() );
@@ -86,13 +88,30 @@ final class Round2RuleRegistryTest extends TestCase {
 	}
 
 	public function test_language_rules_use_medium_priority_and_do_not_claim_prose_matching() {
-		foreach ( array( array( 'elavira.document.language_missing', '2.0.0' ), array( 'elavira.document.invalid_language', '1.0.0' ) ) as $identity ) {
+		foreach ( array( array( 'elavira.document.language_missing', '2.0.0' ), array( 'elavira.document.invalid_language', '2.0.0' ) ) as $identity ) {
 			$rule = $this->rules->get( $identity[0], $identity[1] );
 			$this->assertSame( EvaluationType::AUTOMATIC_FAILURE, $rule->evaluation_type() );
 			$this->assertSame( Priority::MEDIUM, $rule->priority() );
 			$this->assertSame( '3.1.1', $rule->wcag()[0]->to_array()['criterion'] );
 		}
-		$this->assertStringContainsString( 'does not infer', $this->rules->get( 'elavira.document.invalid_language', '1.0.0' )->editorial()['recommendation'] );
+		$this->assertStringContainsString( 'does not infer', $this->rules->get( 'elavira.document.invalid_language', '2.0.0' )->editorial()['recommendation'] );
+	}
+
+	public function test_current_repeated_link_evidence_requires_a_bounded_name_excerpt() {
+		$evidence = array(
+			'accessible_name_excerpt' => str_repeat( 'a', 120 ),
+			'name_fingerprint'        => '12345678',
+			'destination_fingerprint' => '87654321',
+			'destination_kind'        => 'internal',
+			'destination_state'       => 'different',
+		);
+		$this->assertSame( $evidence, $this->rules->get( 'elavira.links.identical_name_different_destination', '2.0.0' )->evidence_schema()->validate( $evidence ) );
+	}
+
+	public function test_language_registry_asset_is_loaded_before_the_scanner() {
+		$source = file_get_contents( dirname( __DIR__, 2 ) . '/src/Scanner/Frontend/ScanPage.php' );
+		$this->assertStringContainsString( "'elavira-language-primary-subtags'", $source );
+		$this->assertStringContainsString( "array( 'elavira-language-primary-subtags', 'elavira-aria-vocabulary' )", $source );
 	}
 
 	public function test_round_two_browser_evidence_normalizes_without_browser_editorial_authority() {

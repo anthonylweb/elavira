@@ -34,7 +34,7 @@ final class RecommendationGenerator {
 		$rows   = $this->database->get_results( $this->database->prepare( "SELECT f.*, MIN(u.canonical_url) AS canonical_url FROM {$tables->findings()} f LEFT JOIN {$tables->audit_urls()} u ON u.audit_id=f.audit_id WHERE f.audit_id=%d GROUP BY f.id LIMIT 1000", absint( $audit_id ) ), ARRAY_A );
 		$count  = 0;
 		foreach ( $rows as $finding ) {
-			if ( FindingStatus::REVIEWED_NOT_ISSUE === $finding['current_status'] ) {
+			if ( FindingStatus::REVIEWED_NOT_ISSUE === $finding['current_status'] || ( array_key_exists( 'wcag_criterion', $finding ) && '' === $finding['wcag_criterion'] ) ) {
 				continue;
 			}
 			$decision = $this->latest_compatible_decision( $tables, $finding );

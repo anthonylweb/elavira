@@ -28,6 +28,7 @@ use Elavira\Scanner\Admin\ContextualAuditLinks;
 use Elavira\Scanner\Frontend\ScanPage;
 use Elavira\Scanner\Http\ScanRestController;
 use Elavira\Scanner\Persistence\ScanSessionRepository;
+use Elavira\Scanner\Persistence\StagedObservationRepository;
 use Elavira\Scanner\Security\CanonicalUrl;
 use Elavira\Scanner\Security\SessionGuard;
 
@@ -59,20 +60,23 @@ final class ScannerModule implements Module {
 
 	/** Build and register REST routes when WordPress initializes REST. @return void */
 	public function register_routes() {
-		$database    = $GLOBALS['wpdb'];
-		$rules       = CoreRuleRegistry::create();
-		$sessions    = new ScanSessionRepository( $database );
-		$audits      = new AuditRepository( $database );
-		$urls        = new AuditUrlRepository( $database );
-		$guard       = new SessionGuard( $database, $sessions, $audits, $urls );
-		$canonical   = new CanonicalUrl();
-		$findings    = new FindingRepository( $database );
-		$occurrences = new OccurrenceRepository( $database );
-		$start       = $this->start_service();
-		$identity    = new ReviewedConditionIdentity();
-		$submit      = new SubmitScanBatch( $database, $sessions, $guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $findings, $occurrences, $audits, $urls, new ReviewedExceptionRepository( $database ), $identity, new SupersessionResolver( $rules, $identity ) );
-		$complete    = new CompleteScan( $database, $sessions, $guard, $audits, $urls, $findings );
-		$controller  = new ScanRestController( $start, $submit, $complete );
+		$database     = $GLOBALS['wpdb'];
+		$rules        = CoreRuleRegistry::create();
+		$sessions     = new ScanSessionRepository( $database );
+		$audits       = new AuditRepository( $database );
+		$urls         = new AuditUrlRepository( $database );
+		$guard        = new SessionGuard( $database, $sessions, $audits, $urls );
+		$canonical    = new CanonicalUrl();
+		$findings     = new FindingRepository( $database );
+		$occurrences  = new OccurrenceRepository( $database );
+		$start        = $this->start_service();
+		$identity     = new ReviewedConditionIdentity();
+		$exceptions   = new ReviewedExceptionRepository( $database );
+		$supersession = new SupersessionResolver( $rules, $identity );
+		$staged       = new StagedObservationRepository( $database );
+		$submit       = new SubmitScanBatch( $database, $sessions, $guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $findings, $occurrences, $audits, $urls, $exceptions, $identity, $supersession, $staged );
+		$complete     = new CompleteScan( $database, $sessions, $guard, $audits, $urls, $findings, $occurrences, $exceptions, $identity, $supersession, $staged );
+		$controller   = new ScanRestController( $start, $submit, $complete );
 		$controller->register_routes();
 	}
 	/** Shared initiation service. @return StartSinglePageScan */

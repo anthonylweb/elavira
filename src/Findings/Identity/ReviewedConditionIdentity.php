@@ -26,6 +26,23 @@ final class ReviewedConditionIdentity {
 		);
 	}
 
+	/** Derive a cross-rule target identity without rule-specific element metadata. @return string */
+	public function cross_rule_target( array $target ) {
+		return hash(
+			'sha256',
+			(string) wp_json_encode(
+				$this->canonicalize(
+					array(
+						'locator'    => $target['locator'] ?? '',
+						'element_id' => $target['element_id'] ?? '',
+						'tag_name'   => $target['tag_name'] ?? '',
+						'selector'   => $target['selector'] ?? '',
+					)
+				)
+			)
+		);
+	}
+
 	/** Recursively stabilize associative-array ordering. @param mixed $value Value. @return mixed */
 	private function canonicalize( $value ) {
 		if ( ! is_array( $value ) ) {

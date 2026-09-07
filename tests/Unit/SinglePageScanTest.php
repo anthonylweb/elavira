@@ -13,15 +13,19 @@ use Elavira\Core\Capabilities\Capability;
 use Elavira\Core\Database\TableNames;
 use Elavira\Core\Migrations\CoreAuditSchema;
 use Elavira\Core\Migrations\CoreScanSessionSchema;
+use Elavira\Core\Migrations\ScanObservationSchema;
 use Elavira\Findings\Persistence\FindingRepository;
 use Elavira\Findings\Persistence\OccurrenceRepository;
 use Elavira\Rules\Browser\BrowserEvidenceValidator;
 use Elavira\Rules\CoreRuleRegistry;
 use Elavira\Rules\Normalization\RuleResultNormalizer;
+use Elavira\Rules\Grouping\SupersessionResolver;
+use Elavira\Findings\Identity\ReviewedConditionIdentity;
 use Elavira\Scanner\Application\CompleteScan;
 use Elavira\Scanner\Application\StartSinglePageScan;
 use Elavira\Scanner\Application\SubmitScanBatch;
 use Elavira\Scanner\Persistence\ScanSessionRepository;
+use Elavira\Scanner\Persistence\StagedObservationRepository;
 use Elavira\Scanner\Security\CanonicalUrl;
 use Elavira\Scanner\Security\SessionGuard;
 use Elavira\Tests\Support\FakeWpdb;
@@ -39,12 +43,14 @@ final class SinglePageScanTest extends TestCase {
 	private $findings;
 	private $audits;
 	private $urls;
+	private $occurrences;
 
 	protected function setUp(): void {
 		$this->database  = new FakeWpdb();
 		$GLOBALS['wpdb'] = $this->database;
 		( new CoreAuditSchema( $this->database ) )->up();
 		( new CoreScanSessionSchema( $this->database ) )->up();
+		( new ScanObservationSchema( $this->database ) )->up();
 		$GLOBALS['elavira_test_current_user_id'] = 7;
 		$GLOBALS['elavira_test_capabilities']    = array( Capability::RUN_AUDITS => true );
 		$GLOBALS['elavira_test_url_objects']     = array();
@@ -55,8 +61,13 @@ final class SinglePageScanTest extends TestCase {
 		$rules                                   = CoreRuleRegistry::create();
 		$this->findings                          = new FindingRepository( $this->database );
 		$this->start                             = new StartSinglePageScan( $this->database, $this->audits, $this->urls, $this->sessions, $rules, new CanonicalUrl() );
-		$this->submit                            = new SubmitScanBatch( $this->database, $this->sessions, $this->guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $this->findings, new OccurrenceRepository( $this->database ), $this->audits, $this->urls );
-		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $this->audits, $this->urls, $this->findings );
+		$occurrences                             = new OccurrenceRepository( $this->database );
+		$this->occurrences                       = $occurrences;
+		$staged                                  = new StagedObservationRepository( $this->database );
+		$identity                                = new ReviewedConditionIdentity();
+		$supersession                            = new SupersessionResolver( $rules, $identity );
+		$this->submit                            = new SubmitScanBatch( $this->database, $this->sessions, $this->guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $this->findings, $occurrences, $this->audits, $this->urls, null, $identity, $supersession, $staged );
+		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $this->audits, $this->urls, $this->findings, $occurrences, null, $identity, $supersession, $staged );
 	}
 
 	public function test_creates_unpredictable_owner_bound_session_and_version_snapshot() {
@@ -66,11 +77,14 @@ final class SinglePageScanTest extends TestCase {
 		$this->assertNotSame( $first, $second );
 		$session = $this->sessions->find_by_token( $first );
 		$this->assertSame( 7, (int) $session['owner_user_id'] );
-		$this->assertSame( 'core-rules-1.2.0', $session['ruleset_version'] );
+		$this->assertSame( 'core-rules-1.6.0', $session['ruleset_version'] );
 		$allowed = json_decode( $session['allowed_rules_json'], true );
 		$this->assertSame( '2.0.0', $allowed['elavira.link.purpose_review'] );
 		$this->assertSame( '2.0.0', $allowed['elavira.heading.structure_review'] );
 		$this->assertSame( '2.0.0', $allowed['elavira.document.language_missing'] );
+		$this->assertSame( '2.0.0', $allowed['elavira.document.invalid_language'] );
+		$this->assertSame( '2.0.0', $allowed['elavira.links.identical_name_different_destination'] );
+		$this->assertSame( '2.0.0', $allowed['elavira.form.accessible_name_missing'] );
 		$this->assertSame( 'https://example.com/article/?a=1&b=2', $session['canonical_url'] );
 	}
 
@@ -137,7 +151,9 @@ final class SinglePageScanTest extends TestCase {
 		$second  = $this->submit->submit( $token, 7, array( $payload, $payload ) );
 		$this->assertFalse( $first['duplicate'] );
 		$this->assertTrue( $second['duplicate'] );
-		$session  = $this->sessions->find_by_token( $token );
+		$session = $this->sessions->find_by_token( $token );
+		$this->assertCount( 0, $this->findings->find_by_audit( $session['audit_id'] ) );
+		$this->complete->complete( $token, 7 );
 		$findings = $this->findings->find_by_audit( $session['audit_id'] );
 		$this->assertCount( 1, $findings );
 		$this->assertSame( 2, (int) $findings[0]['occurrence_count'] );
@@ -183,6 +199,7 @@ final class SinglePageScanTest extends TestCase {
 			$this->assertNotEmpty( $error->getMessage() ); }
 		$this->submit->submit( $token, 7, array( $this->image_result() ) );
 		$session = $this->sessions->find_by_token( $token );
+		$this->complete->complete( $token, 7 );
 		$this->assertSame( 1, (int) $this->findings->find_by_audit( $session['audit_id'] )[0]['occurrence_count'] );
 	}
 
@@ -193,6 +210,98 @@ final class SinglePageScanTest extends TestCase {
 		$this->assertTrue( $this->complete->complete( $token, 7 )['duplicate'] );
 		$this->expectException( RuntimeException::class );
 		$this->submit->submit( $token, 7, array( $this->image_result() ) );
+	}
+
+	public function test_cross_batch_supersession_occurs_only_at_completion() {
+		$token  = $this->token( $this->start->start( 'https://example.com/' ) );
+		$target = array(
+			'selector' => 'main input#email',
+			'tag_name' => 'input',
+		);
+		$this->submit->submit(
+			$token,
+			7,
+			array(
+				array(
+					'rule_id'      => 'elavira.aria.broken_id_reference',
+					'rule_version' => '1.0.0',
+					'outcome'      => 'potential_issue',
+					'target'       => $target,
+					'evidence'     => array(
+						'attribute_name'  => 'aria-labelledby',
+						'reference_state' => 'missing',
+						'token_count'     => 1,
+					),
+					'element'      => array( 'tag_name' => 'input' ),
+					'grouping'     => array(),
+				),
+			)
+		);
+		$this->submit->submit(
+			$token,
+			7,
+			array(
+				array(
+					'rule_id'      => 'elavira.form.accessible_name_missing',
+					'rule_version' => '2.0.0',
+					'outcome'      => 'automatic_failure',
+					'target'       => $target,
+					'evidence'     => array(
+						'control_type' => 'input',
+						'name_state'   => 'missing',
+					),
+					'element'      => array(
+						'tag_name'            => 'input',
+						'input_type'          => 'text',
+						'has_accessible_name' => false,
+					),
+					'grouping'     => array(),
+				),
+			)
+		);
+		$session = $this->sessions->find_by_token( $token );
+		$this->assertCount( 0, $this->findings->find_by_audit( $session['audit_id'] ) );
+		$this->complete->complete( $token, 7 );
+		$findings = $this->findings->find_by_audit( $session['audit_id'] );
+		$this->assertCount( 1, $findings );
+		$this->assertSame( 'elavira.form.accessible_name_missing', $findings[0]['rule_id'] );
+		$occurrences = $this->occurrences->find_by_finding( $findings[0]['id'] );
+		$this->assertStringContainsString( 'elavira.aria.broken_id_reference', $occurrences[0]['diagnostic_json'] );
+	}
+
+	public function test_image_supersession_uses_complete_staged_page_results() {
+		$token  = $this->token( $this->start->start( 'https://example.com/' ) );
+		$target = array(
+			'selector' => 'main img#hero',
+			'tag_name' => 'img',
+		);
+		$this->submit->submit( $token, 7, array( $this->image_review_result( 'elavira.images.alt_quality_review', 'human_review', $target ) ) );
+		$filename = $this->image_review_result( 'elavira.images.filename_alt', 'potential_issue', $target );
+		unset( $filename['evidence']['review_reason'] );
+		$filename['evidence']['pattern'] = 'image_extension';
+		$this->submit->submit( $token, 7, array( $filename ) );
+		$session = $this->sessions->find_by_token( $token );
+		$this->assertCount( 0, $this->findings->find_by_audit( $session['audit_id'] ) );
+		$this->complete->complete( $token, 7 );
+		$findings = $this->findings->find_by_audit( $session['audit_id'] );
+		$this->assertCount( 1, $findings );
+		$this->assertSame( 'elavira.images.filename_alt', $findings[0]['rule_id'] );
+		$this->assertStringContainsString( 'elavira.images.alt_quality_review', $this->occurrences->find_by_finding( $findings[0]['id'] )[0]['diagnostic_json'] );
+	}
+
+	public function test_finalization_retry_rolls_back_partial_findings() {
+		$token = $this->token( $this->start->start( 'https://example.com/' ) );
+		$this->submit->submit( $token, 7, array( $this->image_result() ) );
+		$this->database->fail_next_insert = true;
+		try {
+			$this->complete->complete( $token, 7 );
+			$this->fail();
+		} catch ( RuntimeException $error ) {
+			$this->assertNotEmpty( $error->getMessage() ); }
+		$session = $this->sessions->find_by_token( $token );
+		$this->assertCount( 0, $this->findings->find_by_audit( $session['audit_id'] ) );
+		$this->assertFalse( $this->complete->complete( $token, 7 )['duplicate'] );
+		$this->assertCount( 1, $this->findings->find_by_audit( $session['audit_id'] ) );
 	}
 
 	private function token( array $started ) {
@@ -211,4 +320,21 @@ final class SinglePageScanTest extends TestCase {
 			'element'      => array( 'tag_name' => 'img' ),
 			'grouping'     => array(),
 		); }
+
+	private function image_review_result( $rule_id, $outcome, array $target ) {
+		return array(
+			'rule_id'      => $rule_id,
+			'rule_version' => '1.0.0',
+			'outcome'      => $outcome,
+			'target'       => $target,
+			'evidence'     => array(
+				'alt_excerpt'     => 'hero-banner.png',
+				'alt_fingerprint' => '1234abcd',
+				'context'         => 'functional_link',
+				'review_reason'   => 'functional_context',
+			),
+			'element'      => array( 'tag_name' => 'img' ),
+			'grouping'     => array(),
+		);
+	}
 }

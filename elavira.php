@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'ELAVIRA_VERSION', '0.1.0' );
-define( 'ELAVIRA_SCHEMA_VERSION', '0.6.0' );
+define( 'ELAVIRA_SCHEMA_VERSION', '0.7.0' );
 define( 'ELAVIRA_FILE', __FILE__ );
 define( 'ELAVIRA_DIR', __DIR__ );
 define( 'ELAVIRA_URL', plugin_dir_url( __FILE__ ) );

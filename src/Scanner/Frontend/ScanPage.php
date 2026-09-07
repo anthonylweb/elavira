@@ -50,7 +50,9 @@ final class ScanPage {
 			return; }
 
 		wp_enqueue_style( 'elavira-scanner', ELAVIRA_URL . 'assets/css/scanner.css', array(), ELAVIRA_VERSION );
-		wp_enqueue_script( 'elavira-scanner', ELAVIRA_URL . 'assets/js/scanner.js', array(), ELAVIRA_VERSION, true );
+		wp_enqueue_script( 'elavira-language-primary-subtags', ELAVIRA_URL . 'assets/js/language-primary-subtags.js', array(), ELAVIRA_VERSION, true );
+		wp_enqueue_script( 'elavira-aria-vocabulary', ELAVIRA_URL . 'assets/js/aria-vocabulary.js', array(), ELAVIRA_VERSION, true );
+		wp_enqueue_script( 'elavira-scanner', ELAVIRA_URL . 'assets/js/scanner.js', array( 'elavira-language-primary-subtags', 'elavira-aria-vocabulary' ), ELAVIRA_VERSION, true );
 		wp_add_inline_script(
 			'elavira-scanner',
 			'window.ElaviraScanConfig=' . wp_json_encode(

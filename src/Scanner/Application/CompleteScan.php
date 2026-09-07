@@ -7,12 +7,19 @@
 
 namespace Elavira\Scanner\Application;
 
+// phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.VariableComment, Generic.Commenting.DocComment.MissingShort, Generic.Files.LineLength -- Compact orchestration mirrors the existing scanner application service.
+
 use Elavira\Audit\Persistence\AuditRepository;
 use Elavira\Audit\Persistence\AuditUrlRepository;
 use Elavira\Audit\Values\AuditStatus;
 use Elavira\Audit\Values\AuditUrlStatus;
 use Elavira\Findings\Persistence\FindingRepository;
+use Elavira\Findings\Persistence\OccurrenceRepository;
+use Elavira\Findings\Persistence\ReviewedExceptionRepository;
+use Elavira\Findings\Identity\ReviewedConditionIdentity;
+use Elavira\Rules\Grouping\SupersessionResolver;
 use Elavira\Scanner\Persistence\ScanSessionRepository;
+use Elavira\Scanner\Persistence\StagedObservationRepository;
 use Elavira\Scanner\Security\SessionGuard;
 use Elavira\Scanner\Values\ScanSessionState;
 use RuntimeException;
@@ -49,6 +56,11 @@ final class CompleteScan {
 	 * @var FindingRepository
 	 */
 	private $findings;
+	/** @var OccurrenceRepository */ private $occurrences;
+	/** @var ReviewedExceptionRepository|null */ private $exceptions;
+	/** @var ReviewedConditionIdentity */ private $identity;
+	/** @var SupersessionResolver|null */ private $supersession;
+	/** @var StagedObservationRepository */ private $staged;
 
 	/**
 	 * Construct completion service.
@@ -60,13 +72,18 @@ final class CompleteScan {
 	 * @param AuditUrlRepository    $urls     Audit URL repository.
 	 * @param FindingRepository     $findings Finding repository.
 	 */
-	public function __construct( $database, ScanSessionRepository $sessions, SessionGuard $guard, AuditRepository $audits, AuditUrlRepository $urls, FindingRepository $findings ) {
-		$this->database = $database;
-		$this->sessions = $sessions;
-		$this->guard    = $guard;
-		$this->audits   = $audits;
-		$this->urls     = $urls;
-		$this->findings = $findings;
+	public function __construct( $database, ScanSessionRepository $sessions, SessionGuard $guard, AuditRepository $audits, AuditUrlRepository $urls, FindingRepository $findings, ?OccurrenceRepository $occurrences = null, ?ReviewedExceptionRepository $exceptions = null, ?ReviewedConditionIdentity $identity = null, ?SupersessionResolver $supersession = null, ?StagedObservationRepository $staged = null ) {
+		$this->database     = $database;
+		$this->sessions     = $sessions;
+		$this->guard        = $guard;
+		$this->audits       = $audits;
+		$this->urls         = $urls;
+		$this->findings     = $findings;
+		$this->occurrences  = $occurrences ? $occurrences : new OccurrenceRepository( $database );
+		$this->exceptions   = $exceptions;
+		$this->identity     = $identity ? $identity : new ReviewedConditionIdentity();
+		$this->supersession = $supersession;
+		$this->staged       = $staged ? $staged : new StagedObservationRepository( $database );
 	}
 
 	/**
@@ -105,6 +122,13 @@ final class CompleteScan {
 				throw new RuntimeException( 'This scan session cannot be completed.' );
 			}
 			$this->sessions->update( $session['id'], array( 'state' => ScanSessionState::COMPLETING ) );
+			$normalized = $this->staged->all_for_session( $session['id'] );
+			if ( $this->supersession ) {
+				$normalized = $this->supersession->resolve( $normalized );
+			}
+			foreach ( $normalized as $result ) {
+				$this->persist_result( $session, $result );
+			}
 			$this->urls->update_lifecycle(
 				$session['audit_url_id'],
 				array(
@@ -120,17 +144,66 @@ final class CompleteScan {
 				)
 			);
 			$this->sessions->update( $session['id'], array( 'state' => ScanSessionState::COMPLETED ) );
+			$this->staged->cleanup( $session['id'] );
 			$this->database->query( 'COMMIT' );
 		} catch ( \Throwable $error ) {
 			$this->database->query( 'ROLLBACK' );
 			throw $error;
 		}
 		do_action( 'elavira_audit_completed', (int) $session['audit_id'] );
+		$findings = $this->findings->find_by_audit( $session['audit_id'] );
 		return array(
 			'audit_id'      => (int) $session['audit_id'],
 			'finding_count' => count( $findings ),
 			'duplicate'     => false,
 		);
+	}
+
+	/** Persist one whole-page-resolved primary result inside the completion transaction. @return void */
+	private function persist_result( array $session, array $result ) {
+		if ( empty( $result['creates_finding'] ) ) {
+			return;
+		}
+		$identity   = $this->identity->fingerprints( $result['target'], $result['evidence'], $result['element'] );
+		$audit_url  = $this->urls->find( $session['audit_url_id'] );
+		$exception  = ( $this->exceptions && $audit_url ) ? $this->exceptions->match( $result['rule_id'], $result['rule_version'], $audit_url['canonical_url_hash'], $identity['target'], $identity['evidence'] ) : null;
+		$finding    = $this->findings->find_group( $session['audit_id'], $result['rule_id'], $result['grouping_key'] );
+		$finding_id = $finding ? $finding['id'] : $this->findings->create_in_transaction(
+			array(
+				'audit_id'                    => $session['audit_id'],
+				'rule_id'                     => $result['rule_id'],
+				'rule_version'                => $result['rule_version'],
+				'group_key'                   => $result['grouping_key'],
+				'result_type'                 => $result['outcome'],
+				'category'                    => $result['classification'],
+				'priority'                    => $result['priority'],
+				'review_state'                => $result['review_state'],
+				'wcag_criterion'              => $result['wcag_criterion'],
+				'wcag_level'                  => $result['wcag_level'],
+				'wcag_principle'              => $result['wcag_principle'],
+				'editorial_version'           => $result['editorial_version'],
+				'summary_snapshot'            => $result['editorial']['summary'],
+				'affected_page_count'         => 0,
+				'occurrence_count'            => 0,
+				'active_occurrence_count'     => 0,
+				'reviewed_occurrence_count'   => 0,
+				'diagnostic_occurrence_count' => 0,
+			)
+		);
+		$this->occurrences->create(
+			array(
+				'finding_id'                    => $finding_id,
+				'audit_url_id'                  => $session['audit_url_id'],
+				'target'                        => $result['target'],
+				'evidence'                      => $result['evidence'],
+				'element'                       => $result['element'],
+				'target_fingerprint'            => $identity['target'],
+				'material_evidence_fingerprint' => $identity['evidence'],
+				'reviewed_exception_id'         => $exception['id'] ?? 0,
+				'diagnostics'                   => $result['diagnostics'] ?? array(),
+			)
+		);
+		$this->findings->increment_counts( $finding_id, 1, (bool) $exception, count( $result['diagnostics'] ?? array() ) );
 	}
 
 	/**
@@ -166,6 +239,7 @@ final class CompleteScan {
 				)
 			);
 			$this->audits->update_lifecycle( $session['audit_id'], array( 'status' => AuditStatus::FAILED ) );
+			$this->staged->cleanup( $session['id'] );
 			$this->database->query( 'COMMIT' );
 		} catch ( \Throwable $error ) {
 			$this->database->query( 'ROLLBACK' );

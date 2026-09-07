@@ -292,7 +292,7 @@ final class ReportsPage {
 		<?php if ( 'structural_warning' === ( $editorial['presentation'] ?? '' ) ) : ?>
 			<div class="elavira-structural-warning" role="note"><strong><?php echo esc_html__( 'Structural Warning', 'elavira' ); ?></strong><p><?php echo esc_html__( 'This finding requires human review and is not an Automatic Failure.', 'elavira' ); ?></p></div>
 		<?php endif; ?>
-		<ul class="elavira-finding-meta"><li><strong><?php echo esc_html__( 'Workflow status:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></li><li><strong><?php echo esc_html__( 'Priority:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['priority'] ) ); ?></li><li><strong><?php echo esc_html__( 'Review classification:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></li><li><strong><?php echo esc_html__( 'WCAG:', 'elavira' ); ?></strong> <?php echo esc_html( $finding['wcag_criterion'] . ' Level ' . $finding['wcag_level'] . ' — ' . $this->label( $finding['wcag_principle'] ) ); ?></li></ul>
+		<ul class="elavira-finding-meta"><li><strong><?php echo esc_html__( 'Workflow status:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></li><li><strong><?php echo esc_html__( 'Priority:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['priority'] ) ); ?></li><li><strong><?php echo esc_html__( 'Review classification:', 'elavira' ); ?></strong> <?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></li><li><strong><?php echo esc_html__( 'Standards context:', 'elavira' ); ?></strong> <?php echo esc_html( $this->wcag_label( $finding ) ); ?></li></ul>
 		<?php
 		if ( ! $resolved['available'] ) :
 			?>
@@ -342,6 +342,7 @@ final class ReportsPage {
 				$this->structured( __( 'Target', 'elavira' ), $occurrence['target_json'] );
 				$this->structured( __( 'Evidence', 'elavira' ), $occurrence['evidence_json'] );
 				$this->structured( __( 'Element metadata', 'elavira' ), $occurrence['element_json'] );
+				$this->diagnostics( $occurrence['diagnostic_json'] ?? '' );
 				?>
 	</li>
 				<?php
@@ -446,9 +447,9 @@ final class ReportsPage {
 			$editorial = $resolved['editorial'];
 			$issues[]  = array( $this->label( $finding['current_status'] ), $this->label( $finding['priority'] ), $editorial['title'], $this->label( $finding['category'] ), $this->label( $finding['review_state'] ), $finding['wcag_criterion'], $finding['wcag_level'], $finding['occurrence_count'], $finding['affected_page_count'], $editorial['recommendation'] ?? __( 'Exact historical recommendation unavailable.', 'elavira' ), $editorial['wordpress_guidance'] ?? '', $editorial['developer_guidance'] ?? '' );
 		}
-		$affected = array( array( 'Finding', 'Captured URL', 'Target', 'Evidence', 'Element metadata' ) );
+		$affected = array( array( 'Finding', 'Captured URL', 'Target', 'Evidence', 'Element metadata', 'Diagnostic causes' ) );
 		foreach ( $occurrences as $occurrence ) {
-			$affected[] = array( $occurrence['summary_snapshot'], $occurrence['canonical_url'], $occurrence['target_json'], $occurrence['evidence_json'], $occurrence['element_json'] );
+			$affected[] = array( $occurrence['summary_snapshot'], $occurrence['canonical_url'], $occurrence['target_json'], $occurrence['evidence_json'], $occurrence['element_json'], $occurrence['diagnostic_json'] ?? '' );
 		}
 		$priority    = array( array( 'Priority', 'Meaning' ), array( 'High', 'Likely to create a significant accessibility barrier and generally should be investigated first.' ), array( 'Medium', 'Meaningful accessibility concern that should be addressed, with less immediate impact than High.' ), array( 'Low', 'Lower-impact accessibility concern or best-practice issue.' ), array( 'Disclaimer', 'Priority is an internal organizational recommendation, not an official WCAG severity or conformance grading system.' ) );
 		$status_rows = array( array( 'Finding', 'Status', 'Reason', 'Actor user ID', 'Source audit ID', 'Date' ) );
@@ -508,6 +509,14 @@ final class ReportsPage {
 			return __( 'Reviewed — Not an Issue', 'elavira' );
 		}
 		return ucwords( str_replace( '_', ' ', (string) $value ) );
+	}
+
+	/** Return WCAG metadata without manufacturing a conformance association. @return string */
+	private function wcag_label( array $finding ) {
+		if ( empty( $finding['wcag_criterion'] ) ) {
+			return __( 'Best practice — no direct WCAG mapping', 'elavira' );
+		}
+		return $finding['wcag_criterion'] . ' Level ' . $finding['wcag_level'] . ' — ' . $this->label( $finding['wcag_principle'] );
 	}
 	/** Create a WCAG target label.
 	 *
@@ -574,10 +583,30 @@ final class ReportsPage {
 		if ( is_array( $values ) ) {
 			foreach ( $values as $key => $value ) {
 				if ( is_scalar( $value ) ) {
-					echo '<div><dt>' . esc_html( $this->label( $key ) ) . '</dt><dd><code>' . esc_html( (string) $value ) . '</code></dd></div>';
+					$display = (string) $value;
+					if ( in_array( $key, array( 'ratio_milli', 'required_milli' ), true ) && is_numeric( $value ) ) {
+						$display = number_format_i18n( (int) $value / 1000, 3 ) . ':1';
+					} elseif ( 'font_size_milli' === $key && is_numeric( $value ) ) {
+						$display = number_format_i18n( (int) $value / 1000, 3 ) . 'px';
+					}
+					echo '<div><dt>' . esc_html( $this->label( $key ) ) . '</dt><dd><code>' . esc_html( $display ) . '</code></dd></div>';
 				}
 			}
 		} echo '</dl></div>';
+	}
+
+	/** Render superseded observations as diagnostic causes, not duplicate findings. @return void */
+	private function diagnostics( $json ) {
+		$items = json_decode( (string) $json, true );
+		if ( ! is_array( $items ) || array() === $items ) {
+			return; }
+		echo '<div class="elavira-diagnostics"><h4>' . esc_html__( 'Diagnostic causes retained', 'elavira' ) . '</h4><p>' . esc_html__( 'These lower-level observations help explain the primary finding and are not separate active findings.', 'elavira' ) . '</p><ol>';
+		foreach ( $items as $item ) {
+			echo '<li><strong>' . esc_html( ( $item['rule_id'] ?? '' ) . ' ' . ( $item['rule_version'] ?? '' ) ) . '</strong>';
+			$this->structured( __( 'Diagnostic evidence', 'elavira' ), wp_json_encode( $item['evidence'] ?? array() ) );
+			echo '</li>';
+		}
+		echo '</ol></div>';
 	}
 
 	/** Reduce grouped database counts into the report summary.
@@ -703,7 +732,7 @@ final class ReportsPage {
 			<?php
 			if ( 'structural_warning' === ( $resolved['editorial']['presentation'] ?? '' ) ) :
 				?>
-		<span class="elavira-structural-warning-label"><?php echo esc_html__( 'Structural Warning', 'elavira' ); ?></span><?php endif; ?><span class="description"><?php echo esc_html( $finding['summary_snapshot'] ); ?></span></th><td data-label="<?php echo esc_attr__( 'Priority', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['priority'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Workflow status', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Review state', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Occurrences', 'elavira' ); ?>"><?php echo esc_html( number_format_i18n( $finding['occurrence_count'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'WCAG', 'elavira' ); ?>"><?php echo esc_html( $finding['wcag_criterion'] . ' ' . $finding['wcag_level'] ); ?></td><td data-label="<?php echo esc_attr__( 'Action', 'elavira' ); ?>"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-finding&finding=' . absint( $finding['id'] ) . '&audit=' . absint( $audit_id ) ) ); ?>"><?php echo esc_html__( 'View finding', 'elavira' ); ?></a></td></tr>
+		<span class="elavira-structural-warning-label"><?php echo esc_html__( 'Structural Warning', 'elavira' ); ?></span><?php endif; ?><span class="description"><?php echo esc_html( $finding['summary_snapshot'] ); ?></span></th><td data-label="<?php echo esc_attr__( 'Priority', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['priority'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Workflow status', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['current_status'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Review state', 'elavira' ); ?>"><?php echo esc_html( $this->label( $finding['review_state'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'Occurrences', 'elavira' ); ?>"><?php echo esc_html( number_format_i18n( $finding['occurrence_count'] ) ); ?></td><td data-label="<?php echo esc_attr__( 'WCAG', 'elavira' ); ?>"><?php echo esc_html( $this->wcag_label( $finding ) ); ?></td><td data-label="<?php echo esc_attr__( 'Action', 'elavira' ); ?>"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-finding&finding=' . absint( $finding['id'] ) . '&audit=' . absint( $audit_id ) ) ); ?>"><?php echo esc_html__( 'View finding', 'elavira' ); ?></a></td></tr>
 			<?php
 		endforeach;
 		?>

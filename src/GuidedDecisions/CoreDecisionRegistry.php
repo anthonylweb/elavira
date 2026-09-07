@@ -40,6 +40,18 @@ final class CoreDecisionRegistry {
 						'id'      => 'elavira.image.alt_missing',
 						'version' => '1.0.0',
 					),
+					array(
+						'id'      => 'elavira.images.alt_quality_review',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.images.filename_alt',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.images.long_alt_review',
+						'version' => '1.0.0',
+					),
 				),
 				'learn_topics'      => array( 'images_alternative_text' ),
 				'start'             => 'image_role',
@@ -92,6 +104,10 @@ final class CoreDecisionRegistry {
 					array(
 						'id'      => 'elavira.links.identical_name_different_destination',
 						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.links.identical_name_different_destination',
+						'version' => '2.0.0',
 					),
 				),
 				'start'             => 'purpose_clear',
@@ -172,6 +188,26 @@ final class CoreDecisionRegistry {
 						'id'      => 'elavira.form.accessible_name_missing',
 						'version' => '1.0.0',
 					),
+					array(
+						'id'      => 'elavira.form.accessible_name_missing',
+						'version' => '2.0.0',
+					),
+					array(
+						'id'      => 'elavira.forms.broken_label_reference',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.forms.placeholder_only_label',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.forms.required_instruction_review',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.forms.error_identification_review',
+						'version' => '1.0.0',
+					),
 				),
 				'learn_topics'      => array( 'forms_labels' ),
 				'start'             => 'name_source',
@@ -212,7 +248,12 @@ final class CoreDecisionRegistry {
 				'editorial_version' => '1.0.0',
 				'title'             => __( 'Review use of color', 'elavira' ),
 				'purpose'           => __( 'Determine whether color is the only perceivable cue for information, status, an action, or a distinction.', 'elavira' ),
-				'rules'             => array(),
+				'rules'             => array(
+					array(
+						'id'      => 'elavira.color.color_only_review',
+						'version' => '1.0.0',
+					),
+				),
 				'learn_topics'      => array( 'color_contrast' ),
 				'start'             => 'color_meaning',
 				'steps'             => array(
@@ -246,7 +287,40 @@ final class CoreDecisionRegistry {
 				'editorial_version' => '1.0.0',
 				'title'             => __( 'Review keyboard interaction', 'elavira' ),
 				'purpose'           => __( 'Guide a human keyboard test of reachability, expected operation, focus escape, visibility, and order.', 'elavira' ),
-				'rules'             => array(),
+				'rules'             => array(
+					array(
+						'id'      => 'elavira.keyboard.positive_tabindex',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.keyboard.non_native_interactive',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.keyboard.possible_unreachable_control',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.keyboard.possible_trap',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.keyboard.custom_widget_review',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.focus.possible_hidden_focus',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.focus.order_review',
+						'version' => '1.0.0',
+					),
+					array(
+						'id'      => 'elavira.focus.modal_management_review',
+						'version' => '1.0.0',
+					),
+				),
 				'learn_topics'      => array( 'keyboard_accessibility', 'focus_focus_order' ),
 				'start'             => 'instructions',
 				'steps'             => array(

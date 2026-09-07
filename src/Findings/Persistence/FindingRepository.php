@@ -135,7 +135,7 @@ final class FindingRepository extends Repository {
 				'review_state'                => PersistenceValidator::one_of( $data['review_state'] ?? '', ReviewState::all(), 'review state' ),
 				'current_status'              => FindingStatus::OPEN,
 				'wcag_criterion'              => PersistenceValidator::text( $data['wcag_criterion'] ?? '', 32, 'WCAG criterion' ),
-				'wcag_level'                  => PersistenceValidator::one_of( $data['wcag_level'] ?? '', array( 'A', 'AA', 'AAA' ), 'WCAG level' ),
+				'wcag_level'                  => '' === ( $data['wcag_level'] ?? '' ) ? '' : PersistenceValidator::one_of( $data['wcag_level'], array( 'A', 'AA', 'AAA' ), 'WCAG level' ),
 				'wcag_principle'              => PersistenceValidator::text( $data['wcag_principle'] ?? '', 32, 'WCAG principle' ),
 				'editorial_version'           => PersistenceValidator::identifier( $data['editorial_version'] ?? '', 'editorial version' ),
 				'summary_snapshot'            => PersistenceValidator::text( $data['summary_snapshot'] ?? '', 4096, 'summary snapshot', true ),

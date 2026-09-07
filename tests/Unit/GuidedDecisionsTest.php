@@ -42,15 +42,34 @@ final class GuidedDecisionsTest extends TestCase {
 	public function test_new_rule_bound_decisions_use_exact_current_rule_versions() {
 		$registry = CoreDecisionRegistry::create();
 		$this->assertSame( 'elavira.decision.alternative_text', $registry->for_rule( 'elavira.image.alt_missing', '1.0.0' )->get( 'id' ) );
+		$this->assertSame( 'elavira.decision.alternative_text', $registry->for_rule( 'elavira.images.alt_quality_review', '1.0.0' )->get( 'id' ) );
+		$this->assertSame( 'elavira.decision.alternative_text', $registry->for_rule( 'elavira.images.filename_alt', '1.0.0' )->get( 'id' ) );
+		$this->assertSame( 'elavira.decision.alternative_text', $registry->for_rule( 'elavira.images.long_alt_review', '1.0.0' )->get( 'id' ) );
 		$this->assertSame( 'elavira.decision.form_labels_instructions', $registry->for_rule( 'elavira.form.accessible_name_missing', '1.0.0' )->get( 'id' ) );
+		$this->assertSame( 'elavira.decision.form_labels_instructions', $registry->for_rule( 'elavira.form.accessible_name_missing', '2.0.0' )->get( 'id' ) );
+		$this->assertSame( 'elavira.decision.form_labels_instructions', $registry->for_rule( 'elavira.forms.required_instruction_review', '1.0.0' )->get( 'id' ) );
 		$this->assertNull( $registry->for_rule( 'elavira.image.alt_missing', '2.0.0' ) );
 	}
 
 	public function test_manual_decisions_have_no_fabricated_rule_compatibility() {
 		$registry = CoreDecisionRegistry::create();
-		foreach ( array( 'use_of_color', 'keyboard_interaction', 'audio_video_alternatives' ) as $id ) {
+		foreach ( array( 'audio_video_alternatives' ) as $id ) {
 			$this->assertSame( array(), $registry->get( 'elavira.decision.' . $id, '1.0.0' )->get( 'rules' ) );
 		}
+	}
+
+	public function test_round_five_color_review_binds_exactly_and_contrast_rules_do_not() {
+		$registry = CoreDecisionRegistry::create();
+		$this->assertSame( 'elavira.decision.use_of_color', $registry->for_rule( 'elavira.color.color_only_review', '1.0.0' )->get( 'id' ) );
+		$this->assertNull( $registry->for_rule( 'elavira.color.color_only_review', '2.0.0' ) );
+		$this->assertNull( $registry->for_rule( 'elavira.contrast.cannot_determine', '1.0.0' ) );
+	}
+
+	public function test_round_four_rules_bind_to_keyboard_decision_by_exact_version() {
+		$registry = CoreDecisionRegistry::create();
+		$this->assertSame( 'elavira.decision.keyboard_interaction', $registry->for_rule( 'elavira.keyboard.positive_tabindex', '1.0.0' )->get( 'id' ) );
+		$this->assertSame( 'elavira.decision.keyboard_interaction', $registry->for_rule( 'elavira.focus.modal_management_review', '1.0.0' )->get( 'id' ) );
+		$this->assertNull( $registry->for_rule( 'elavira.keyboard.positive_tabindex', '2.0.0' ) );
 	}
 
 	/** Test Alternative Text branches.

@@ -213,6 +213,103 @@ final class BrowserEvidenceContractTest extends TestCase {
 		$this->validator->validate( $payload );
 	}
 
+	public function test_server_recalculates_contrast_and_controls_threshold() {
+		$payload = $this->contrast_payload();
+		$result  = $this->validator->validate( $payload );
+		$this->assertSame( RuleOutcome::AUTOMATIC_FAILURE, $result->outcome() );
+		$payload['evidence']['required_milli'] = 3000;
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
+	public function test_server_rejects_tampered_contrast_ratio_and_size_classification() {
+		$payload                            = $this->contrast_payload();
+		$payload['evidence']['ratio_milli'] = 9000;
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
+	public function test_server_rejects_browser_selected_large_text_classification() {
+		$payload                               = $this->contrast_payload();
+		$payload['rule_id']                    = 'elavira.contrast.large_text_insufficient';
+		$payload['evidence']['required_milli'] = 3000;
+		$payload['evidence']['text_size']      = 'large';
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
+	public function test_image_filename_evidence_is_server_checked() {
+		$payload                        = $this->image_review_payload( 'elavira.images.filename_alt', 'potential_issue' );
+		$payload['evidence']['pattern'] = 'image_extension';
+		$result                         = $this->validator->validate( $payload );
+		$this->assertSame( RuleOutcome::POTENTIAL_ISSUE, $result->outcome() );
+		$payload['evidence']['alt_excerpt'] = 'A team meeting';
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
+	public function test_long_alt_metrics_are_bounded_by_server() {
+		$payload                              = $this->image_review_payload( 'elavira.images.long_alt_review', 'human_review' );
+		$payload['evidence']['alt_length']    = 179;
+		$payload['evidence']['word_count']    = 40;
+		$payload['evidence']['review_reason'] = 'extended_multi_sentence';
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
+	public function test_image_browser_cannot_author_quality_conclusion() {
+		$payload                              = $this->image_review_payload( 'elavira.images.alt_quality_review', 'human_review' );
+		$payload['evidence']['review_reason'] = 'functional_context';
+		$payload['evidence']['context']       = 'functional_link';
+		$payload['evidence']['alt_is_bad']    = true;
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
+	private function contrast_payload() {
+		return array(
+			'rule_id'      => 'elavira.contrast.text_insufficient',
+			'rule_version' => '1.0.0',
+			'outcome'      => 'automatic_failure',
+			'target'       => array(
+				'tag_name' => 'p',
+				'selector' => '#copy',
+			),
+			'evidence'     => array(
+				'foreground'      => '#777777',
+				'background'      => '#ffffff',
+				'ratio_milli'     => 4478,
+				'required_milli'  => 4500,
+				'text_size'       => 'normal',
+				'font_size_milli' => 16000,
+				'font_weight'     => 400,
+				'determination'   => 'opaque',
+				'rendered_state'  => 'current',
+			),
+			'element'      => array( 'tag_name' => 'p' ),
+			'grouping'     => array(),
+		);
+	}
+
+	private function image_review_payload( $rule_id, $outcome ) {
+		return array(
+			'rule_id'      => $rule_id,
+			'rule_version' => '1.0.0',
+			'outcome'      => $outcome,
+			'target'       => array(
+				'tag_name' => 'img',
+				'selector' => '#hero',
+			),
+			'evidence'     => array(
+				'alt_excerpt'     => 'hero-banner.png',
+				'alt_fingerprint' => '1234abcd',
+				'context'         => 'standalone',
+			),
+			'element'      => array( 'tag_name' => 'img' ),
+			'grouping'     => array(),
+		);
+	}
+
 	private function image_payload() {
 		return array(
 			'rule_id'      => 'elavira.image.alt_missing',

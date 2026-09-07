@@ -34,6 +34,11 @@ final class RuleResultNormalizer {
 			$rule->wcag()
 		);
 		$primary         = reset( $mappings );
+		$primary         = $primary ? $primary : array(
+			'criterion' => '',
+			'level'     => '',
+			'principle' => '',
+		);
 		$review_state    = EvaluationType::AUTOMATIC_FAILURE === $rule->evaluation_type()
 			? ReviewState::NOT_REQUIRED
 			: ReviewState::NEEDS_REVIEW;
