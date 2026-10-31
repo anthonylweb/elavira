@@ -88,7 +88,7 @@ final class ScanRestController {
 		return $this->respond(
 			function () use ( $request ) {
 				$target = $request->get_param( 'wcag_target' );
-				return $this->start->start( $request->get_param( 'url' ), $target ? $target : CoreSettings::get()['default_wcag_target'] );
+				return $this->start->start( $request->get_param( 'url' ), $target ? $target : CoreSettings::get()['default_wcag_target'], true === $request->get_param( 'audit_404' ) );
 			}
 		);
 	}
@@ -148,6 +148,6 @@ final class ScanRestController {
 		try {
 			return new WP_REST_Response( $callback(), 200 );
 		} catch ( Throwable $error ) {
-			return new WP_Error( 'elavira_scan_rejected', $error->getMessage(), array( 'status' => 400 ) ); }
+			return new WP_Error( 'elavira_scan_rejected', \Elavira\Scanner\Security\PageResponse::message( $error->getMessage() ), array( 'status' => 400 ) ); }
 	}
 }

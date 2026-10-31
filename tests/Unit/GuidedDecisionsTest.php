@@ -27,13 +27,16 @@ final class GuidedDecisionsTest extends TestCase {
 		);
 		$this->assertSame(
 			array(
-				'elavira.decision.alternative_text',
 				'elavira.decision.link_purpose',
+				'elavira.decision.alternative_text',
 				'elavira.decision.heading_structure',
 				'elavira.decision.form_labels_instructions',
 				'elavira.decision.use_of_color',
 				'elavira.decision.keyboard_interaction',
 				'elavira.decision.audio_video_alternatives',
+				'elavira.decision.focus_visibility',
+				'elavira.decision.aria_behavior',
+				'elavira.decision.contrast_review',
 			),
 			$ids
 		);
@@ -62,7 +65,8 @@ final class GuidedDecisionsTest extends TestCase {
 		$registry = CoreDecisionRegistry::create();
 		$this->assertSame( 'elavira.decision.use_of_color', $registry->for_rule( 'elavira.color.color_only_review', '1.0.0' )->get( 'id' ) );
 		$this->assertNull( $registry->for_rule( 'elavira.color.color_only_review', '2.0.0' ) );
-		$this->assertNull( $registry->for_rule( 'elavira.contrast.cannot_determine', '1.0.0' ) );
+		$this->assertSame( 'elavira.decision.contrast_review', $registry->for_rule( 'elavira.contrast.cannot_determine', '1.0.0' )->get( 'id' ) );
+		$this->assertNull( $registry->for_rule( 'elavira.contrast.cannot_determine', '2.0.0' ) );
 	}
 
 	public function test_round_four_rules_bind_to_keyboard_decision_by_exact_version() {
@@ -201,9 +205,9 @@ final class GuidedDecisionsTest extends TestCase {
 
 	public function test_navigator_validates_answers_and_resolves_server_branch() {
 		$decision = CoreDecisionRegistry::create()->for_rule( 'elavira.link.purpose_review', '1.0.0' );
-		$result   = ( new DecisionNavigator() )->resolve( $decision, array( 'no', 'yes' ) );
+		$result   = ( new DecisionNavigator() )->resolve( $decision, array( 'text', 'no', 'no' ) );
 		$this->assertTrue( $result['complete'] );
-		$this->assertSame( 'remediation_likely', $result['outcome_id'] );
+		$this->assertSame( 'text_change', $result['outcome_id'] );
 		$this->assertSame( 'open', $result['outcome']['status'] );
 	}
 
@@ -223,8 +227,8 @@ final class GuidedDecisionsTest extends TestCase {
 
 	public function test_heading_flow_preserves_human_review_recommendation() {
 		$decision = CoreDecisionRegistry::create()->for_rule( 'elavira.heading.structure_review', '1.0.0' );
-		$result   = ( new DecisionNavigator() )->resolve( $decision, array( 'yes', 'yes', 'no' ) );
-		$this->assertSame( 'structure_reasonable', $result['outcome_id'] );
+		$result   = ( new DecisionNavigator() )->resolve( $decision, array( 'yes', 'yes', 'yes', 'yes' ) );
+		$this->assertSame( 'reasonable', $result['outcome_id'] );
 		$this->assertSame( 'needs_review', $result['outcome']['status'] );
 	}
 

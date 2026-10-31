@@ -15,16 +15,16 @@ final class StatementRenderer {
 	public function render( array $fields, array $meta = array() ) {
 		$html  = '<div class="elavira-accessibility-statement">';
 		$html .= '<p><strong>' . esc_html__( 'Organization:', 'elavira' ) . '</strong> ' . esc_html( $fields['organization'] ?? '' ) . '</p>';
-		$html .= $this->section( __( 'Our accessibility commitment', 'elavira' ), $fields['commitment'] ?? '' );
+		$html .= $this->section( __( 'Our Accessibility Commitment', 'elavira' ), $fields['commitment'] ?? '' );
 		$html .= '<section><h2>' . esc_html__( 'Conformance Status — Based on Plugin Findings', 'elavira' ) . '</h2>';
 		$html .= '<p>' . esc_html__( 'Elavira findings do not constitute a complete determination of WCAG conformance. Automated testing cannot test every requirement, and human review may still be required.', 'elavira' ) . '</p>';
 		$html .= '<dl><div><dt>' . esc_html__( 'WCAG Target', 'elavira' ) . '</dt><dd>' . esc_html( $this->target( $fields['wcag_target'] ?? '' ) ) . '</dd></div><div><dt>' . esc_html__( 'Plugin Findings', 'elavira' ) . '</dt><dd>' . esc_html( $this->label( $fields['plugin_findings_status'] ?? '' ) ) . '</dd></div><div><dt>' . esc_html__( "Organization's Stated Conformance", 'elavira' ) . '</dt><dd>' . esc_html( $this->label( $fields['stated_conformance'] ?? '' ) ) . '</dd></div></dl></section>';
-		$html .= $this->section( __( 'Known limitations', 'elavira' ), $fields['known_limitations'] ?? '' );
+		$html .= $this->section( __( 'Known Limitations', 'elavira' ), $fields['known_limitations'] ?? '' );
 		$html .= $this->contact( $fields );
 		$html .= $this->section( __( 'Compatibility', 'elavira' ), $fields['compatibility'] ?? '' );
-		$html .= $this->section( __( 'Assessment approach', 'elavira' ), $fields['assessment_approach'] ?? '' );
-		$html .= $this->section( __( 'Additional information', 'elavira' ), $fields['additional_information'] ?? '' );
-		$html .= '<section><h2>' . esc_html__( 'Statement information', 'elavira' ) . '</h2>';
+		$html .= $this->section( __( 'Assessment Approach', 'elavira' ), $fields['assessment_approach'] ?? '' );
+		$html .= $this->section( __( 'Additional Information', 'elavira' ), $fields['additional_information'] ?? '' );
+		$html .= '<section><h2>' . esc_html__( 'Statement Information', 'elavira' ) . '</h2>';
 		if ( ! empty( $meta['last_reviewed'] ) ) {
 			$html .= '<p><strong>' . esc_html__( 'Last reviewed:', 'elavira' ) . '</strong> ' . esc_html( mysql2date( get_option( 'date_format' ), $meta['last_reviewed'] ) ) . '</p>';
 		}
@@ -55,7 +55,7 @@ final class StatementRenderer {
 		if ( '' === $feedback && ! $links ) {
 			return '';
 		}
-		$html = '<section><h2>' . esc_html__( 'Feedback and contact', 'elavira' ) . '</h2>';
+		$html = '<section><h2>' . esc_html__( 'Feedback and Contact', 'elavira' ) . '</h2>';
 		if ( '' !== $feedback ) {
 			$html .= wpautop( esc_html( $feedback ) );
 		}

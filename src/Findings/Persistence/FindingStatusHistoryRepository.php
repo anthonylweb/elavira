@@ -16,7 +16,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Records status transitions without erasing prior workflow history.
+ * Records finding activity without erasing prior workflow history.
  */
 final class FindingStatusHistoryRepository extends Repository {
 	/** Return bounded status history for all findings in an audit.
@@ -29,12 +29,12 @@ final class FindingStatusHistoryRepository extends Repository {
 		return $this->database->get_results( $this->database->prepare( $query, absint( $audit_id ) ), ARRAY_A );
 	}
 	/**
-	 * Record a status transition.
+	 * Record a status change or note-only activity.
 	 *
 	 * Verified remains an explicit persisted state; verification automation is
 	 * outside this repository and must supply its source audit deliberately.
 	 *
-	 * @param array $data Status transition attributes.
+	 * @param array $data Activity attributes, including the resulting status.
 	 * @return int
 	 * @throws RuntimeException When the status cannot be persisted.
 	 * @throws Throwable When a transactional operation fails unexpectedly.
@@ -51,7 +51,7 @@ final class FindingStatusHistoryRepository extends Repository {
 		}
 	}
 
-	/** Record while the caller owns the transaction. @param array $data Transition. @return int */
+	/** Record while the caller owns the transaction. @param array $data Activity. @return int */
 	public function record_in_transaction( array $data ) {
 		$finding_id = $this->require_parent( $this->tables->findings(), $data['finding_id'] ?? 0, 'finding' );
 		$status     = PersistenceValidator::one_of( $data['status'] ?? '', FindingStatus::all(), 'finding status' );
@@ -100,7 +100,7 @@ final class FindingStatusHistoryRepository extends Repository {
 	 */
 	public function find_by_finding( $finding_id ) {
 		return $this->database->get_results(
-			$this->database->prepare( "SELECT * FROM {$this->tables->finding_status_history()} WHERE finding_id = %d ORDER BY created_at ASC, id ASC LIMIT 500", absint( $finding_id ) ),
+			$this->database->prepare( "SELECT * FROM {$this->tables->finding_status_history()} WHERE finding_id = %d AND occurrence_id = 0 ORDER BY created_at ASC, id ASC LIMIT 500", absint( $finding_id ) ),
 			ARRAY_A
 		);
 	}

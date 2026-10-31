@@ -80,7 +80,7 @@ final class Round2RuleRegistryTest extends TestCase {
 			$rule = $this->rules->get( $id, '1.0.0' );
 			$this->assertSame( EvaluationType::HUMAN_REVIEW, $rule->evaluation_type() );
 			$this->assertSame( 'structural_warning', $rule->editorial()['presentation'] );
-			$this->assertStringContainsString( 'not', strtolower( $rule->editorial()['why_it_matters'] ) );
+			$this->assertStringContainsString( 'WCAG and HTML do not require exactly one H1.', $rule->editorial()['recommendation'] );
 		}
 		$this->assertSame( EvaluationType::POTENTIAL_ISSUE, $this->rules->get( 'elavira.structure.heading_level_jump', '1.0.0' )->evaluation_type() );
 		$this->assertSame( EvaluationType::POTENTIAL_ISSUE, $this->rules->get( 'elavira.structure.empty_heading', '1.0.0' )->evaluation_type() );
@@ -94,7 +94,7 @@ final class Round2RuleRegistryTest extends TestCase {
 			$this->assertSame( Priority::MEDIUM, $rule->priority() );
 			$this->assertSame( '3.1.1', $rule->wcag()[0]->to_array()['criterion'] );
 		}
-		$this->assertStringContainsString( 'does not infer', $this->rules->get( 'elavira.document.invalid_language', '2.0.0' )->editorial()['recommendation'] );
+		$this->assertStringContainsString( 'do not guess from the page content', $this->rules->get( 'elavira.document.invalid_language', '2.0.0' )->editorial()['recommendation'] );
 	}
 
 	public function test_current_repeated_link_evidence_requires_a_bounded_name_excerpt() {
@@ -148,7 +148,7 @@ final class Round2RuleRegistryTest extends TestCase {
 	public function test_reports_render_structural_warning_as_visible_text() {
 		$source = file_get_contents( dirname( __DIR__, 2 ) . '/src/Reports/Admin/ReportsPage.php' );
 		$this->assertStringContainsString( "'Structural Warning'", $source );
-		$this->assertStringContainsString( 'is not an Automatic Failure', $source );
+		$this->assertStringContainsString( 'does not establish an accessibility failure', $source );
 		$this->assertStringContainsString( "'structural_warning'", $source );
 	}
 

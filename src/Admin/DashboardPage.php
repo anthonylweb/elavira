@@ -87,13 +87,14 @@ final class DashboardPage {
 			'addressed'           => 0,
 			'accepted_limitation' => 0,
 			'needs_review'        => 0,
+			'needs_correction'    => 0,
 			'high'                => 0,
 			'medium'              => 0,
 			'low'                 => 0,
 		);
 		foreach ( $rows as $row ) {
 			$count = (int) $row['finding_count'];
-			if ( isset( $counts[ $row['current_status'] ] ) ) {
+			if ( 'needs_review' !== $row['current_status'] && isset( $counts[ $row['current_status'] ] ) ) {
 				$counts[ $row['current_status'] ] += $count; }
 			if ( 'needs_review' === $row['review_state'] ) {
 				$counts['needs_review'] += $count; }
@@ -107,7 +108,8 @@ final class DashboardPage {
 	private function counts( array $counts ) {
 		echo '<dl class="elavira-dashboard-grid">';
 		foreach ( array(
-			'open'                => __( 'Open', 'elavira' ),
+			'open'                => __( 'Open grouped findings', 'elavira' ),
+			'needs_correction'    => __( 'Needs Correction grouped findings', 'elavira' ),
 			'needs_review'        => __( 'Needs Review (human review)', 'elavira' ),
 			'addressed'           => __( 'Addressed', 'elavira' ),
 			'accepted_limitation' => __( 'Accepted Limitation', 'elavira' ),

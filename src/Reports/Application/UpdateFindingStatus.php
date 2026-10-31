@@ -62,21 +62,40 @@ final class UpdateFindingStatus {
 	 * @param string $status     Requested status.
 	 * @param string $reason     Optional bounded reason.
 	 * @param int    $actor_id   Actor user ID.
-	 * @return int
+	 * @return int History ID, or zero when there was no meaningful change.
 	 * @throws RuntimeException When the finding is unavailable.
 	 * @throws InvalidArgumentException When the requested transition is invalid.
 	 */
 	public function update( $finding_id, $status, $reason, $actor_id ) {
+		if ( FindingStatus::NEEDS_CORRECTION === $status && '' === trim( sanitize_textarea_field( $reason ) ) ) {
+			throw new InvalidArgumentException( 'Explain what needs correction.' );
+		}
 		$finding = $this->findings->find( $finding_id );
 		if ( ! $finding ) {
 			throw new RuntimeException( 'The finding is not available.' );
 		}
-		$allowed = array( FindingStatus::OPEN, FindingStatus::ADDRESSED, FindingStatus::ACCEPTED_LIMITATION, FindingStatus::NEEDS_REVIEW, FindingStatus::REVIEWED_NOT_ISSUE );
-		if ( ! in_array( $status, $allowed, true ) ) {
+		if ( $this->occurrences && count( $this->occurrences->find_by_finding( $finding_id ) ) > 1 && $status !== $finding['current_status'] ) {
+			throw new InvalidArgumentException( 'Review each occurrence independently from its report entry.' );
+		}
+		if ( $this->occurrences && $this->database ) {
+			$items = $this->occurrences->find_by_finding( $finding_id );
+			if ( 1 === count( $items ) ) {
+				return $this->occurrences->reviews()->update( $finding_id, $items[0]['id'], $status, $reason, $actor_id );
+			}
+		}
+		$allowed     = array( FindingStatus::OPEN, FindingStatus::ADDRESSED, FindingStatus::ACCEPTED_LIMITATION, FindingStatus::NEEDS_REVIEW, FindingStatus::NEEDS_CORRECTION, FindingStatus::REVIEWED_NOT_ISSUE );
+		$status_same = $status === $finding['current_status'];
+		if ( ( ! $status_same && ! in_array( $status, $allowed, true ) ) || ! in_array( $status, FindingStatus::all(), true ) ) {
 			throw new InvalidArgumentException( 'That manual finding status is not allowed.' );
 		}
-		if ( $status === $finding['current_status'] ) {
-			throw new InvalidArgumentException( 'Choose a status different from the current status.' );
+		$reason = substr( trim( (string) $reason ), 0, 1000 );
+		if ( $status_same ) {
+			if ( '' === $reason ) {
+				return 0;
+			}
+			$history_id = $this->record( $finding_id, $status, $reason, $actor_id, false );
+			do_action( 'elavira_finding_activity_recorded', (int) $finding['audit_id'], (int) $finding_id, $status );
+			return $history_id;
 		}
 		if ( FindingStatus::REVIEWED_NOT_ISSUE === $status ) {
 			if ( ! in_array( $finding['category'], array( 'potential_issue', 'human_review' ), true ) ) {
@@ -125,6 +144,7 @@ final class UpdateFindingStatus {
 			$history_id = $this->record( $finding_id, $status, $reason, $actor_id, false );
 		}
 		do_action( 'elavira_finding_status_changed', (int) $finding['audit_id'], (int) $finding_id, $status );
+		do_action( 'elavira_finding_activity_recorded', (int) $finding['audit_id'], (int) $finding_id, $status );
 		return $history_id;
 	}
 
@@ -135,7 +155,7 @@ final class UpdateFindingStatus {
 				'finding_id'      => $finding_id,
 				'status'          => $status,
 				'actor_user_id'   => $actor_id,
-				'reason'          => substr( trim( (string) $reason ), 0, 1000 ),
+				'reason'          => $reason,
 				'source_audit_id' => 0,
 			);
 		return $in_transaction ? $this->history->record_in_transaction( $data ) : $this->history->record( $data );

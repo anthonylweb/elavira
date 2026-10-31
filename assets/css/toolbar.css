@@ -11,7 +11,7 @@ html.elavira-pref-text-size { font-size: var(--elavira-text-size); }
 .elavira-toolbar__dialog { position: fixed; z-index: 9991; inset: 0; background: rgba(0,0,0,.62); }
 .elavira-toolbar__panel { position: absolute; inset-block: 0; right: 0; width: min(28rem, 100%); overflow: auto; padding: 1.25rem; background: #fff; color: #171717; box-shadow: 0 0 2rem rgba(0,0,0,.35); }
 .elavira-toolbar__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.elavira-toolbar__header h2 { margin: 0; color: inherit; font: 700 1.5rem/1.3 system-ui, sans-serif; }
+.elavira-toolbar__header h2 { margin: 0; color: inherit; font: 700 1.5rem/1.3 system-ui, sans-serif; text-transform: capitalize; }
 .elavira-toolbar__panel fieldset { margin: 1rem 0; border: 1px solid #666; padding: .75rem; }
 .elavira-toolbar__panel legend { padding: 0 .3rem; font-weight: 700; }
 .elavira-toolbar__panel label { display: block; margin: .65rem 0; color: inherit; }

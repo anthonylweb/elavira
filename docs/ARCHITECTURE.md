@@ -2,6 +2,233 @@
 
 Status: current Core architecture and approved extension boundaries.
 
+## Finding activity and integrated remediation workflow (Audit Report UX Prompt 6)
+
+`finding_status_history` is the authoritative finding activity log as well as the
+source of workflow-status history. Each row records the resulting status, bounded
+note, actor, timestamp, and optional verification audit. The previous status is
+derived from the preceding chronological row; no duplicate previous-status column
+or parallel comments table is required.
+
+`UpdateFindingStatus` accepts a same-status request only when it contains a
+non-empty activity note. It appends history and emits
+`elavira_finding_activity_recorded`, but does not emit
+`elavira_finding_status_changed`. An unchanged status with an empty note is a safe
+no-op represented by return value `0`. Statement recommendations continue to
+listen only to the status-change hook, so note-only activity cannot alter
+Statement state. Actual status transitions retain existing behavior and emit both
+hooks.
+
+Finding detail derives “Finding created,” “Status changed” with previous →
+resulting status, and “Note added” with the retained status. Guided Decision
+completions remain in their versioned decision-history table and render nearby as
+“Guided Decision activity”; detailed answers remain in a disclosure. Completion
+alone never changes status. A prior completion is advertised and can be repeated
+against the same exact rule/version contract.
+
+The remediation path remains Detect → Explain → Recommend → User acts → Re-audit
+→ Verify. Addressed means work was performed and is not proof of resolution;
+Verified remains subsequent-audit-owned. “Resolved” is not a stored or displayed
+status. Reviewed — Not an Issue remains distinct from Accepted Limitation.
+
+Report/finding/decision and return links are same-tab workflow navigation.
+Finding-to-Learn links and approved external resources preserve the active task in
+a new tab with `target="_blank"`, `rel="noopener noreferrer"`, and visible new-tab
+wording. Audited canonical pages use the same deliberate pattern. Recorded link
+destinations remain escaped plain evidence. Historical editorial gaps show stored
+snapshots and available evidence without substituting current guidance; exact
+decision compatibility remains independent and may still provide a safe CTA.
+
+## Learn Center (Audit Report UX Prompt 5)
+
+`CoreTopicRegistry` is the server-owned source for 14 immutable educational
+topics. Stable topic IDs drive Audit Report, Guided Decision, directory, related-
+topic, and WCAG-reference links. `TopicDefinition` validates the common content
+contract and supports conceptual directory groups plus optional structured code
+examples. Examples are product-authored data and are always escaped by
+`LearnPage`; developer prose renders as prose rather than executable markup.
+
+The three Start Here topics are ordered separately. The remaining registry topics
+are grouped at render time as Content and media, Structure and navigation, Forms
+and interaction, Visual accessibility, and Developer semantics while retaining
+their searchable categories. Filters are bounded, read-only, and allowlisted.
+Unknown topic IDs continue to produce a safe 404, and Learn requires the normal
+authenticated WordPress `read` capability.
+
+Learn mappings remain editorial, exact-contract metadata. Prompt 5 changes only
+the current semantics/ARIA rule contracts in `CoreRuleGuidance` to the new
+`aria_accessible_controls` topic. Hidden focusable ARIA content intentionally
+retains `keyboard_accessibility` because actual focus behavior is the core review.
+Older unrelated rule contracts retain their established mappings; no fallback or
+version-range mapping is introduced. The current Control Roles and States decision
+uses the ARIA and Keyboard topics, and historical decision definitions remain
+unchanged in `HistoricalDecisionRegistry`.
+
+Internal Learn links remain same-tab. Report/decision links that preserve an active
+workflow and all external W3C references use the established accessible new-tab
+pattern: `_blank`, `noopener noreferrer`, and visible purpose text. The directory
+and article UI is server-rendered, uses semantic headings/lists/figures, wraps long
+content, and contains code overflow at narrow widths.
+
+This layer changes no detection, result semantics, persistence, remediation,
+schema, or Core/Premium boundary. It makes no conformance claim and does not bump
+the plugin version.
+
+## Guided Decision UX (Audit Report UX Prompt 4)
+
+Guided Decisions remain server-owned, finding-bound decision-support graphs.
+`DecisionNavigator` replays signed answers through trusted definitions; the browser
+never supplies branch targets or outcomes. `DecisionRegistry` now retains the seven
+original `1.0.0` definitions for exact historical lookup while exposing revised
+`2.0.0` definitions as the current versions. Three focused new definitions begin at
+`1.0.0`. `for_rule()` still requires an explicit rule ID and exact rule version;
+no range matching or editorial hint creates compatibility.
+
+The current library contains ten flows. The seven established flows were reviewed
+and rewritten in plain language with inspection help, a genuine uncertainty route,
+actionable conclusions, and verification guidance. Link Purpose now branches among
+text, image-only, and mixed-content links. A single occurrence with a reliable
+recorded `link_kind` may pre-answer only that first branch; grouped findings,
+historical records, and mixed/unknown content do not. Recorded simple link names
+remain excerpts rather than claimed browser accessibility-tree names.
+
+The three new flows are:
+
+- Focus Visibility and Overlays for
+  `elavira.focus.possible_hidden_focus@1.0.0` and
+  `elavira.focus.obscured_review@1.0.0`.
+- Control Roles and States for
+  `elavira.semantics.state_consistency_review@1.0.0`,
+  `elavira.semantics.native_semantics_overridden@1.0.0`, and
+  `elavira.aria.prohibited_attribute@1.0.0`.
+- Uncertain Contrast for
+  `elavira.contrast.cannot_determine@1.0.0`.
+
+`DecisionPage` loads at most three occurrence records after capability, finding,
+audit ownership, and exact compatibility checks. `DecisionContext` presents only
+bounded persisted facts through the existing `OccurrencePresenter` plus a small
+allowlist of rule evidence. It does not infer a result from missing evidence.
+Recorded evidence is labeled separately from examples and is escaped at output.
+
+Completed finding-bound reviews reuse `DecisionRepository`: the stored record
+contains decision ID/version, ordered question/answer labels, outcome, combined
+interpretation/recommendation/verification copy, actor, timestamp, optional note,
+and the user's explicit workflow choice. Saving a decision leaves status unchanged
+by default. An authorized user may explicitly choose Open, Addressed, Accepted
+Limitation, or Needs Review. Verified remains audit-owned, and Reviewed — Not an
+Issue remains the finding workflow that creates a reviewed exception when eligible.
+Standalone educational media guidance cannot save or change a finding.
+
+Finding-launched flows provide same-tab links back to the finding and its report,
+including their IDs. Deeper Learn links open in a new tab with
+`noopener noreferrer` and visible “opens in a new tab” text. Internal workflow
+navigation remains same-tab. The page uses native fieldset, legend, radio, button,
+label, textarea, heading, navigation, and definition-list semantics. Scoped wrapping
+and width rules keep long evidence usable at 320 CSS pixels.
+
+No database migration, scanner-result change, automatic remediation, Premium
+boundary change, or plugin-version bump is part of this work.
+
+## Current-rule editorial refinements (Audit Report UX Prompt 3)
+
+`CoreRuleGuidance` supplies intentionally authored copy keyed by exact Core rule
+ID and version. `CoreRuleRegistry` assembles the same contract definitions in the
+same order, then refines their existing editorial metadata using the validated,
+immutable `RuleDefinition::with_editorial()` method. No additional persistence
+store, database migration, scanner behavior or Core/Premium boundary is involved.
+Non-editorial fields cannot be changed by that method. All current contracts have
+explicit entries; the six earlier contracts have no entry and retain their copy.
+
+Compatible same-contract clarifications retain rule/editorial version identifiers,
+so old reports using those exact contracts display clarified guidance without
+rewriting stored snapshots or history. This is not immutable prose editioning.
+`HistoricalRuleResolver` still requires exact rule/editorial versions; incompatible
+or unavailable versions never borrow newer guidance. See
+`AUDIT_EDITORIAL_STANDARD.md` for authoring/compatibility policy and
+`AUDIT_RULE_EDITORIAL_REVIEW.md` for the inventory, mapping decisions and QA.
+
+The existing dynamic overview remains accurate for old audits. Guided Decision
+resolution remains exact; the obscured-focus rule's stale editorial hint was
+cleared without broadening any flow. Hidden-focusable ARIA content uses the
+registered keyboard Learn topic. No plugin version bump is part of this work.
+
+## Occurrence identification (Audit Report UX Prompt 2)
+
+`Reports/Admin/OccurrencePresenter` maps recorded target/element/evidence facts
+to primary labeled values and concise occurrence headings, with no detection or
+workflow authority. `ReportsPage` escapes its output and displays the audited URL
+separately from plain-text destinations. Native disclosures retain technical
+data. Missing historical fields are omitted, and heading shortening does not
+shorten the complete captured values shown below.
+
+Browser runtime `core-browser-1.5.1` adds optional, bounded identification fields
+to the existing element object: link kind/destination/name excerpt, image
+filename/alt state/excerpt, element text, immediate paragraph context and field
+name. The scanner asset uses the runtime version for cache invalidation. The
+shared browser validator enforces field and URL limits. Existing staging and
+occurrence JSON persistence handle this data without migrations. Plugin version,
+rule/editorial versions, detection outcomes, grouping and help mappings remain
+unchanged.
+
+Context collection uses only a small immediate paragraph walk, excluding form
+values, hidden/script/style/editable content. HTTP(S) destinations omit
+credentials, queries and fragments; images expose only a filename. No HTML or
+full-page prose is collected. Simple available link names are explicitly labeled
+as excerpts, not computed accessibility-tree names. Historical name/alt excerpts,
+heading levels and language states remain usable.
+
+Reviewed-condition identity already includes element metadata. Richer or changed
+identification data may conservatively require renewed review while all historical
+records remain untouched. No identity weakening or selector-only matching was
+introduced. Evidence matrix, field limits and QA results are recorded in
+`docs/AUDIT_REPORT_UX_FRAMEWORK.md`.
+
+## Audit Report UX guidance framework (0.2.0 milestone in progress)
+
+Reports continue to use `ReportsPage`, `HistoricalRuleResolver`, and the existing
+versioned `RuleDefinition` registry. No database migration, scanner contract change,
+plugin version bump, or parallel guidance store is introduced.
+
+`RuleDefinition::editorial()` retains summary, impact, recommendation, WordPress
+and developer guidance, and existing Learn/Guided Decision identifiers. It now
+also exposes optional `what_to_check` and `verification_guidance` strings, plus
+`examples` (at most ten comparisons). Each example requires `instead_of`,
+`consider`, and `explanation` strings, each bounded to 4096 bytes. Comparison code
+remains literal text and is escaped on output. Examples are editorial content,
+never captured evidence or automatically approved replacement values. Authors
+must use WordPress translation functions with the `elavira` domain for prose;
+code literals may remain literal, with translated contextual explanations.
+
+Missing optional fields default to empty strings/an empty array and produce no
+empty guidance sections. Existing guidance is not rewritten in this framework
+change. Historical resolution still requires exact rule and editorial versions;
+unavailable versions show the persisted summary with an explicit warning. Later
+editorial work must account for this exact-version policy rather than silently
+substituting new advice into historical reports.
+
+Finding detail presents the summary, captured locations, impact, inspection
+guidance, contextual help, remediation, examples, verification, and technical
+guidance. Native details/summary disclosures contain occurrence diagnostics and
+rule/developer information. Existing bounded name/alternative-text excerpts may
+help identify occurrences outside the disclosure. No new page data is collected.
+Workflow forms, status history, decision history, and pagination retain their
+existing services and routes. XLSX retains its existing columns and guidance;
+exporting the new optional editorial fields is not part of this change.
+
+Guided Decision CTAs use `DecisionRegistry::for_rule()` exact rule/version
+compatibility; Learn CTAs require the historically resolved `learn_topic` to
+exist in `TopicRegistry`. Missing mappings produce no action. The decision
+registry remains authoritative for finding launch compatibility, independently
+of editorial availability, matching the existing decision route.
+
+`HistoricalRuleResolver::current_rule_count()` counts distinct registered rule
+IDs from the injected Core registry, matching scan-start selection of one version
+per ID. It includes browser checks whose observations require human review;
+Guided Decisions are in a separate registry and are never counted. Retained
+historical versions do not inflate the count. The overview explicitly describes
+current Core coverage separately from the ruleset recorded by an older audit,
+because audits do not persist a historical rule-count snapshot.
+
 ## 1. Core execution model
 
 Core performs one rendered public-page audit at a time in the authorized user's browser.
@@ -341,3 +568,25 @@ exception, Statement, staging, and qualified audit-coverage behavior.
 **Phase 1 production ruleset implementation is complete.** This is not a release-
 readiness statement; the remaining manual and compatibility work is tracked in
 the release checklist.
+
+
+## Report UX 0.2.3
+
+Needs Correction (`needs_correction`) is an unresolved workflow status, independent
+of scanner classification, priority, and review_state. It is stored in existing
+status columns without a schema migration. Both grouped activity and independent
+occurrence services reject blank correction notes before writing any status or
+history. Existing occurrence aggregation remains authoritative; mixed groups keep
+the established Needs Review aggregate while occurrence filters and counts retain
+the actual individual statuses.
+
+Rejected form drafts use a ten-minute, non-autoloaded WordPress transient scoped
+to the signed-in user, finding, and occurrence. The next matching form consumes
+it and exposes an associated validation error. Report URLs contain no note text.
+
+WordPress remediation renders only with an explicit `wordpress_guidance_useful`
+editorial approval. Omitted prose remains in definitions; no detection contract
+or historical evidence is changed. Legacy generated-note presentation requires
+an exact matching persisted decision (actor, time, status, prefix, and note).
+Unmatched notes are displayed unchanged. New decision activity stores plain note
+text; the existing decision record retains ID, version, outcome, and answers.

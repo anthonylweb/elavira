@@ -68,7 +68,66 @@
 	}
 
 	function base( node ) {
-		return { target: { selector: selector( node ), tag_name: node.tagName.toLowerCase() }, element: { tag_name: node.tagName.toLowerCase() } };
+		var target = { selector: selector( node ), tag_name: node.tagName.toLowerCase(), identity_version: 2 };
+		if ( node.id && node.id.length <= 191 ) { target.element_id = node.id; }
+		var classes = node.getAttribute( 'class' ) || '';
+		if ( classes ) { target.element_classes = classes.slice( 0, 512 ); }
+		return { target: target, element: identification( node ) };
+	}
+
+	// Identification only: never read form values, serialize markup, or collect large containers.
+	function identifyingText( node ) {
+		var parts = [], visited = 0, size = 0;
+		function walk( current, depth ) {
+			if ( ! current || ++visited > 64 || depth > 6 || size >= 160 ) { return; }
+			if ( current.nodeType === 3 ) { var value = String( current.nodeValue || '' ).slice( 0, 160 - size ); parts.push( value ); size += value.length; return; }
+			if ( ! visible( current ) || /^(INPUT|TEXTAREA|SELECT|SCRIPT|STYLE|NOSCRIPT)$/.test( current.tagName ) || ( current.hasAttribute && current.hasAttribute( 'contenteditable' ) ) ) { return; }
+			Array.prototype.some.call( current.childNodes || [], function ( child ) { walk( child, depth + 1 ); return visited >= 64 || size >= 160; } );
+		}
+		walk( node, 0 );
+		return evidenceText( parts.join( ' ' ), 160 );
+	}
+
+	function identifyingUrl( value, node, filename ) {
+		if ( ! value ) { return ''; }
+		try {
+			var doc = node.ownerDocument || root.document, url = new URL( value, doc && ( doc.baseURI || doc.location && doc.location.href ) );
+			if ( ! /^https?:$/.test( url.protocol ) ) { return ''; }
+			var display = filename ? url.pathname.split( '/' ).pop() : url.origin + url.pathname;
+			return display.length <= 512 ? display : '';
+		} catch ( error ) { return ''; }
+	}
+
+	function identification( node ) {
+		var tag = node.tagName.toLowerCase(), item = { tag_name: tag }, link = tag === 'a' && node.hasAttribute( 'href' ) ? node : tag === 'img' && node.closest ? node.closest( 'a[href]' ) : null;
+		var image = tag === 'img' ? node : null;
+		if ( link ) {
+			var content = identifyingText( link ), images = link.querySelectorAll ? link.querySelectorAll( 'img' ) : [];
+			if ( ! image && images.length === 1 && visible( images[ 0 ] ) ) { image = images[ 0 ]; }
+			item.link_kind = ! text( link ) && images.length === 1 && image ? 'image_only' : content && ! images.length ? 'text' : 'mixed_or_unknown';
+			item.link_destination = identifyingUrl( link.getAttribute( 'href' ), link, false );
+			if ( content ) { item.text_excerpt = content; }
+			// Expose only simple available naming sources; complex referenced names remain technical review.
+			if ( ! link.hasAttribute( 'aria-labelledby' ) ) {
+				var name = link.getAttribute( 'aria-label' ) || ( item.link_kind === 'text' ? content : item.link_kind === 'image_only' ? image.getAttribute( 'alt' ) : '' );
+				if ( name ) { item.link_name_excerpt = evidenceText( name, 160 ); }
+			}
+			var parent = link.parentElement;
+			if ( parent && parent.tagName === 'P' ) { var context = identifyingText( parent ); if ( context && context !== content ) { item.context_excerpt = context; } }
+		}
+		if ( image ) {
+			item.image_filename = identifyingUrl( image.currentSrc || image.getAttribute( 'src' ), image, true );
+			item.image_alt_state = ! image.hasAttribute( 'alt' ) ? 'missing' : image.getAttribute( 'alt' ) === '' ? 'empty' : 'present';
+			if ( item.image_alt_state === 'present' ) { item.image_alt_excerpt = evidenceText( image.getAttribute( 'alt' ), 160 ); }
+		}
+		if ( /^h[1-6]$/.test( tag ) || tag === 'button' ) { item.text_excerpt = identifyingText( node ); }
+		if ( /^(input|select|textarea)$/.test( tag ) ) {
+			item.input_type = ( node.type || tag ).slice( 0, 32 );
+			var fieldName = node.getAttribute( 'name' );
+			if ( fieldName ) { item.field_name = evidenceText( fieldName, 80 ); }
+		}
+		Object.keys( item ).forEach( function ( key ) { if ( item[ key ] === '' ) { delete item[ key ]; } } );
+		return item;
 	}
 
 	function result( id, outcome, node, evidence, grouping, version ) {
@@ -182,8 +241,10 @@
 			var roleText = ( node.getAttribute( 'role' ) || '' ).trim().toLowerCase(), role = explicitRole( node, vocabulary ), native = nativeRole( node );
 			if ( roleText && ! role ) { results.push( result( 'elavira.semantics.invalid_role', 'potential_issue', node, { role_state: 'no_valid_token', first_invalid_token: evidenceText( roleText.split( /\s+/ )[ 0 ], 64 ), native_role_state: native ? 'available' : 'none' } ) ); }
 			if ( role && native && role === native ) { results.push( result( 'elavira.aria.redundant_role', 'potential_issue', node, { native_role: native, explicit_role: role } ) ); }
-			if ( role && native && role !== native && [ 'button', 'checkbox', 'combobox', 'link', 'radio', 'searchbox', 'slider', 'textbox' ].indexOf( native ) !== -1 ) { results.push( result( 'elavira.semantics.native_semantics_overridden', 'potential_issue', node, { native_role: native, explicit_role: role } ) ); }
-			var effectiveRole = role || native, required = vocabulary.requiredByRole[ effectiveRole ] || [];
+			var presentation = role === 'presentation' || role === 'none';
+			var presentationIgnored = presentation && ( !! focusableKind( node ) || Array.prototype.some.call( node.attributes || [], function ( attribute ) { return /^(aria-atomic|aria-busy|aria-controls|aria-current|aria-describedby|aria-details|aria-disabled|aria-dropeffect|aria-errormessage|aria-flowto|aria-grabbed|aria-haspopup|aria-hidden|aria-invalid|aria-keyshortcuts|aria-label|aria-labelledby|aria-live|aria-owns|aria-relevant|aria-roledescription)$/.test( attribute.name ); } ) );
+			if ( role && native && role !== native && ! presentationIgnored && [ 'button', 'checkbox', 'combobox', 'link', 'radio', 'searchbox', 'slider', 'textbox' ].indexOf( native ) !== -1 ) { results.push( result( 'elavira.semantics.native_semantics_overridden', 'potential_issue', node, { native_role: native, explicit_role: role } ) ); }
+			var effectiveRole = presentationIgnored ? native : ( role || native ), required = role && ! presentationIgnored && role !== native ? ( vocabulary.requiredByRole[ effectiveRole ] || [] ) : [];
 			required.forEach( function ( attribute ) {
 				var value = node.getAttribute( attribute ), invalid = value !== null ? ariaValueReason( attribute, value.trim().toLowerCase(), vocabulary ) : '';
 				if ( value === null ) { results.push( result( 'elavira.aria.required_attribute_missing', 'potential_issue', node, { role: effectiveRole, attribute_name: attribute } ) ); results.push( result( 'elavira.semantics.required_state_missing', 'automatic_failure', node, { role: effectiveRole, required_attribute: attribute, state_reason: 'missing' } ) ); }
@@ -196,9 +257,9 @@
 				if ( name.indexOf( 'aria-' ) !== 0 ) { return; }
 				if ( vocabulary.attributes.indexOf( name ) === -1 ) { results.push( result( 'elavira.aria.invalid_attribute', 'potential_issue', node, { attribute_name: evidenceText( name, 64 ), reason: 'unknown' } ) ); return; }
 				var reason = ariaValueReason( name, value, vocabulary ); if ( reason ) { results.push( result( 'elavira.aria.invalid_value', 'potential_issue', node, { attribute_name: name, value_reason: reason } ) ); }
-				if ( vocabulary.nameProhibitedRoles.indexOf( role ) !== -1 && /^(?:aria-label|aria-labelledby)$/.test( name ) ) { results.push( result( 'elavira.aria.prohibited_attribute', 'potential_issue', node, { role: role, attribute_name: name } ) ); }
+				if ( ! presentationIgnored && vocabulary.nameProhibitedRoles.indexOf( role ) !== -1 && /^(?:aria-label|aria-labelledby)$/.test( name ) ) { results.push( result( 'elavira.aria.prohibited_attribute', 'potential_issue', node, { role: role, attribute_name: name } ) ); }
 				if ( Object.prototype.hasOwnProperty.call( vocabulary.idReferences, name ) ) {
-					var tokens = value.split( /\s+/ ).filter( Boolean ), broken = ! tokens.length ? 'empty' : '';
+					var tokens = attribute.value.trim().split( /\s+/ ).filter( Boolean ), broken = ! tokens.length ? 'empty' : '';
 					for ( var i = 0; ! broken && i < tokens.length; i++ ) { var matches = ids[ tokens[ i ] ] || []; if ( ! matches.length ) { broken = 'missing'; } else if ( matches.length > 1 ) { broken = 'duplicate'; results.push( result( 'elavira.aria.duplicate_id_reference', 'potential_issue', node, { attribute_name: name, duplicate_count: matches.length } ) ); } else if ( /^(?:aria-labelledby|aria-describedby)$/.test( name ) && ! text( matches[ 0 ] ) ) { broken = 'no_usable_text'; } }
 					if ( broken ) { results.push( result( 'elavira.aria.broken_id_reference', 'potential_issue', node, { attribute_name: name, reference_state: broken, token_count: tokens.length } ) ); }
 				}

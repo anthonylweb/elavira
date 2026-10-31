@@ -37,6 +37,7 @@ final class Installer {
 				new StatementSchema( $GLOBALS['wpdb'] ),
 				new RulesetFoundationSchema( $GLOBALS['wpdb'] ),
 				new ScanObservationSchema( $GLOBALS['wpdb'] ),
+				new \Elavira\Core\Migrations\OccurrenceReviewSchema( $GLOBALS['wpdb'] ),
 			)
 		);
 

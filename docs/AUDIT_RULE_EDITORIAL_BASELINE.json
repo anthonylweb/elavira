@@ -1,0 +1,1789 @@
+[
+    {
+        "id": "elavira.image.alt_missing",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.1.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "alt_state"
+        ],
+        "resolved_decision": "elavira.decision.alternative_text",
+        "editorial": {
+            "title": "Image is missing an alternative text attribute",
+            "description": "An image element does not provide an alt attribute.",
+            "summary": "Images are missing alternative text attributes.",
+            "why_it_matters": "People who cannot see an image need a text alternative or an explicit indication that it is decorative.",
+            "recommendation": "Determine each image purpose and provide appropriate alternative text or an empty alt attribute for a decorative image.",
+            "wordpress_guidance": "Review the image Alternative Text field in the Media Library or block settings, then re-audit the rendered page.",
+            "developer_guidance": "Ensure rendered img elements always include an alt attribute whose value reflects the image purpose.",
+            "learn_topic": "images_alternative_text",
+            "guided_decision": "alternative_text",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.form.accessible_name_missing",
+        "version": "1.0.0",
+        "current": false,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "control_type",
+            "accessible_name_state"
+        ],
+        "resolved_decision": "elavira.decision.form_labels_instructions",
+        "editorial": {
+            "title": "Form control is missing an accessible name",
+            "description": "A rendered form control has no programmatically determinable accessible name.",
+            "summary": "Form controls are missing accessible names.",
+            "why_it_matters": "People using assistive technology need a reliable name to understand and operate each control.",
+            "recommendation": "Provide a visible label or another standards-compliant accessible name that describes the control purpose.",
+            "wordpress_guidance": "Check the form block or form-plugin field settings for a visible label, then inspect the rendered result.",
+            "developer_guidance": "Associate a label element with the control whenever possible; use ARIA naming only when native labeling is not suitable.",
+            "learn_topic": "forms_labels",
+            "guided_decision": "form_labels_instructions",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.link.purpose_review",
+        "version": "1.0.0",
+        "current": false,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.4",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "text_state",
+            "destination_kind"
+        ],
+        "resolved_decision": "elavira.decision.link_purpose",
+        "editorial": {
+            "title": "Link purpose needs review",
+            "description": "A link has empty, generic, or potentially ambiguous text that needs human evaluation in context.",
+            "summary": "Link purposes require human review.",
+            "why_it_matters": "People navigating links out of context need enough information to understand where each link goes or what it does.",
+            "recommendation": "Review the link together with its surrounding content and make its purpose clear when necessary.",
+            "wordpress_guidance": "Edit the linked text in the relevant block, menu, or widget when its purpose is unclear in context.",
+            "developer_guidance": "Ensure the computed accessible name and programmatic context communicate a meaningful purpose.",
+            "learn_topic": "links_navigation",
+            "guided_decision": "link_purpose",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.heading.structure_review",
+        "version": "1.0.0",
+        "current": false,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "current_level",
+            "previous_level",
+            "issue"
+        ],
+        "resolved_decision": "elavira.decision.heading_structure",
+        "editorial": {
+            "title": "Heading structure needs review",
+            "description": "The rendered heading sequence may not describe the page structure clearly.",
+            "summary": "Heading structure requires human evaluation.",
+            "why_it_matters": "A meaningful heading hierarchy helps people understand and navigate page organization.",
+            "recommendation": "Review whether headings describe sections accurately and form a logical hierarchy.",
+            "wordpress_guidance": "Review Heading blocks and template headings in the rendered page, changing levels only when structure requires it.",
+            "developer_guidance": "Use native heading elements according to document structure rather than visual size alone.",
+            "learn_topic": "headings_structure",
+            "guided_decision": "heading_structure",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.document.language_missing",
+        "version": "1.0.0",
+        "current": false,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "3.1.1",
+                "level": "A",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "language_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Page language is missing",
+            "description": "The rendered document does not declare its default human language.",
+            "summary": "The page language is not declared.",
+            "why_it_matters": "Assistive technologies use the declared language to pronounce and interpret content correctly.",
+            "recommendation": "Ensure the rendered html element declares the page default language.",
+            "wordpress_guidance": "Confirm the WordPress Site Language and inspect whether the active theme outputs it on the rendered html element.",
+            "developer_guidance": "Use the WordPress language attributes API in the document element and preserve valid theme output.",
+            "learn_topic": "language_content",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.links.missing_accessible_name",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.4",
+                "level": "A",
+                "principle": "operable"
+            },
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "accessible_name_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Link is missing an accessible name",
+            "description": "A rendered link has no objectively available accessible name.",
+            "summary": "Links are missing accessible names.",
+            "why_it_matters": "People using assistive technology need a name to identify a link and understand that it can be activated.",
+            "recommendation": "Provide link content or another standards-supported accessible name that communicates the link purpose.",
+            "wordpress_guidance": "Review the linked text, image alternative text, menu label, or block settings that supply the rendered link name.",
+            "developer_guidance": "Ensure the rendered anchor has a non-empty computed accessible name from visible content or a valid naming relationship.",
+            "learn_topic": "links_navigation",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.link.purpose_review",
+        "version": "2.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "2.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.4",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "label_kind",
+            "destination_kind"
+        ],
+        "resolved_decision": "elavira.decision.link_purpose",
+        "editorial": {
+            "title": "Link purpose may be ambiguous",
+            "description": "A link uses a short generic accessible name whose purpose may depend on surrounding context.",
+            "summary": "Links use generic names that may not communicate their purpose.",
+            "why_it_matters": "Generic names can be unclear when links are encountered out of context, although programmatically associated context may make a particular link acceptable.",
+            "recommendation": "Review each link with its programmatically associated context and clarify the accessible name where its purpose remains unclear.",
+            "wordpress_guidance": "Review the link text and surrounding block content. Use descriptive linked text when the purpose is not clear from supported context.",
+            "developer_guidance": "Check the computed accessible name and context exposed to assistive technology; do not rely on visual proximity alone.",
+            "learn_topic": "links_navigation",
+            "guided_decision": "link_purpose",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.links.identical_name_different_destination",
+        "version": "1.0.0",
+        "current": false,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.4",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "name_fingerprint",
+            "destination_fingerprint",
+            "destination_kind",
+            "destination_state"
+        ],
+        "resolved_decision": "elavira.decision.link_purpose",
+        "editorial": {
+            "title": "Identical link names lead to different destinations",
+            "description": "Rendered links share the same normalized accessible name but lead to materially different destinations.",
+            "summary": "Links with the same accessible name lead to different destinations.",
+            "why_it_matters": "People may not be able to distinguish links when the same name is presented without the surrounding page context.",
+            "recommendation": "Review whether each link purpose is clear from its accessible name and programmatically associated context.",
+            "wordpress_guidance": "Use descriptive linked text in blocks, navigation, or widgets when identical names perform different actions.",
+            "developer_guidance": "Compare computed accessible names and resolved destinations, preserving meaningful query and fragment differences.",
+            "learn_topic": "links_navigation",
+            "guided_decision": "link_purpose",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.links.identical_name_different_destination",
+        "version": "2.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "2.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.4",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "accessible_name_excerpt",
+            "name_fingerprint",
+            "destination_fingerprint",
+            "destination_kind",
+            "destination_state"
+        ],
+        "resolved_decision": "elavira.decision.link_purpose",
+        "editorial": {
+            "title": "Identical link names lead to different destinations",
+            "description": "Rendered links share the same normalized accessible name but lead to materially different destinations.",
+            "summary": "Links with the same accessible name lead to different destinations.",
+            "why_it_matters": "People may not be able to distinguish links when the same name is presented without the surrounding page context.",
+            "recommendation": "Review whether each link purpose is clear from its accessible name and programmatically associated context.",
+            "wordpress_guidance": "Use descriptive linked text in blocks, navigation, or widgets when identical names perform different actions.",
+            "developer_guidance": "Compare computed accessible names and resolved destinations, preserving meaningful query and fragment differences.",
+            "learn_topic": "links_navigation",
+            "guided_decision": "link_purpose",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.structure.missing_h1",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "h1_count"
+        ],
+        "resolved_decision": "elavira.decision.heading_structure",
+        "editorial": {
+            "title": "Page has no level-one heading",
+            "description": "The rendered page has no visible h1 element.",
+            "summary": "A clear level-one heading is strongly recommended",
+            "why_it_matters": "Elavira strongly recommends a clear level-one heading to establish the primary topic of the page and support a well-structured document. A missing H1 is not, by itself, an automatic WCAG failure.",
+            "recommendation": "Review the document structure and add a clear primary heading when that best represents the page. Do not add a heading merely to satisfy a count.",
+            "wordpress_guidance": "Review Heading blocks and template headings in the rendered page. Choose heading levels for document structure, not visual size.",
+            "developer_guidance": "Use native heading elements to represent the document hierarchy. WCAG and HTML do not require exactly one H1.",
+            "learn_topic": "headings_structure",
+            "guided_decision": "heading_structure",
+            "presentation": "structural_warning",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.structure.multiple_h1",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "h1_state"
+        ],
+        "resolved_decision": "elavira.decision.heading_structure",
+        "editorial": {
+            "title": "Page has multiple level-one headings",
+            "description": "The rendered page has more than one visible h1 element.",
+            "summary": "Multiple level-one headings need structural review",
+            "why_it_matters": "Multiple level-one headings are not automatically a WCAG failure. Elavira strongly recommends reviewing whether one clear primary page heading would better represent the page’s document structure.",
+            "recommendation": "Review the purpose and hierarchy of the level-one headings. Retain multiple H1 elements when they accurately represent the document; otherwise clarify the primary heading.",
+            "wordpress_guidance": "Review Heading blocks and template headings in the rendered page. Choose heading levels for document structure, not visual size.",
+            "developer_guidance": "Use native heading elements to represent the document hierarchy. WCAG and HTML do not require exactly one H1.",
+            "learn_topic": "headings_structure",
+            "guided_decision": "heading_structure",
+            "presentation": "structural_warning",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.structure.heading_level_jump",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "previous_level",
+            "current_level"
+        ],
+        "resolved_decision": "elavira.decision.heading_structure",
+        "editorial": {
+            "title": "Heading hierarchy skips a level",
+            "description": "A visible heading follows a heading more than one level higher in the rendered sequence.",
+            "summary": "Heading levels may not reflect the intended document hierarchy.",
+            "why_it_matters": "Skipped heading levels can make relationships between sections less clear, although page context determines whether the observed sequence is problematic.",
+            "recommendation": "Review the surrounding sections and use heading levels that accurately represent their hierarchy.",
+            "wordpress_guidance": "Review Heading blocks and template headings in the rendered page. Choose levels according to document structure.",
+            "developer_guidance": "Use native h1–h6 elements to represent sections and keep the rendered hierarchy meaningful.",
+            "learn_topic": "headings_structure",
+            "guided_decision": "heading_structure",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.structure.empty_heading",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "heading_level"
+        ],
+        "resolved_decision": "elavira.decision.heading_structure",
+        "editorial": {
+            "title": "Semantic heading is empty",
+            "description": "A visible semantic heading has no accessible text content.",
+            "summary": "Empty headings may create confusing navigation stops.",
+            "why_it_matters": "People who navigate by headings may encounter a heading with no useful name. The markup alone does not establish a complete WCAG failure.",
+            "recommendation": "Review the element in context. Remove unintended empty headings or provide meaningful heading text that describes the section.",
+            "wordpress_guidance": "Review Heading blocks and template headings in the rendered page. Choose levels according to document structure.",
+            "developer_guidance": "Use native h1–h6 elements to represent sections and keep the rendered hierarchy meaningful.",
+            "learn_topic": "headings_structure",
+            "guided_decision": "heading_structure",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.heading.structure_review",
+        "version": "2.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "2.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "issue"
+        ],
+        "resolved_decision": "elavira.decision.heading_structure",
+        "editorial": {
+            "title": "Page heading semantics need review",
+            "description": "The rendered page or its main content contains no visible semantic heading elements.",
+            "summary": "The main page content may lack a semantic heading structure.",
+            "why_it_matters": "Content without semantic headings may be harder to understand and navigate, but a person must determine which content requires headings.",
+            "recommendation": "Review whether the main content contains sections that need descriptive semantic headings. Do not add headings that do not represent real structure.",
+            "wordpress_guidance": "Review Heading blocks and template headings in the rendered page. Choose levels according to document structure.",
+            "developer_guidance": "Use native h1–h6 elements to represent sections and keep the rendered hierarchy meaningful.",
+            "learn_topic": "headings_structure",
+            "guided_decision": "heading_structure",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.document.language_missing",
+        "version": "2.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "2.0.0",
+        "wcag": [
+            {
+                "criterion": "3.1.1",
+                "level": "A",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "language_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Page language is missing",
+            "description": "The rendered document does not declare a non-empty default human language.",
+            "summary": "The page language is not declared.",
+            "why_it_matters": "Assistive technologies use the declared language to pronounce and interpret content correctly.",
+            "recommendation": "Add a valid primary language tag to the rendered html element.",
+            "wordpress_guidance": "Confirm the WordPress Site Language and inspect whether the active theme outputs a valid lang attribute on the rendered html element.",
+            "developer_guidance": "Use the WordPress language attributes API and emit a valid BCP 47-style primary language tag.",
+            "learn_topic": "language_content",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.document.invalid_language",
+        "version": "1.0.0",
+        "current": false,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "3.1.1",
+                "level": "A",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "language_state",
+            "declared_language"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Page language tag is invalid",
+            "description": "The rendered document declares a primary language tag with an objectively invalid structure.",
+            "summary": "The page language declaration is invalid.",
+            "why_it_matters": "Assistive technologies use the declared language to pronounce and interpret content correctly.",
+            "recommendation": "Correct the primary language tag. Elavira does not infer whether the declaration matches the page prose.",
+            "wordpress_guidance": "Confirm the WordPress Site Language and inspect whether the active theme outputs a valid lang attribute on the rendered html element.",
+            "developer_guidance": "Use the WordPress language attributes API and emit a valid BCP 47-style primary language tag.",
+            "learn_topic": "language_content",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.document.invalid_language",
+        "version": "2.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "2.0.0",
+        "wcag": [
+            {
+                "criterion": "3.1.1",
+                "level": "A",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "language_state",
+            "declared_language",
+            "primary_subtag"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Page language tag is invalid",
+            "description": "The rendered document declares a language tag whose primary language subtag is malformed or is not registered by IANA.",
+            "summary": "The page language declaration is invalid.",
+            "why_it_matters": "Assistive technologies use the declared language to pronounce and interpret content correctly.",
+            "recommendation": "Correct the language tag using a registered primary language subtag. Elavira does not infer whether the declaration matches the page prose.",
+            "wordpress_guidance": "Confirm the WordPress Site Language and inspect whether the active theme outputs a valid lang attribute on the rendered html element.",
+            "developer_guidance": "Use the WordPress language attributes API and emit a valid BCP 47-style primary language tag.",
+            "learn_topic": "language_content",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.form.accessible_name_missing",
+        "version": "2.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "2.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "control_type",
+            "name_state"
+        ],
+        "resolved_decision": "elavira.decision.form_labels_instructions",
+        "editorial": {
+            "title": "Form control is missing an accessible name",
+            "description": "A rendered native form control that requires a name has no supported programmatic naming source.",
+            "summary": "Form control is missing an accessible name.",
+            "why_it_matters": "A rendered native form control that requires a name has no supported programmatic naming source.",
+            "recommendation": "Correct the rendered semantic consequence, then re-audit. Do not treat an Addressed status as verification.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": "form_labels_instructions",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.forms.broken_label_reference",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "reference_state",
+            "control_type"
+        ],
+        "resolved_decision": "elavira.decision.form_labels_instructions",
+        "editorial": {
+            "title": "Explicit form label relationship is broken",
+            "description": "A label for reference is empty, missing, duplicated, or does not resolve to a labelable control. Another naming source may preserve the accessible result.",
+            "summary": "Explicit form label relationship is broken.",
+            "why_it_matters": "A label for reference is empty, missing, duplicated, or does not resolve to a labelable control. Another naming source may preserve the accessible result.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": "form_labels_instructions",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.forms.placeholder_only_label",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "3.3.2",
+                "level": "A",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "control_type",
+            "placeholder_state"
+        ],
+        "resolved_decision": "elavira.decision.form_labels_instructions",
+        "editorial": {
+            "title": "Placeholder appears to be the only label",
+            "description": "A text-entry control has a placeholder-derived accessible name but no persistent supported labeling source.",
+            "summary": "Placeholder appears to be the only label.",
+            "why_it_matters": "A text-entry control has a placeholder-derived accessible name but no persistent supported labeling source.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": "form_labels_instructions",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.forms.required_instruction_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "3.3.2",
+                "level": "A",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "required_source",
+            "control_type"
+        ],
+        "resolved_decision": "elavira.decision.form_labels_instructions",
+        "editorial": {
+            "title": "Required-field communication needs review",
+            "description": "A rendered control declares a required state. A person must verify that required status and necessary instructions are visible and programmatically available.",
+            "summary": "Required-field communication needs review.",
+            "why_it_matters": "A rendered control declares a required state. A person must verify that required status and necessary instructions are visible and programmatically available.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": "form_labels_instructions",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.forms.error_identification_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "3.3.1",
+                "level": "A",
+                "principle": "understandable"
+            },
+            {
+                "criterion": "3.3.3",
+                "level": "AA",
+                "principle": "understandable"
+            }
+        ],
+        "evidence_fields": [
+            "trigger"
+        ],
+        "resolved_decision": "elavira.decision.form_labels_instructions",
+        "editorial": {
+            "title": "Form error handling needs interaction review",
+            "description": "A rendered form contains an explicit invalid state or error-reporting region. Static inspection cannot verify submission, identification, announcement, focus, or suggestions.",
+            "summary": "Form error handling needs interaction review.",
+            "why_it_matters": "A rendered form contains an explicit invalid state or error-reporting region. Static inspection cannot verify submission, identification, announcement, focus, or suggestions.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": "form_labels_instructions",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.semantics.control_missing_name",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "name_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Interactive component is missing an accessible name",
+            "description": "An in-scope rendered ARIA widget that requires a name has no supported programmatic naming source.",
+            "summary": "Interactive component is missing an accessible name.",
+            "why_it_matters": "An in-scope rendered ARIA widget that requires a name has no supported programmatic naming source.",
+            "recommendation": "Correct the rendered semantic consequence, then re-audit. Do not treat an Addressed status as verification.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.semantics.invalid_role",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "role_state",
+            "first_invalid_token",
+            "native_role_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Explicit ARIA role token is invalid",
+            "description": "An explicit role contains no recognized non-abstract WAI-ARIA 1.2 fallback token. Syntax alone does not establish a WCAG failure.",
+            "summary": "Explicit ARIA role token is invalid.",
+            "why_it_matters": "An explicit role contains no recognized non-abstract WAI-ARIA 1.2 fallback token. Syntax alone does not establish a WCAG failure.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.semantics.required_state_missing",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "required_attribute",
+            "state_reason"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Required semantic state or property is unavailable",
+            "description": "The resolved ARIA role unambiguously requires a state or property that is absent or deterministically invalid.",
+            "summary": "Required semantic state or property is unavailable.",
+            "why_it_matters": "The resolved ARIA role unambiguously requires a state or property that is absent or deterministically invalid.",
+            "recommendation": "Correct the rendered semantic consequence, then re-audit. Do not treat an Addressed status as verification.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.semantics.state_consistency_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "state_attribute"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Exposed component state needs interaction review",
+            "description": "A mutable ARIA state is present. A person must compare it with visible presentation and actual behavior throughout interaction.",
+            "summary": "Exposed component state needs interaction review.",
+            "why_it_matters": "A mutable ARIA state is present. A person must compare it with visible presentation and actual behavior throughout interaction.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.semantics.native_semantics_overridden",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "native_role",
+            "explicit_role"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Explicit role may conflict with native semantics",
+            "description": "A narrowly recognized native interactive element is assigned a substantially different role that may confuse its exposed semantics.",
+            "summary": "Explicit role may conflict with native semantics.",
+            "why_it_matters": "A narrowly recognized native interactive element is assigned a substantially different role that may confuse its exposed semantics.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.invalid_attribute",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [],
+        "evidence_fields": [
+            "attribute_name",
+            "reason"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA attribute name is unknown",
+            "description": "A rendered aria-* attribute is not in the bundled WAI-ARIA 1.2 vocabulary. The spelling defect alone is not a proven WCAG failure.",
+            "summary": "ARIA attribute name is unknown.",
+            "why_it_matters": "A rendered aria-* attribute is not in the bundled WAI-ARIA 1.2 vocabulary. The spelling defect alone is not a proven WCAG failure.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.invalid_value",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "attribute_name",
+            "value_reason"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA attribute value is invalid",
+            "description": "A supported ARIA attribute has a deterministically invalid token, enumeration, numeric value, or ID-reference form.",
+            "summary": "ARIA attribute value is invalid.",
+            "why_it_matters": "A supported ARIA attribute has a deterministically invalid token, enumeration, numeric value, or ID-reference form.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.prohibited_attribute",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [],
+        "evidence_fields": [
+            "role",
+            "attribute_name"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA naming attribute is prohibited for this role",
+            "description": "A role that prohibits author-provided naming uses aria-label or aria-labelledby. This syntax condition does not by itself establish a WCAG failure.",
+            "summary": "ARIA naming attribute is prohibited for this role.",
+            "why_it_matters": "A role that prohibits author-provided naming uses aria-label or aria-labelledby. This syntax condition does not by itself establish a WCAG failure.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.required_attribute_missing",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "4.1.2",
+                "level": "A",
+                "principle": "robust"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "attribute_name"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA role is missing a required attribute",
+            "description": "A resolved role is missing an attribute required by the bounded WAI-ARIA 1.2 contract. A separate consequence rule becomes primary when the semantic state is unavailable.",
+            "summary": "ARIA role is missing a required attribute.",
+            "why_it_matters": "A resolved role is missing an attribute required by the bounded WAI-ARIA 1.2 contract. A separate consequence rule becomes primary when the semantic state is unavailable.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.broken_id_reference",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "attribute_name",
+            "reference_state",
+            "token_count"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA ID reference is broken",
+            "description": "An applicable ARIA ID-reference is empty, missing, ambiguous, or resolves to no usable text where naming or description requires text. A valid fallback prevents a missing-name failure.",
+            "summary": "ARIA ID reference is broken.",
+            "why_it_matters": "An applicable ARIA ID-reference is empty, missing, ambiguous, or resolves to no usable text where naming or description requires text. A valid fallback prevents a missing-name failure.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.hidden_focusable_content",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [],
+        "evidence_fields": [
+            "focusable_kind",
+            "hidden_source"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA-hidden content contains a focusable descendant",
+            "description": "A rendered aria-hidden region contains a conservatively focusable descendant. Script-controlled focus and interaction still require manual testing.",
+            "summary": "ARIA-hidden content contains a focusable descendant.",
+            "why_it_matters": "A rendered aria-hidden region contains a conservatively focusable descendant. Script-controlled focus and interaction still require manual testing.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.duplicate_id_reference",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.3.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "attribute_name",
+            "duplicate_count"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "ARIA relationship references a duplicated ID",
+            "description": "An ARIA or HTML labeling relationship depends on an ID used by multiple elements, making the relationship ambiguous.",
+            "summary": "ARIA relationship references a duplicated ID.",
+            "why_it_matters": "An ARIA or HTML labeling relationship depends on an ID used by multiple elements, making the relationship ambiguous.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.aria.redundant_role",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [],
+        "evidence_fields": [
+            "native_role",
+            "explicit_role"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Explicit role repeats native semantics",
+            "description": "A narrow native HTML pattern repeats its implicit role. This is best-practice education and has no direct WCAG mapping.",
+            "summary": "Explicit role repeats native semantics.",
+            "why_it_matters": "A narrow native HTML pattern repeats its implicit role. This is best-practice education and has no direct WCAG mapping.",
+            "recommendation": "Review the rendered component in context and with appropriate assistive technology before deciding whether remediation is required.",
+            "wordpress_guidance": "Inspect the responsible block, form plugin, theme, or custom component and verify the rendered result before changing it.",
+            "developer_guidance": "Prefer native HTML semantics. Inspect the computed accessibility information and test behavior rather than relying on source syntax alone.",
+            "learn_topic": "forms_labels",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.keyboard.positive_tabindex",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.3",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "tabindex_category",
+            "tabindex_value",
+            "focusable_kind"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Positive tabindex needs focus-order review",
+            "description": "A visible interactive or focusable element uses a positive tabindex, which can move keyboard focus away from logical DOM and reading order.",
+            "summary": "Positive tabindex needs focus-order review.",
+            "why_it_matters": "A visible interactive or focusable element uses a positive tabindex, which can move keyboard focus away from logical DOM and reading order.",
+            "recommendation": "Start before the region; use Tab through it, compare focus with visual and content order, then repeat with Shift+Tab.",
+            "wordpress_guidance": "Prefer logical DOM order and the normal document focus order instead of positive tabindex values.",
+            "developer_guidance": "Prefer logical DOM order and the normal document focus order instead of positive tabindex values.",
+            "learn_topic": "focus_focus_order",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.keyboard.non_native_interactive",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.1.1",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "interaction_signal",
+            "tabindex_category"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Non-native interactive element needs keyboard review",
+            "description": "A visible non-native element exposes an interactive role or focusability signal. That pattern does not prove keyboard inoperability.",
+            "summary": "Non-native interactive element needs keyboard review.",
+            "why_it_matters": "A visible non-native element exposes an interactive role or focusability signal. That pattern does not prove keyboard inoperability.",
+            "recommendation": "Reach it using Tab or the widget’s expected navigation model; verify activation, state changes, visible focus, and a usable way to leave it.",
+            "wordpress_guidance": "Prefer a native HTML control where it meets the need; otherwise implement and test the documented keyboard pattern and semantic states.",
+            "developer_guidance": "Prefer a native HTML control where it meets the need; otherwise implement and test the documented keyboard pattern and semantic states.",
+            "learn_topic": "keyboard_accessibility",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.keyboard.possible_unreachable_control",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.1.1",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "focusability"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Custom control may require keyboard-reachability testing",
+            "description": "A visible non-native interactive role has no ordinary tab stop or uses a negative tabindex. Script-managed or composite navigation may still be valid.",
+            "summary": "Custom control may require keyboard-reachability testing.",
+            "why_it_matters": "A visible non-native interactive role has no ordinary tab stop or uses a negative tabindex. Script-managed or composite navigation may still be valid.",
+            "recommendation": "Begin at a logical point before the control, attempt to reach and operate it without a pointer, and test any documented arrow-key model.",
+            "wordpress_guidance": "Use a native control where feasible, or provide an appropriate focus-management and keyboard interaction model.",
+            "developer_guidance": "Use a native control where feasible, or provide an appropriate focus-management and keyboard interaction model.",
+            "learn_topic": "keyboard_accessibility",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.keyboard.possible_trap",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.1.2",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "structure",
+            "focusable_descendants"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Application-style region needs keyboard-trap testing",
+            "description": "A visible application-role region contains multiple focusable descendants. Static inspection cannot establish that focus becomes trapped.",
+            "summary": "Application-style region needs keyboard-trap testing.",
+            "why_it_matters": "A visible application-role region contains multiple focusable descendants. Static inspection cannot establish that focus becomes trapped.",
+            "recommendation": "Keyboard into the region, traverse controls forward and backward, try Escape where conventional, and confirm focus can leave without a pointer or unexpected action.",
+            "wordpress_guidance": "Provide standard movement and exit behavior; intentional modal containment must include an accessible keyboard dismissal path.",
+            "developer_guidance": "Provide standard movement and exit behavior; intentional modal containment must include an accessible keyboard dismissal path.",
+            "learn_topic": "keyboard_accessibility",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.keyboard.custom_widget_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.1.1",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "role",
+            "widget_pattern"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Custom widget needs interaction-pattern review",
+            "description": "A visible non-native composite or specialized ARIA widget requires manual verification of its role-specific keyboard behavior.",
+            "summary": "Custom widget needs interaction-pattern review.",
+            "why_it_matters": "A visible non-native composite or specialized ARIA widget requires manual verification of its role-specific keyboard behavior.",
+            "recommendation": "Test only the keys expected for this widget type, such as Tab, arrows, Enter, Space, Escape, Home, or End as its documented pattern requires.",
+            "wordpress_guidance": "Prefer native controls where suitable; otherwise implement the applicable WAI-ARIA keyboard interaction pattern completely.",
+            "developer_guidance": "Prefer native controls where suitable; otherwise implement the applicable WAI-ARIA keyboard interaction pattern completely.",
+            "learn_topic": "keyboard_accessibility",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.focus.possible_hidden_focus",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.7",
+                "level": "AA",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "style_pattern",
+            "style_source"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Author styles may suppress the focus indicator",
+            "description": "A bounded author focus rule removes the outline without declaring another detectable focus-state border, shadow, or background treatment. Interaction may still provide a valid indicator elsewhere.",
+            "summary": "Author styles may suppress the focus indicator.",
+            "why_it_matters": "A bounded author focus rule removes the outline without declaring another detectable focus-state border, shadow, or background treatment. Interaction may still provide a valid indicator elsewhere.",
+            "recommendation": "Keyboard through the affected controls and visually confirm a persistent, perceivable focus indicator in every relevant state.",
+            "wordpress_guidance": "Retain native focus styling or add a clear focus-visible treatment; verify visibility rather than relying on outline removal alone.",
+            "developer_guidance": "Retain native focus styling or add a clear focus-visible treatment; verify visibility rather than relying on outline removal alone.",
+            "learn_topic": "focus_focus_order",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.focus.order_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.3",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "order_trigger"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Focus order needs manual review",
+            "description": "A bounded focus configuration may alter sequential focus order. Static inspection cannot determine whether the resulting sequence preserves meaning and operation.",
+            "summary": "Focus order needs manual review.",
+            "why_it_matters": "A bounded focus configuration may alter sequential focus order. Static inspection cannot determine whether the resulting sequence preserves meaning and operation.",
+            "recommendation": "Use Tab and Shift+Tab through the region and compare the actual focus sequence with its logical reading, visual, and interaction order.",
+            "wordpress_guidance": "Align DOM and normal focus order with the intended sequence and avoid positive tabindex values.",
+            "developer_guidance": "Align DOM and normal focus order with the intended sequence and avoid positive tabindex values.",
+            "learn_topic": "focus_focus_order",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.focus.obscured_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.11",
+                "level": "AA",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "position",
+            "boundary",
+            "coverage"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Persistent overlay may obscure focused content",
+            "description": "A substantial fixed or sticky, elevated region touches a viewport boundary and may overlap focused content during keyboard navigation.",
+            "summary": "Persistent overlay may obscure focused content.",
+            "why_it_matters": "A substantial fixed or sticky, elevated region touches a viewport boundary and may overlap focused content during keyboard navigation.",
+            "recommendation": "Move focus near each overlay boundary, test scrolling, and confirm every focused component remains sufficiently visible.",
+            "wordpress_guidance": "Adjust scrolling offsets, spacing, overlay dimensions, or focus movement so focused components remain visible.",
+            "developer_guidance": "Adjust scrolling offsets, spacing, overlay dimensions, or focus movement so focused components remain visible.",
+            "learn_topic": "focus_focus_order",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.focus.modal_management_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "2.4.3",
+                "level": "A",
+                "principle": "operable"
+            }
+        ],
+        "evidence_fields": [
+            "dialog_pattern",
+            "role"
+        ],
+        "resolved_decision": "elavira.decision.keyboard_interaction",
+        "editorial": {
+            "title": "Dialog focus management needs interaction review",
+            "description": "A visible open native dialog or ARIA modal dialog requires human verification of focus entry, containment, dismissal, background restriction, and restoration.",
+            "summary": "Dialog focus management needs interaction review.",
+            "why_it_matters": "A visible open native dialog or ARIA modal dialog requires human verification of focus entry, containment, dismissal, background restriction, and restoration.",
+            "recommendation": "Open it by keyboard, inspect its name and initial focus, traverse it, dismiss it by keyboard, and confirm focus returns logically and background interaction is restricted.",
+            "wordpress_guidance": "Use native dialog behavior or a complete accessible dialog pattern with an accessible name, managed focus, keyboard dismissal, and logical restoration.",
+            "developer_guidance": "Use native dialog behavior or a complete accessible dialog pattern with an accessible name, managed focus, keyboard dismissal, and logical restoration.",
+            "learn_topic": "focus_focus_order",
+            "guided_decision": "keyboard_interaction",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.contrast.text_insufficient",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.4.3",
+                "level": "AA",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "foreground",
+            "background",
+            "ratio_milli",
+            "required_milli",
+            "text_size",
+            "font_size_milli",
+            "font_weight",
+            "determination",
+            "rendered_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Normal text has insufficient determinate contrast",
+            "description": "Elavira established the current rendered foreground and background relationship for applicable normal text and calculated a ratio below 4.5:1.",
+            "summary": "Normal text has insufficient determinate contrast.",
+            "why_it_matters": "People with low vision may be unable to distinguish text from its background.",
+            "recommendation": "Adjust the text or background colors so the effective ratio is at least 4.5:1, then re-audit.",
+            "wordpress_guidance": "Review the responsible theme, block, Global Styles, or component styles and verify every relevant state after changes.",
+            "developer_guidance": "Use WCAG relative luminance and effective composited colors; do not infer accessibility from color distance or source tokens.",
+            "learn_topic": "color_contrast",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.contrast.large_text_insufficient",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.4.3",
+                "level": "AA",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "foreground",
+            "background",
+            "ratio_milli",
+            "required_milli",
+            "text_size",
+            "font_size_milli",
+            "font_weight",
+            "determination",
+            "rendered_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Large text has insufficient determinate contrast",
+            "description": "Elavira established that the current rendered text qualifies as large-scale and calculated a ratio below 3:1.",
+            "summary": "Large text has insufficient determinate contrast.",
+            "why_it_matters": "People with low vision may be unable to distinguish large text from its background.",
+            "recommendation": "Adjust the text or background colors so the effective ratio is at least 3:1, then re-audit.",
+            "wordpress_guidance": "Review the responsible theme, block, Global Styles, or component styles and verify every relevant state after changes.",
+            "developer_guidance": "Use WCAG relative luminance and effective composited colors; do not infer accessibility from color distance or source tokens.",
+            "learn_topic": "color_contrast",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.contrast.non_text_insufficient",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "automatic_failure",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.4.11",
+                "level": "AA",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "foreground",
+            "background",
+            "ratio_milli",
+            "required_milli",
+            "visual_category",
+            "determination",
+            "rendered_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Applicable non-text visual information has insufficient contrast",
+            "description": "Elavira established an applicable essential component or graphical relationship below 3:1.",
+            "summary": "Applicable non-text visual information has insufficient contrast.",
+            "why_it_matters": "People with low vision may be unable to identify an essential control, state, or graphical object.",
+            "recommendation": "Increase the applicable visual contrast to at least 3:1 without relying on an unnecessary decorative boundary.",
+            "wordpress_guidance": "Review the responsible theme, block, Global Styles, or component styles and verify every relevant state after changes.",
+            "developer_guidance": "Use WCAG relative luminance and effective composited colors; do not infer accessibility from color distance or source tokens.",
+            "learn_topic": "color_contrast",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.contrast.cannot_determine",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.4.3",
+                "level": "AA",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "candidate",
+            "reason",
+            "required_milli",
+            "rendered_state"
+        ],
+        "resolved_decision": null,
+        "editorial": {
+            "title": "Rendered contrast could not be determined reliably",
+            "description": "Elavira found a relevant current-state text or component candidate but could not establish its effective color relationship.",
+            "summary": "Rendered contrast could not be determined reliably.",
+            "why_it_matters": "People with low vision may encounter insufficient contrast that static calculation cannot responsibly confirm.",
+            "recommendation": "Test the identified current and relevant alternate states with an appropriate contrast tool; resolve complex layering if testing confirms insufficient contrast.",
+            "wordpress_guidance": "Review the responsible theme, block, Global Styles, or component styles and verify every relevant state after changes.",
+            "developer_guidance": "Use WCAG relative luminance and effective composited colors; do not infer accessibility from color distance or source tokens.",
+            "learn_topic": "color_contrast",
+            "guided_decision": null,
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.color.color_only_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.4.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "meaning",
+            "non_color_cue",
+            "rendered_state"
+        ],
+        "resolved_decision": "elavira.decision.use_of_color",
+        "editorial": {
+            "title": "Status may rely on color alone",
+            "description": "A rendered control explicitly reports an invalid state without a bounded referenced error description or message.",
+            "summary": "Status may rely on color alone.",
+            "why_it_matters": "People who cannot perceive a color difference may miss the error or required response.",
+            "recommendation": "Verify that visible text, meaningful iconography, pattern, shape, or another non-color cue communicates the same status.",
+            "wordpress_guidance": "Review the responsible theme, block, Global Styles, or component styles and verify every relevant state after changes.",
+            "developer_guidance": "Use WCAG relative luminance and effective composited colors; do not infer accessibility from color distance or source tokens.",
+            "learn_topic": "color_contrast",
+            "guided_decision": "use_of_color",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.images.alt_quality_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.1.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "alt_excerpt",
+            "alt_fingerprint",
+            "context",
+            "review_reason"
+        ],
+        "resolved_decision": "elavira.decision.alternative_text",
+        "editorial": {
+            "title": "Contextual text-alternative review is warranted",
+            "description": "An image with a supplied alternative appears in a functional or captioned context where its purpose and possible redundancy require human judgment.",
+            "summary": "Contextual text-alternative review is warranted.",
+            "why_it_matters": "People who cannot see an image rely on an alternative that communicates its purpose in context.",
+            "recommendation": "Review this text alternative in context. Decide whether the image is informative, decorative, functional, complex, redundant with nearby content, or an image of text.",
+            "wordpress_guidance": "Review the Image block or Media Library alternative-text field and any featured-image, theme, page-builder, custom-field, or plugin output. A Media Library change may not affect every use; verify the rendered public page.",
+            "developer_guidance": "Determine the image purpose in context and render an appropriate native alt attribute. Functional images must contribute an action or destination name. Complex images may need a concise alternative plus a suitable detailed equivalent.",
+            "learn_topic": "images_alternative_text",
+            "guided_decision": "alternative_text",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.images.filename_alt",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "potential_issue",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.1.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "alt_excerpt",
+            "alt_fingerprint",
+            "context",
+            "pattern"
+        ],
+        "resolved_decision": "elavira.decision.alternative_text",
+        "editorial": {
+            "title": "Text alternative resembles an image filename",
+            "description": "The supplied alternative matches a bounded filename-style pattern. This pattern may come from a media filename or import workflow, but context remains authoritative.",
+            "summary": "Text alternative resembles an image filename.",
+            "why_it_matters": "People who cannot see an image rely on an alternative that communicates its purpose in context.",
+            "recommendation": "Review whether the alternative communicates the image’s purpose in this rendered context. Do not replace it automatically.",
+            "wordpress_guidance": "Review the Image block or Media Library alternative-text field and any featured-image, theme, page-builder, custom-field, or plugin output. A Media Library change may not affect every use; verify the rendered public page.",
+            "developer_guidance": "Determine the image purpose in context and render an appropriate native alt attribute. Functional images must contribute an action or destination name. Complex images may need a concise alternative plus a suitable detailed equivalent.",
+            "learn_topic": "images_alternative_text",
+            "guided_decision": "alternative_text",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    },
+    {
+        "id": "elavira.images.long_alt_review",
+        "version": "1.0.0",
+        "current": true,
+        "outcome": "human_review",
+        "editorial_version": "1.0.0",
+        "wcag": [
+            {
+                "criterion": "1.1.1",
+                "level": "A",
+                "principle": "perceivable"
+            }
+        ],
+        "evidence_fields": [
+            "alt_excerpt",
+            "alt_fingerprint",
+            "context",
+            "alt_length",
+            "word_count",
+            "review_reason"
+        ],
+        "resolved_decision": "elavira.decision.alternative_text",
+        "editorial": {
+            "title": "Extended text alternative may need a different equivalent strategy",
+            "description": "A bounded Elavira heuristic found an extended, multi-sentence alternative. Length alone is not a WCAG failure and does not establish that the alternative is incorrect.",
+            "summary": "Extended text alternative may need a different equivalent strategy.",
+            "why_it_matters": "People who cannot see an image rely on an alternative that communicates its purpose in context.",
+            "recommendation": "Review whether a concise alternative should identify the image or purpose while important detail is provided through adjacent text, structured content, a data table, or another suitable equivalent.",
+            "wordpress_guidance": "Review the Image block or Media Library alternative-text field and any featured-image, theme, page-builder, custom-field, or plugin output. A Media Library change may not affect every use; verify the rendered public page.",
+            "developer_guidance": "Determine the image purpose in context and render an appropriate native alt attribute. Functional images must contribute an action or destination name. Complex images may need a concise alternative plus a suitable detailed equivalent.",
+            "learn_topic": "images_alternative_text",
+            "guided_decision": "alternative_text",
+            "presentation": "default",
+            "what_to_check": "",
+            "verification_guidance": "",
+            "examples": []
+        }
+    }
+]

@@ -52,15 +52,16 @@ final class GuidedDecisionsModule implements Module {
 			$history    = new FindingStatusHistoryRepository( $database );
 			$this->page = new DecisionPage(
 				array(
-					'audits'     => new AuditRepository( $database ),
-					'findings'   => $findings,
-					'registry'   => CoreDecisionRegistry::create(),
-					'navigator'  => new DecisionNavigator(),
-					'state'      => new DecisionState(),
-					'repository' => new DecisionRepository( $database ),
-					'status'     => new UpdateFindingStatus( $findings, $history ),
-					'rules'      => CoreRuleRegistry::create(),
-					'learn'      => CoreTopicRegistry::create(),
+					'audits'      => new AuditRepository( $database ),
+					'findings'    => $findings,
+					'occurrences' => new \Elavira\Findings\Persistence\OccurrenceRepository( $database ),
+					'registry'    => CoreDecisionRegistry::create(),
+					'navigator'   => new DecisionNavigator(),
+					'state'       => new DecisionState(),
+					'repository'  => new DecisionRepository( $database ),
+					'status'      => new UpdateFindingStatus( $findings, $history ),
+					'rules'       => CoreRuleRegistry::create(),
+					'learn'       => CoreTopicRegistry::create(),
 				)
 			);
 		}

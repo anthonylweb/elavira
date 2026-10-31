@@ -26,7 +26,16 @@ final class HistoricalRuleResolver {
 		$this->rules = $rules;
 	}
 
-	/** Resolve audit-time guidance without substituting newer editorial content.
+	/** Count current browser checks once per rule ID, excluding historical versions. @return int */
+	public function current_rule_count() {
+		$ids = array();
+		foreach ( $this->rules->all() as $rule ) {
+			$ids[ $rule->id() ] = true;
+		}
+		return count( $ids );
+	}
+
+	/** Resolve exact compatible guidance; never substitute another rule/editorial version.
 	 *
 	 * @param array $finding Persisted finding.
 	 * @return array

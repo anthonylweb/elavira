@@ -82,6 +82,9 @@ final class DecisionDefinition {
 	 */
 	private function validate_graph( array $data ) {
 		foreach ( $data['steps'] as $step_id => $step ) {
+			if ( isset( $step['help'] ) && ( ! is_string( $step['help'] ) || strlen( $step['help'] ) > 4096 ) ) {
+				throw new InvalidArgumentException( 'Guided Decision help must be bounded text.' );
+			}
 			if ( ! in_array( $step['type'] ?? '', array( 'yes_no', 'single_choice', 'information' ), true ) ) {
 				throw new InvalidArgumentException( 'Unsupported Guided Decision step type.' );
 			}
@@ -97,6 +100,11 @@ final class DecisionDefinition {
 				if ( ! isset( $data['steps'][ $target ] ) && ! isset( $data['outcomes'][ $target ] ) ) {
 					throw new InvalidArgumentException( 'Guided Decision branch target is invalid.' );
 				}
+			}
+		}
+		foreach ( $data['outcomes'] as $outcome ) {
+			if ( isset( $outcome['verification_guidance'] ) && ( ! is_string( $outcome['verification_guidance'] ) || strlen( $outcome['verification_guidance'] ) > 4096 ) ) {
+				throw new InvalidArgumentException( 'Guided Decision verification must be bounded text.' );
 			}
 		}
 		$reachable_steps    = array();

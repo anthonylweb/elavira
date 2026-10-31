@@ -1,5 +1,52 @@
 .elavira-reports {
 	max-width: 90rem;
+	overflow-wrap: anywhere;
+}
+
+.elavira-identification > div {
+	margin-block: 0.75rem;
+	min-width: 0;
+}
+
+.elavira-identification dt {
+	font-weight: 600;
+}
+
+.elavira-identification dd {
+	margin: 0.25rem 0 0;
+	overflow-wrap: anywhere;
+}
+
+.elavira-reports pre,
+.elavira-reports code {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.elavira-reports input,
+.elavira-reports select,
+.elavira-reports textarea {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.elavira-technical,
+.elavira-examples {
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.elavira-technical > summary {
+	cursor: pointer;
+	font-weight: 600;
+	padding: 0.25rem;
+}
+
+.elavira-summary dl > div,
+.elavira-evidence dl > div {
+	min-width: 0;
 }
 
 .elavira-filters {
@@ -118,6 +165,30 @@
 	margin: 0;
 	padding: 0;
 	border: 0;
+	min-width: 0;
+}
+
+.elavira-decision {
+	overflow-wrap: anywhere;
+}
+
+.elavira-decision-evidence {
+	max-width: 52rem;
+	padding: 1rem;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+}
+
+.wrap.elavira-decision .elavira-decision-evidence h3 {
+	text-transform: none;
+}
+
+.elavira-decision-evidence dt {
+	font-weight: 600;
+}
+
+.elavira-decision-evidence dd {
+	margin: 0.25rem 0 0.75rem;
 }
 
 .elavira-decision-form legend {
@@ -140,6 +211,36 @@
 
 .elavira-decision-answers dd {
 	margin: 0.25rem 0 0;
+}
+
+.elavira-activity-history,
+.elavira-decision-history {
+	max-width: 52rem;
+	padding-inline-start: 1.5rem;
+}
+
+.elavira-activity-history > li,
+.elavira-decision-history > li {
+	margin-block: 1rem;
+	padding: 1rem;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.elavira-activity-history dl {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+	gap: 0.75rem 1rem;
+	margin-bottom: 0;
+}
+
+.elavira-activity-history dt {
+	font-weight: 600;
+}
+
+.elavira-activity-history dd {
+	margin: 0.25rem 0 0;
+	overflow-wrap: anywhere;
 }
 
 @media (max-width: 782px) {
@@ -184,3 +285,44 @@
 		font-weight: 600;
 	}
 }
+
+.elavira-reports .elavira-occurrence-addressed { border-inline-start: 4px double currentColor; }
+.elavira-reports .elavira-accepted { margin-block: 1.5rem; padding: 1rem; border: 1px solid #646970; }
+.elavira-reports summary { cursor: pointer; }
+.elavira-reports form label, .elavira-reports form textarea { display: block; }
+.elavira-reports code { overflow-wrap: anywhere; }
+.elavira-reports :focus-visible { outline: 2px solid #005a9c; outline-offset: 3px; }
+
+.elavira-latest-note p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Review fields follow document order at every width. */
+.elavira-reports textarea,
+.elavira-reports input[type="text"],
+.elavira-reports input[type="search"] { width: 100%; min-width: 0; }
+.elavira-reports textarea { resize: vertical; }
+.elavira-reports .elavira-filters { justify-content: center; }
+.elavira-filter-field { min-width: 0; max-width: 100%; }
+.elavira-review-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; margin-block: 1rem; }
+.elavira-review-row > div { min-width: 0; }
+.elavira-occurrence-review { container-type: inline-size; }
+@container (min-width: 44rem) {
+ .elavira-review-row { grid-template-columns: minmax(13rem, 1fr) minmax(14rem, 2fr) minmax(12rem, 1.5fr); }
+}
+.elavira-reports .elavira-activity-history { max-width: none; margin: 0; padding: 0; }
+.elavira-activity-card { margin-block: 1rem; padding: 1rem; border: 1px solid #c3c4c7; background: #fff; }
+.elavira-activity-card h3 { margin-top: 0; }
+.elavira-activity-card dd { white-space: pre-wrap; }
+.elavira-action-row { display: flex; flex-wrap: wrap; gap: 1rem; }
+.elavira-action-row > * { flex: 1 1 15rem; min-width: 0; }
+.elavira-reports .elavira-action-row .button { display: block; width: 100%; box-sizing: border-box; text-align: center; white-space: normal; padding: .5rem 1rem; }
+.elavira-reports .elavira-action-row > .elavira-export { width: auto; background: #005a9c; color: #fff; border-color: #005a9c; }
+.elavira-reports .elavira-export:hover { background: #004578; color: #fff; }
+.elavira-reports .elavira-occurrences h4 a { font-weight: 700; }
+.elavira-reports .description { font-weight: 400; }
+.elavira-note-error { color: #8a2424; font-weight: 600; }
+.elavira-reports [hidden] { display: none; }
+
+.elavira-reports .elavira-wordpress-guidance h2 { text-transform: none; }

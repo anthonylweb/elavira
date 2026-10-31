@@ -126,9 +126,16 @@ final class CompleteScan {
 			if ( $this->supersession ) {
 				$normalized = $this->supersession->resolve( $normalized );
 			}
+			$identities = array();
 			foreach ( $normalized as $result ) {
-				$this->persist_result( $session, $result );
+				$key                = $this->occurrence_key( $result );
+				$identities[ $key ] = ( $identities[ $key ] ?? 0 ) + 1;
 			}
+			foreach ( $normalized as $result ) {
+				$this->persist_result( $session, $result, 1 === $identities[ $this->occurrence_key( $result ) ] );
+			}
+			foreach ( $this->findings->find_by_audit( $session['audit_id'] ) as $finding ) {
+				$this->occurrences->reviews()->refresh( $finding['id'] ); }
 			$this->urls->update_lifecycle(
 				$session['audit_url_id'],
 				array(
@@ -159,14 +166,26 @@ final class CompleteScan {
 		);
 	}
 
+	/** Count matching identities before applying any previous decision. @return string */
+	private function occurrence_key( array $result ) {
+		$identity = $this->identity->fingerprints( $result['target'], $result['evidence'], $result['element'] );
+		return $result['rule_id'] . ':' . $result['rule_version'] . ':' . $identity['target'] . ':' . $identity['evidence'];
+	}
+
 	/** Persist one whole-page-resolved primary result inside the completion transaction. @return void */
-	private function persist_result( array $session, array $result ) {
+	private function persist_result( array $session, array $result, $unique = true ) {
 		if ( empty( $result['creates_finding'] ) ) {
 			return;
 		}
-		$identity   = $this->identity->fingerprints( $result['target'], $result['evidence'], $result['element'] );
-		$audit_url  = $this->urls->find( $session['audit_url_id'] );
-		$exception  = ( $this->exceptions && $audit_url ) ? $this->exceptions->match( $result['rule_id'], $result['rule_version'], $audit_url['canonical_url_hash'], $identity['target'], $identity['evidence'] ) : null;
+		$identity  = $this->identity->fingerprints( $result['target'], $result['evidence'], $result['element'] );
+		$audit_url = $this->urls->find( $session['audit_url_id'] );
+		$matchable = $unique && $this->identity->matchable( $result['target'], $result['element'] );
+		$exception = ( $matchable && $this->exceptions && $audit_url ) ? $this->exceptions->match( $result['rule_id'], $result['rule_version'], $audit_url['canonical_url_hash'], $identity['target'], $identity['evidence'] ) : null;
+		if ( ! $exception && $matchable && $this->exceptions && $audit_url && 2 === ( $result['target']['identity_version'] ?? 0 ) ) {
+			$legacy_target = array_intersect_key( $result['target'], array_flip( array( 'selector', 'tag_name' ) ) );
+			$legacy        = $this->identity->fingerprints( $legacy_target, $result['evidence'], $result['element'] );
+			$exception     = $this->exceptions->match( $result['rule_id'], $result['rule_version'], $audit_url['canonical_url_hash'], $legacy['target'], $legacy['evidence'] );
+		}
 		$finding    = $this->findings->find_group( $session['audit_id'], $result['rule_id'], $result['grouping_key'] );
 		$finding_id = $finding ? $finding['id'] : $this->findings->create_in_transaction(
 			array(
@@ -190,8 +209,12 @@ final class CompleteScan {
 				'diagnostic_occurrence_count' => 0,
 			)
 		);
+		$previous   = $matchable && $audit_url ? $this->occurrences->previous( $session['audit_id'], $result['rule_id'], $result['rule_version'], $audit_url['canonical_url_hash'], $identity['target'], $identity['evidence'] ) : null;
+		$status     = $exception ? 'reviewed_not_issue' : ( $previous && in_array( $previous['current_status'] ?? '', array( 'addressed', 'accepted_limitation', 'needs_review' ), true ) ? $previous['current_status'] : 'open' );
 		$this->occurrences->create(
 			array(
+				'current_status'                => $status,
+				'previous_occurrence_id'        => $previous['id'] ?? $exception['source_occurrence_id'] ?? 0,
 				'finding_id'                    => $finding_id,
 				'audit_url_id'                  => $session['audit_url_id'],
 				'target'                        => $result['target'],
@@ -217,7 +240,7 @@ final class CompleteScan {
 	 */
 	public function fail( $token, $user_id, $code ) {
 		$session = $this->guard->authorize( $token, $user_id, null, array( ScanSessionState::CREATED, ScanSessionState::ACTIVE ) );
-		$allowed = array( 'scanner_error', 'readiness_timeout', 'transport_error', 'validation_rejected', 'result_limit_exceeded' );
+		$allowed = array( 'page_missing', 'scanner_error', 'readiness_timeout', 'transport_error', 'validation_rejected', 'result_limit_exceeded' );
 		if ( ! in_array( $code, $allowed, true ) ) {
 			$code = 'scanner_error'; }
 		$this->database->query( 'START TRANSACTION' );

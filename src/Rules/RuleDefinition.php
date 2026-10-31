@@ -108,6 +108,24 @@ final class RuleDefinition {
 			$data['supersedes'] = array();
 		}
 
+		foreach ( array( 'what_to_check', 'verification_guidance' ) as $field ) {
+			$data[ $field ] = $data[ $field ] ?? '';
+			PersistenceValidator::text( $data[ $field ], 4096, $field, true );
+		}
+		$data['examples'] = $data['examples'] ?? array();
+		if ( ! is_array( $data['examples'] ) || count( $data['examples'] ) > 10 ) {
+			throw new InvalidArgumentException( 'Invalid rule examples.' );
+		}
+		foreach ( $data['examples'] as $example ) {
+			if ( ! is_array( $example ) ) {
+				throw new InvalidArgumentException( 'Invalid rule example.' );
+			}
+			foreach ( array( 'instead_of', 'consider', 'explanation' ) as $field ) {
+				if ( ! isset( $example[ $field ] ) || ! is_string( $example[ $field ] ) || '' === trim( $example[ $field ] ) || strlen( $example[ $field ] ) > 4096 ) {
+					throw new InvalidArgumentException( 'Rule examples require bounded comparison and context text.' );
+				}
+			}
+		}
 		$this->data = $data;
 	}
 
@@ -173,17 +191,35 @@ final class RuleDefinition {
 	 */
 	public function editorial() {
 		return array(
-			'title'              => $this->data['title'],
-			'description'        => $this->data['description'],
-			'summary'            => $this->data['summary'],
-			'why_it_matters'     => $this->data['why_it_matters'],
-			'recommendation'     => $this->data['recommendation'],
-			'wordpress_guidance' => $this->data['wordpress_guidance'],
-			'developer_guidance' => $this->data['developer_guidance'],
-			'learn_topic'        => $this->data['learn_topic'] ?? null,
-			'guided_decision'    => $this->data['guided_decision'] ?? null,
-			'presentation'       => $this->data['presentation'],
+			'title'                     => $this->data['title'],
+			'description'               => $this->data['description'],
+			'summary'                   => $this->data['summary'],
+			'why_it_matters'            => $this->data['why_it_matters'],
+			'recommendation'            => $this->data['recommendation'],
+			'wordpress_guidance'        => $this->data['wordpress_guidance'],
+			'wordpress_guidance_useful' => $this->data['wordpress_guidance_useful'] ?? false,
+			'developer_guidance'        => $this->data['developer_guidance'],
+			'learn_topic'               => $this->data['learn_topic'] ?? null,
+			'guided_decision'           => $this->data['guided_decision'] ?? null,
+			'presentation'              => $this->data['presentation'],
+			'what_to_check'             => $this->data['what_to_check'],
+			'verification_guidance'     => $this->data['verification_guidance'],
+			'examples'                  => $this->data['examples'],
 		);
+	}
+
+	/**
+	 * Refine compatible editorial copy without changing the detection contract.
+	 *
+	 * @param array $editorial Trusted editorial fields for this exact definition.
+	 * @return RuleDefinition
+	 * @throws InvalidArgumentException When a non-editorial field is supplied.
+	 */
+	public function with_editorial( array $editorial ) {
+		if ( array_diff_key( $editorial, $this->editorial() ) ) {
+			throw new InvalidArgumentException( 'Only editorial fields may be refined.' );
+		}
+		return new self( array_replace( $this->data, $editorial ) );
 	}
 
 	/**

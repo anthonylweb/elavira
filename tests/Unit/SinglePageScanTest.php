@@ -50,6 +50,7 @@ final class SinglePageScanTest extends TestCase {
 		$GLOBALS['wpdb'] = $this->database;
 		( new CoreAuditSchema( $this->database ) )->up();
 		( new CoreScanSessionSchema( $this->database ) )->up();
+		( new \Elavira\Core\Migrations\RulesetFoundationSchema( $this->database ) )->up();
 		( new ScanObservationSchema( $this->database ) )->up();
 		$GLOBALS['elavira_test_current_user_id'] = 7;
 		$GLOBALS['elavira_test_capabilities']    = array( Capability::RUN_AUDITS => true );
@@ -67,7 +68,7 @@ final class SinglePageScanTest extends TestCase {
 		$identity                                = new ReviewedConditionIdentity();
 		$supersession                            = new SupersessionResolver( $rules, $identity );
 		$this->submit                            = new SubmitScanBatch( $this->database, $this->sessions, $this->guard, new BrowserEvidenceValidator( $rules ), new RuleResultNormalizer(), $this->findings, $occurrences, $this->audits, $this->urls, null, $identity, $supersession, $staged );
-		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $this->audits, $this->urls, $this->findings, $occurrences, null, $identity, $supersession, $staged );
+		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $this->audits, $this->urls, $this->findings, $occurrences, new \Elavira\Findings\Persistence\ReviewedExceptionRepository( $this->database ), $identity, $supersession, $staged );
 	}
 
 	public function test_creates_unpredictable_owner_bound_session_and_version_snapshot() {
@@ -302,6 +303,75 @@ final class SinglePageScanTest extends TestCase {
 		$this->assertCount( 0, $this->findings->find_by_audit( $session['audit_id'] ) );
 		$this->assertFalse( $this->complete->complete( $token, 7 )['duplicate'] );
 		$this->assertCount( 1, $this->findings->find_by_audit( $session['audit_id'] ) );
+	}
+
+
+	public function test_occurrence_workflow_across_audits_and_reset() {
+		$target                      = array(
+			'identity_version' => 2,
+			'element_id'       => 'hero',
+			'selector'         => 'main img#hero',
+			'tag_name'         => 'img',
+		);
+		$one                         = $this->image_review_result( 'elavira.images.alt_quality_review', 'human_review', $target );
+		$two                         = $one;
+		$two['target']['element_id'] = 'footer';
+		$two['target']['selector']   = 'footer img#footer';
+		$scan                        = function ( $results ) {
+			$token = $this->token( $this->start->start( 'https://example.com/' ) );
+			$this->submit->submit( $token, 7, $results );
+			$completed = $this->complete->complete( $token, 7 );
+			return $this->occurrences->find_by_audit( $completed['audit_id'] );
+		};
+		$rows                        = $scan( array( $one, $two ) );
+		$this->assertCount( 2, $rows );
+		$review = $this->occurrences->reviews();
+		$review->update( $rows[0]['finding_id'], $rows[0]['id'], 'reviewed_not_issue', 'Context reviewed', 7 );
+		$review->update( $rows[1]['finding_id'], $rows[1]['id'], 'addressed', 'Work performed', 7 );
+		$one['target']['selector'] = 'section:nth-of-type(2)>img#hero';
+		$rows                      = $scan( array( $one, $two ) );
+		$this->assertSame( array( 'reviewed_not_issue', 'addressed' ), array_column( $rows, 'current_status' ) );
+		$this->assertGreaterThan( 0, $rows[0]['previous_occurrence_id'] );
+		$this->assertGreaterThan( 0, $rows[0]['reviewed_exception_id'] );
+		$this->assertCount( 1, $scan( array( $two ) ) ); // Absent accepted occurrences are not resurrected.
+		( new \Elavira\Findings\Persistence\ReviewedExceptionRepository( $this->database ) )->reset_all( 7 );
+		$rows = $scan( array( $one, $two ) );
+		$this->assertSame( 'open', $rows[0]['current_status'] );
+		$this->assertSame( 'addressed', $rows[1]['current_status'] );
+	}
+
+	public function test_ambiguous_current_matches_do_not_inherit_acceptance() {
+		$one   = $this->image_review_result(
+			'elavira.images.alt_quality_review',
+			'human_review',
+			array(
+				'identity_version' => 2,
+				'element_id'       => 'duplicate',
+				'selector'         => 'main img',
+				'tag_name'         => 'img',
+			)
+		);
+		$token = $this->token( $this->start->start( 'https://example.com/' ) );
+		$this->submit->submit( $token, 7, array( $one ) );
+		$audit = $this->complete->complete( $token, 7 );
+		$row   = $this->occurrences->find_by_audit( $audit['audit_id'] )[0];
+		$this->occurrences->reviews()->update( $row['finding_id'], $row['id'], 'reviewed_not_issue', '', 7 );
+		$two                       = $one;
+		$two['target']['selector'] = 'footer img';
+		$token                     = $this->token( $this->start->start( 'https://example.com/' ) );
+		$this->submit->submit( $token, 7, array( $one, $two ) );
+		$audit = $this->complete->complete( $token, 7 );
+		$rows  = $this->occurrences->find_by_audit( $audit['audit_id'] );
+		$this->assertSame( array( 'open', 'open' ), array_column( $rows, 'current_status' ) );
+	}
+
+	public function test_missing_url_does_not_create_audit_graph() {
+		$GLOBALS['elavira_test_http_responses'] = array( array( 'response' => array( 'code' => 404 ) ) );
+		try {
+			$this->start->start( 'https://example.com/missing' );
+			$this->fail( 'Expected missing-page rejection' ); } catch ( RuntimeException $error ) {
+			$this->assertSame( 'page_missing', $error->getMessage() ); }
+			$this->assertCount( 0, $this->database->tables['wp_elavira_audits'] );
 	}
 
 	private function token( array $started ) {

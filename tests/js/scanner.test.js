@@ -8,10 +8,10 @@ const scanner = require( '../../assets/js/scanner.js' );
 
 function node( tag, attributes = {}, content = '' ) {
 	const result = {
-		nodeType: 1, tagName: tag.toUpperCase(), id: attributes.id || '', type: attributes.type || '', textContent: content, childNodes: content ? [ { nodeType: 3, nodeValue: content } ] : [], parentElement: null,
+		nodeType: 1, tagName: tag.toUpperCase(), id: attributes.id || '', type: attributes.type || '', textContent: content, children: [], childNodes: content ? [ { nodeType: 3, nodeValue: content } ] : [], parentElement: null,
 		getAttribute: ( name ) => Object.prototype.hasOwnProperty.call( attributes, name ) ? attributes[ name ] : null,
 		hasAttribute: ( name ) => Object.prototype.hasOwnProperty.call( attributes, name ), closest: ( query ) => ( attributes.closest || {} )[ query ] || null, querySelector: ( query ) => ( attributes.matches || {} )[ query ] || null,
-		querySelectorAll: ( query ) => query === 'img[alt]' ? ( attributes.images || [] ) : query === '*' ? ( attributes.children || [] ) : []
+		querySelectorAll: ( query ) => query === 'img[alt]' || query === 'img' ? ( attributes.images || [] ) : query === '*' ? ( attributes.children || [] ) : []
 	};
 	result.attributes = Object.keys( attributes ).filter( ( name ) => ! [ 'images', 'children', 'matches', 'closest' ].includes( name ) ).map( ( name ) => ( { name, value: String( attributes[ name ] ) } ) );
 	return result;
@@ -310,4 +310,87 @@ test( 'readiness observer resolves and cleans up after bounded quiet time', asyn
 	const timers = { setTimeout, clearTimeout };
 	await scanner.waitForReady( { readyState: 'complete', documentElement: {} }, { quietMs: 1, stabilizeMs: 5, readyMaxMs: 20 }, Observer, timers );
 	assert.equal( typeof callback, 'function' ); assert.equal( disconnected, true );
+} );
+
+test( 'identification captures text links, image links, headings and minimized URLs without changing outcomes', () => {
+ const icon = node('img', {src:'/images/envelope.svg?secret=yes', alt:'Envelope icon'});
+ const imageLink = node('a', {href:'/contact/?secret=yes#token', images:[icon]});
+ icon.closest = q => q === 'a[href]' || q === 'a[href],button,[role="button"],[role="link"]' ? imageLink : null;
+ imageLink.childNodes = [icon];
+ const vague = node('a', {href:'/services/?token=private'}, 'Learn more');
+ const paragraph = node('p', {}, 'Learn about our services Learn more');
+ paragraph.childNodes = [{nodeType:3,nodeValue:'Learn about our services '},vague]; vague.parentElement=paragraph;
+ const heading = node('h3', {}, 'Our Services');
+ const missing = node('img',{src:'/images/banner.png'});
+ const field = node('input',{type:'email',name:'email_address',value:'DO NOT STORE'});
+ const doc = documentFor({'a[href]':[vague,imageLink], 'img[alt]':[icon], 'img:not([alt])':[missing], 'input:not([type="hidden"]), select, textarea, button':[field], 'h1,h2,h3,h4,h5,h6':[node('h1',{},'Home'),heading]}, null);
+ [icon,imageLink,vague,missing,field,heading].forEach(n=>n.ownerDocument=doc);
+ const results=scanner.evaluate(doc);
+ const link=results.find(r=>r.rule_id==='elavira.link.purpose_review');
+ assert.equal(link.element.text_excerpt,'Learn more');
+ assert.equal(link.element.context_excerpt,'Learn about our services Learn more');
+ assert.equal(link.element.link_destination,'https://example.com/services/');
+ const image=results.find(r=>r.rule_id==='elavira.images.alt_quality_review');
+ assert.equal(image.element.link_kind,'image_only');
+ assert.equal(image.element.image_filename,'envelope.svg');
+ assert.equal(image.element.image_alt_excerpt,'Envelope icon');
+ assert.equal(image.element.link_name_excerpt,'Envelope icon');
+ assert.equal(image.element.link_destination,'https://example.com/contact/');
+ assert.equal(results.find(r=>r.rule_id==='elavira.structure.heading_level_jump').element.text_excerpt,'Our Services');
+ assert.equal(results.find(r=>r.rule_id==='elavira.image.alt_missing').element.image_alt_state,'missing');
+ assert.equal(results.find(r=>r.rule_id==='elavira.form.accessible_name_missing').element.field_name,'email_address');
+ assert.equal(results.find(r=>r.rule_id==='elavira.document.language_missing').evidence.language_state,'missing');
+ assert.equal(JSON.stringify(results).includes('DO NOT STORE'),false);
+ assert.equal(JSON.stringify(results).includes('secret=yes'),false);
+ assert.equal(JSON.stringify(results).includes('token=private'),false);
+});
+
+test( 'identification omits private containers, complex names, unsafe URLs and bounds excerpts', () => {
+ const link=node('a',{href:'javascript:alert(1)','aria-labelledby':'other'},'Learn more');
+ const privateField=node('textarea',{},'PRIVATE VALUE');
+ const hidden=node('span',{},'HIDDEN'); hidden.hidden=true;
+ const parent=node('p'); parent.childNodes=[link,privateField,hidden,{nodeType:3,nodeValue:'x'.repeat(1000)}]; link.parentElement=parent;
+ const doc=documentFor({'a[href]':[link]}); link.ownerDocument=doc;
+ const element=scanner.evaluate(doc).find(r=>r.rule_id==='elavira.link.purpose_review').element;
+ assert.equal(element.link_destination,undefined);
+ assert.equal(element.link_name_excerpt,undefined);
+ assert.ok(element.context_excerpt.length<=160);
+ assert.equal(element.context_excerpt.includes('PRIVATE VALUE'),false);
+ assert.equal(element.context_excerpt.includes('HIDDEN'),false);
+});
+
+
+test( 'element identification preserves ID and classes with the hierarchy', () => {
+    const link = node( 'a', { href: '/next', id: 'actual-id', class: 'elavira-qa-empty-link other' } );
+    const findings = scanner.evaluate( documentFor( { 'a[href]': [ link ] } ) );
+    const finding = findings.find( item => item.rule_id === 'elavira.links.empty_link' );
+    const target = ( finding || findings.find( item => item.target.tag_name === 'a' ) ).target;
+    assert.equal( target.element_id, 'actual-id' );
+    assert.equal( target.element_classes, 'elavira-qa-empty-link other' );
+    assert.equal( target.selector, 'a#actual-id' );
+} );
+
+test( 'presentation roles honor conflict resolution and valid decorative uses', () => {
+    const button = node( 'button', { role: 'presentation', 'aria-label': 'Close' } );
+    const decorative = node( 'div', { role: 'none' } );
+    const generic = node( 'div', { role: 'generic', 'aria-label': 'Invalid name' } );
+    const results = scanner.evaluate( documentFor( { '*': [ button, decorative, generic ] } ) );
+    const prohibited = results.filter( item => item.rule_id === 'elavira.aria.prohibited_attribute' );
+    assert.equal( prohibited.length, 1 );
+    assert.equal( prohibited[0].evidence.role, 'generic' );
+    assert.equal( results.some( item => item.rule_id === 'elavira.semantics.native_semantics_overridden' ), false );
+} );
+
+test( 'ARIA ID references preserve case', () => {
+    const label = node( 'span', { id: 'LabelA' }, 'Name' );
+    const button = node( 'button', { 'aria-labelledby': 'LabelA' }, 'Fallback' );
+    const results = scanner.evaluate( documentFor( { '*': [ label, button ] } ) );
+    assert.equal( results.some( item => item.rule_id === 'elavira.aria.broken_id_reference' ), false );
+} );
+
+
+test( 'native checkbox state does not require redundant ARIA', () => {
+    const checkbox = node( 'input', { type: 'checkbox', 'aria-label': 'Subscribe' } );
+    const results = scanner.evaluate( documentFor( { '*': [ checkbox ] } ) );
+    assert.equal( results.some( item => item.rule_id === 'elavira.semantics.required_state_missing' || item.rule_id === 'elavira.aria.required_attribute_missing' ), false );
 } );

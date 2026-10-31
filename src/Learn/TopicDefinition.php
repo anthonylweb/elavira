@@ -18,6 +18,13 @@ final class TopicDefinition {
 
 	/** Validate a topic definition. @param array $data Topic data. */
 	public function __construct( array $data ) {
+		$data     = array_merge(
+			array(
+				'group'    => '',
+				'examples' => array(),
+			),
+			$data
+		);
 		$required = array( 'id', 'version', 'title', 'summary', 'category', 'principle', 'wcag', 'sections', 'wordpress_guidance', 'developer_guidance', 'related_rules', 'related_topics', 'resources', 'keywords' );
 		if ( array() !== array_diff( $required, array_keys( $data ) ) || ! preg_match( '/^[a-z][a-z0-9_]*$/', (string) ( $data['id'] ?? '' ) ) ) {
 			throw new InvalidArgumentException( 'Invalid Learn topic definition.' );
@@ -27,7 +34,7 @@ final class TopicDefinition {
 				throw new InvalidArgumentException( 'Learn topic metadata cannot be empty.' );
 			}
 		}
-		foreach ( array( 'wcag', 'sections', 'wordpress_guidance', 'developer_guidance', 'related_rules', 'related_topics', 'resources', 'keywords' ) as $field ) {
+		foreach ( array( 'wcag', 'sections', 'wordpress_guidance', 'developer_guidance', 'related_rules', 'related_topics', 'resources', 'keywords', 'examples' ) as $field ) {
 			if ( ! is_array( $data[ $field ] ) ) {
 				throw new InvalidArgumentException( 'Learn topic collections must be arrays.' );
 			}

@@ -43,7 +43,7 @@ final class StatementTest extends TestCase {
 		$this->assertStringContainsString( 'Conformance Status — Based on Plugin Findings', $html );
 		$this->assertStringContainsString( 'do not constitute a complete determination', $html );
 		$this->assertStringContainsString( $fields['organization'], $html );
-		$this->assertMatchesRegularExpression( '/<section><h2>Feedback and contact<\/h2>.*mailto:/s', $html );
+		$this->assertMatchesRegularExpression( '/<section><h2>Feedback and Contact<\/h2>.*mailto:/s', $html );
 		$this->assertStringNotContainsString( '<script', $html );
 	}
 

@@ -21,8 +21,15 @@ capabilities during activation. The release ZIP includes the generated Composer
 autoloader; site owners do not need Composer.
 
 The PHP and WordPress minimums above are the current executable package
-requirements. A supported browser matrix has not yet been formally defined and
-must be established before a compatibility claim is published.
+requirements. Elavira targets the latest stable WordPress release while
+retaining those minimums. Phase 1 browser support is Chrome, Firefox, Edge, and
+Safari on desktop and mobile where applicable. Individual release-checklist
+results distinguish that support policy from browser/platform combinations that
+were not available for validation.
+
+Elavira Core is free software intended for distribution through WordPress.org
+under GPL-2.0-or-later. Premium is a separate extension and is not bundled with
+Core. WordPress multisite is not officially supported or tested in Phase 1.
 
 ## Core scanner limitations
 
@@ -46,9 +53,13 @@ it is not remediation and does not make an inaccessible site conformant.
 Preferences remain in that visitor's browser storage and do not create a
 disability or diagnosis profile in WordPress.
 
-Deactivation preserves Elavira data and settings. A destructive uninstall
-policy is not currently defined, so this build does not automatically remove
-Core records or associated WordPress pages on uninstall.
+Deactivation and uninstall preserve Elavira data and settings by default. This
+prevents an uninstall or temporary deactivation from silently destroying audit,
+finding, decision, statement, or history records.
+
+## License
+
+Elavira is licensed under GPL-2.0-or-later. See [LICENSE](LICENSE).
 
 ## Development
 

@@ -1,11 +1,12 @@
 .elavira-learn {
-	max-width: 72rem;
+	max-width: none;
+	overflow-wrap: anywhere;
 }
 
 .elavira-learn-intro,
 .elavira-learn-summary,
 .elavira-learn-detail article {
-	max-width: 70ch;
+	max-width: none;
 }
 
 .elavira-learn-nav ul,
@@ -41,6 +42,10 @@
 
 .elavira-learn > section {
 	margin-top: 2rem;
+}
+
+.elavira-topic-group {
+	margin-top: 1.5rem;
 }
 
 .elavira-learn-filters {
@@ -91,6 +96,17 @@
 	overflow-x: auto;
 	white-space: pre-wrap;
 	word-break: break-word;
+}
+
+.elavira-learn-example {
+	margin: 1rem 0;
+	padding: 1rem;
+	border-inline-start: 4px solid #2271b1;
+	background: #f6f7f7;
+}
+
+.elavira-learn-example figcaption {
+	margin-bottom: 0.5rem;
 }
 
 @media (max-width: 480px) {

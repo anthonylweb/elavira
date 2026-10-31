@@ -40,7 +40,7 @@ final class ToolbarPage {
 		$this->authorize();
 		$settings = ToolbarSettings::get();
 		?>
-		<div class="wrap"><h1><?php echo esc_html__( 'Visitor Accessibility Toolbar', 'elavira' ); ?></h1>
+		<div class="wrap elavira-toolbar-admin"><h1><?php echo esc_html__( 'Visitor Accessibility Toolbar', 'elavira' ); ?></h1>
 		<p><?php echo esc_html__( 'Offer optional browsing preferences. The toolbar does not fix accessibility defects or establish conformance.', 'elavira' ); ?></p>
 		<?php
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect notice marker.

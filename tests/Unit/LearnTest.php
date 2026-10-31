@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 final class LearnTest extends TestCase {
 	public function test_initial_registry_covers_every_current_rule_topic() {
 		$topics = CoreTopicRegistry::create();
-		$this->assertCount( 13, $topics->all() );
+		$this->assertCount( 14, $topics->all() );
 		foreach ( CoreRuleRegistry::create()->all() as $rule ) {
 			$this->assertNotNull( $topics->find( $rule->editorial()['learn_topic'] ) );
 		}
@@ -79,7 +79,7 @@ final class LearnTest extends TestCase {
 
 	public function test_required_phase_one_topics_and_start_here_are_available() {
 		$topics = CoreTopicRegistry::create();
-		$ids    = array( 'understanding_wcag', 'understanding_conformance', 'understanding_audit_results', 'images_alternative_text', 'headings_structure', 'links_navigation', 'forms_labels', 'keyboard_accessibility', 'focus_focus_order', 'color_contrast', 'audio_video', 'language_content', 'motion_animation' );
+		$ids    = array( 'understanding_wcag', 'understanding_conformance', 'understanding_audit_results', 'images_alternative_text', 'headings_structure', 'links_navigation', 'forms_labels', 'keyboard_accessibility', 'focus_focus_order', 'color_contrast', 'aria_accessible_controls', 'audio_video', 'language_content', 'motion_animation' );
 		foreach ( $ids as $id ) {
 			$this->assertNotNull( $topics->find( $id ), $id );
 		}
@@ -132,6 +132,98 @@ final class LearnTest extends TestCase {
 				$this->assertContains( $topic_id, $decision->get( 'learn_topics' ) );
 			}
 		}
+	}
+
+	public function test_every_topic_has_meaningful_intro_and_renders() {
+		foreach ( CoreTopicRegistry::create()->all() as $topic ) {
+			$this->assertGreaterThan( 8, strlen( $topic->get( 'title' ) ), $topic->get( 'id' ) );
+			$this->assertGreaterThan( 40, strlen( $topic->get( 'summary' ) ), $topic->get( 'id' ) );
+			$html = $this->render_topic( $topic->get( 'id' ) );
+			$this->assertStringContainsString( '<h1>' . esc_html( $topic->get( 'title' ) ) . '</h1>', $html );
+		}
+	}
+
+	public function test_expanded_education_and_escaped_examples_render() {
+		$aria = $this->render_topic( 'aria_accessible_controls' );
+		$this->assertStringContainsString( 'Why native HTML comes first', $aria );
+		$this->assertStringContainsString( 'does not create focus, keyboard interaction', $aria );
+		$this->assertStringContainsString( 'ID references must resolve to the intended unique elements', $aria );
+		$this->assertStringContainsString( 'aria-hidden regions containing controls', $aria );
+		$this->assertStringContainsString( '&lt;button type=&quot;button&quot;&gt;Save draft&lt;/button&gt;', $aria );
+		$this->assertStringNotContainsString( '<button type="button">Save draft</button>', $aria );
+
+		$focus = $this->render_topic( 'focus_focus_order' );
+		$this->assertStringContainsString( 'cookie banners, chat windows', $focus );
+		$this->assertStringContainsString( 'Test at zoom and narrow widths', $focus );
+
+		$contrast = $this->render_topic( 'color_contrast' );
+		$this->assertStringContainsString( 'Normal text reaches 4.5:1', $contrast );
+		$this->assertStringContainsString( 'gradients, images, opacity, overlays', $contrast );
+
+		$images = $this->render_topic( 'images_alternative_text' );
+		$this->assertStringContainsString( 'The alternative names the link destination or action', $images );
+		$this->assertStringContainsString( 'empty alternative prevents a redundant announcement', $images );
+	}
+
+	public function test_current_semantics_rules_use_dedicated_topic_and_historical_copy_stays_exact() {
+		$rules = CoreRuleRegistry::create();
+		$this->assertSame( 'aria_accessible_controls', $rules->get( 'elavira.aria.broken_id_reference', '1.0.0' )->editorial()['learn_topic'] );
+		$this->assertSame( 'keyboard_accessibility', $rules->get( 'elavira.aria.hidden_focusable_content', '1.0.0' )->editorial()['learn_topic'] );
+		$this->assertSame( 'links_navigation', $rules->get( 'elavira.link.purpose_review', '1.0.0' )->editorial()['learn_topic'] );
+		$this->assertSame( 'links_navigation', $rules->get( 'elavira.link.purpose_review', '2.0.0' )->editorial()['learn_topic'] );
+	}
+
+	public function test_internal_and_external_link_behavior_is_intentional() {
+		$html  = $this->render_topic( 'aria_accessible_controls' );
+		$html .= $this->render_landing();
+		$dom   = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$dom->loadHTML( $html );
+		libxml_clear_errors();
+		foreach ( $dom->getElementsByTagName( 'a' ) as $link ) {
+			$text = strtolower( trim( $link->textContent ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- DOM API property.
+			$this->assertNotContains( $text, array( 'click here', 'learn more' ) );
+			if ( false !== strpos( $link->getAttribute( 'href' ), 'admin.php?page=elavira-learn' ) ) {
+				$this->assertNotSame( '_blank', $link->getAttribute( 'target' ) );
+			} elseif ( 0 === strpos( $link->getAttribute( 'href' ), 'https://www.w3.org/' ) ) {
+				$this->assertSame( '_blank', $link->getAttribute( 'target' ) );
+				$this->assertSame( 'noopener noreferrer', $link->getAttribute( 'rel' ) );
+				$this->assertStringContainsString( 'opens in a new tab', $text );
+			}
+		}
+	}
+
+	public function test_directory_groups_topics_and_css_supports_narrow_reflow() {
+		$html = $this->render_landing();
+		foreach ( array( 'Content and media', 'Structure and navigation', 'Forms and interaction', 'Visual accessibility', 'Developer semantics' ) as $group ) {
+			$this->assertStringContainsString( '<h3>' . $group . '</h3>', $html );
+		}
+		$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/learn.css' );
+		$this->assertStringContainsString( 'overflow-wrap: anywhere', $css );
+		$this->assertStringContainsString( 'max-width: 100%', $css );
+		$this->assertStringContainsString( 'overflow-x: auto', $css );
+	}
+
+	/** Render one registered topic.
+	 *
+	 * @param string $id Topic ID.
+	 * @return string
+	 */
+	private function render_topic( $id ) {
+		$_GET['topic'] = $id;
+		ob_start();
+		$this->page()->detail();
+		$html = ob_get_clean();
+		unset( $_GET['topic'] );
+		return $html;
+	}
+
+	/** Render the Learn directory. @return string */
+	private function render_landing() {
+		$_GET = array();
+		ob_start();
+		$this->page()->landing();
+		return ob_get_clean();
 	}
 
 	/** Build the complete registry-backed view controller. @return LearnPage */

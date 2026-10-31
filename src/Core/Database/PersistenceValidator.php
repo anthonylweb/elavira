@@ -15,7 +15,7 @@ use InvalidArgumentException;
  */
 final class PersistenceValidator {
 	const CONFIGURATION_MAX_BYTES = 65535;
-	const TARGET_MAX_BYTES        = 4096;
+	const TARGET_MAX_BYTES        = 8192;
 	const EVIDENCE_MAX_BYTES      = 16384;
 	const ELEMENT_MAX_BYTES       = 8192;
 

@@ -33,7 +33,7 @@ final class Round4RuleRegistryTest extends TestCase {
 			$this->assertSame( EvaluationType::HUMAN_REVIEW, $rule->evaluation_type(), $id );
 			$this->assertSame( $metadata[0], $rule->priority(), $id );
 			$this->assertSame( $metadata[1], $rule->wcag()[0]->criterion(), $id );
-			$this->assertSame( 'keyboard_interaction', $rule->editorial()['guided_decision'], $id );
+			$this->assertSame( in_array( $id, array( 'elavira.focus.obscured_review', 'elavira.focus.possible_hidden_focus' ), true ) ? 'focus_visibility' : 'keyboard_interaction', $rule->editorial()['guided_decision'], $id );
 		}
 	}
 

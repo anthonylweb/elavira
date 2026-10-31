@@ -15,6 +15,7 @@ final class FindingStatus {
 	const ADDRESSED           = 'addressed';
 	const VERIFIED            = 'verified';
 	const ACCEPTED_LIMITATION = 'accepted_limitation';
+	const NEEDS_CORRECTION    = 'needs_correction';
 	const NEEDS_REVIEW        = 'needs_review';
 	const REVIEWED_NOT_ISSUE  = 'reviewed_not_issue';
 
@@ -30,6 +31,7 @@ final class FindingStatus {
 			self::VERIFIED,
 			self::ACCEPTED_LIMITATION,
 			self::NEEDS_REVIEW,
+			self::NEEDS_CORRECTION,
 			self::REVIEWED_NOT_ISSUE,
 		);
 	}

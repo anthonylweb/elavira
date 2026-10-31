@@ -1,0 +1,906 @@
+[
+    {
+        "id": "elavira.decision.alternative_text",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review alternative text",
+        "purpose": "Determine an appropriate text-alternative approach from the image’s purpose in its actual context.",
+        "rules": [
+            {
+                "id": "elavira.image.alt_missing",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.images.alt_quality_review",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.images.filename_alt",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.images.long_alt_review",
+                "version": "1.0.0"
+            }
+        ],
+        "learn_topics": [
+            "images_alternative_text"
+        ],
+        "start": "image_role",
+        "steps": {
+            "image_role": {
+                "type": "single_choice",
+                "question": "What is the image’s primary purpose in this context?",
+                "options": [
+                    {
+                        "id": "informative",
+                        "label": "It communicates information",
+                        "target": "same_information"
+                    },
+                    {
+                        "id": "decorative",
+                        "label": "It is purely decorative",
+                        "target": "decorative"
+                    },
+                    {
+                        "id": "functional",
+                        "label": "It acts as a link or control",
+                        "target": "functional"
+                    },
+                    {
+                        "id": "complex",
+                        "label": "It is a chart, diagram, infographic, or other complex image",
+                        "target": "complex"
+                    },
+                    {
+                        "id": "text",
+                        "label": "It contains meaningful text",
+                        "target": "image_text"
+                    },
+                    {
+                        "id": "uncertain",
+                        "label": "I am not sure",
+                        "target": "further_review"
+                    }
+                ]
+            },
+            "same_information": {
+                "type": "yes_no",
+                "question": "Is the same information already communicated in adjacent text?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "redundant"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "informative"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "decorative": {
+                "interpretation": "The image may be treated as decorative.",
+                "recommendation": "Confirm it adds no information or function, then provide an intentionally empty text alternative through the responsible content or code. Do not add descriptive text merely because an image exists.",
+                "status": "needs_review"
+            },
+            "redundant": {
+                "interpretation": "The image may be redundant with adjacent text.",
+                "recommendation": "Confirm the adjacent text communicates the same purpose. If so, use an intentionally empty alternative so the information is not announced twice.",
+                "status": "needs_review"
+            },
+            "informative": {
+                "interpretation": "The image likely needs a meaningful text alternative.",
+                "recommendation": "Write a concise alternative that communicates the image’s purpose in this context, then re-audit. Elavira does not generate or apply the wording.",
+                "status": "open"
+            },
+            "functional": {
+                "interpretation": "The functional image needs an accessible name describing its action or destination.",
+                "recommendation": "Provide an accessible name for the link or control based on what it does, not merely what the image looks like, then test the rendered control.",
+                "status": "open"
+            },
+            "complex": {
+                "interpretation": "The complex image likely needs both a short alternative and a more complete explanation.",
+                "recommendation": "Provide a concise text alternative and make the important data or relationships available in nearby text, a table, or another suitable explanation.",
+                "status": "open"
+            },
+            "image_text": {
+                "interpretation": "The meaningful text in the image must be available as text.",
+                "recommendation": "Prefer real text where practical. Otherwise provide an alternative that communicates the same words and purpose, while separately checking applicable image-of-text requirements.",
+                "status": "open"
+            },
+            "further_review": {
+                "interpretation": "The appropriate treatment needs further human review.",
+                "recommendation": "Review the image with its surrounding content and intended action before choosing decorative, informative, functional, complex, or image-of-text treatment.",
+                "status": "needs_review"
+            }
+        }
+    },
+    {
+        "id": "elavira.decision.link_purpose",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review link purpose",
+        "purpose": "Consider whether people using assistive technology can understand what the link does from its accessible name and programmatically associated context.",
+        "rules": [
+            {
+                "id": "elavira.link.purpose_review",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.link.purpose_review",
+                "version": "2.0.0"
+            },
+            {
+                "id": "elavira.links.identical_name_different_destination",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.links.identical_name_different_destination",
+                "version": "2.0.0"
+            }
+        ],
+        "learn_topics": [
+            "links_navigation"
+        ],
+        "start": "purpose_clear",
+        "steps": {
+            "purpose_clear": {
+                "type": "yes_no",
+                "question": "Is the link purpose clear from its accessible name or programmatically associated context?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "context_available"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "different_destinations"
+                    }
+                ]
+            },
+            "context_available": {
+                "type": "yes_no",
+                "question": "Would that context be available when assistive technology presents the link?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "context_sufficient"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "remediation_likely"
+                    }
+                ]
+            },
+            "different_destinations": {
+                "type": "yes_no",
+                "question": "Do links with the same ambiguous name lead to different destinations or actions?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "remediation_likely"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "context_available"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "context_sufficient": {
+                "interpretation": "The available context may communicate the link purpose.",
+                "recommendation": "Review the link with assistive technology and keep the finding in human review until your evaluation is complete.",
+                "status": "needs_review"
+            },
+            "remediation_likely": {
+                "interpretation": "The link purpose likely needs clarification.",
+                "recommendation": "Revise the accessible link name or its programmatically associated context, then mark it Addressed only after making the change.",
+                "status": "open"
+            }
+        }
+    },
+    {
+        "id": "elavira.decision.heading_structure",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review heading structure",
+        "purpose": "Consider whether headings describe real sections and communicate the organization of the rendered page.",
+        "rules": [
+            {
+                "id": "elavira.heading.structure_review",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.heading.structure_review",
+                "version": "2.0.0"
+            },
+            {
+                "id": "elavira.structure.missing_h1",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.structure.multiple_h1",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.structure.heading_level_jump",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.structure.empty_heading",
+                "version": "1.0.0"
+            }
+        ],
+        "learn_topics": [
+            "headings_structure"
+        ],
+        "start": "real_sections",
+        "steps": {
+            "real_sections": {
+                "type": "yes_no",
+                "question": "Do the headings identify actual sections of content rather than only provide visual styling?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "hierarchy_clear"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "remediation_likely"
+                    }
+                ]
+            },
+            "hierarchy_clear": {
+                "type": "yes_no",
+                "question": "Does the heading hierarchy communicate the page organization clearly when read without visual styling?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "visual_headings"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "remediation_likely"
+                    }
+                ]
+            },
+            "visual_headings": {
+                "type": "yes_no",
+                "question": "Is any text functioning visually as a heading without semantic heading markup?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "remediation_likely"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "structure_reasonable"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "structure_reasonable": {
+                "interpretation": "The heading structure may communicate the content organization appropriately.",
+                "recommendation": "Complete any remaining assistive-technology review before deciding whether the finding can be retained as reviewed.",
+                "status": "needs_review"
+            },
+            "remediation_likely": {
+                "interpretation": "The heading structure likely needs remediation.",
+                "recommendation": "Use semantic headings that reflect the document structure, then mark Addressed only after changing the rendered page.",
+                "status": "open"
+            }
+        }
+    },
+    {
+        "id": "elavira.decision.form_labels_instructions",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review form labels and instructions",
+        "purpose": "Review whether a form control communicates its accessible name, purpose, required state, instructions, format, and relevant errors.",
+        "rules": [
+            {
+                "id": "elavira.form.accessible_name_missing",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.form.accessible_name_missing",
+                "version": "2.0.0"
+            },
+            {
+                "id": "elavira.forms.broken_label_reference",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.forms.placeholder_only_label",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.forms.required_instruction_review",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.forms.error_identification_review",
+                "version": "1.0.0"
+            }
+        ],
+        "learn_topics": [
+            "forms_labels"
+        ],
+        "start": "name_source",
+        "steps": {
+            "name_source": {
+                "type": "single_choice",
+                "question": "How does the control receive its accessible name?",
+                "options": [
+                    {
+                        "id": "visible_label",
+                        "label": "A programmatically associated visible label",
+                        "target": "purpose_clear"
+                    },
+                    {
+                        "id": "labelledby",
+                        "label": "Visible text referenced programmatically",
+                        "target": "purpose_clear"
+                    },
+                    {
+                        "id": "aria_label",
+                        "label": "Another supported programmatic name",
+                        "target": "purpose_clear"
+                    },
+                    {
+                        "id": "placeholder",
+                        "label": "Placeholder text only",
+                        "target": "placeholder_only"
+                    },
+                    {
+                        "id": "none",
+                        "label": "No accessible name",
+                        "target": "missing_name"
+                    },
+                    {
+                        "id": "uncertain",
+                        "label": "I am not sure",
+                        "target": "further_review"
+                    }
+                ]
+            },
+            "purpose_clear": {
+                "type": "yes_no",
+                "question": "Does the accessible name clearly communicate the control’s purpose?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "instructions_needed"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "insufficient_name"
+                    }
+                ]
+            },
+            "instructions_needed": {
+                "type": "yes_no",
+                "question": "Are instructions needed for required state, expected format, completion, or relevant error correction?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "instructions_present"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "context_reasonable"
+                    }
+                ]
+            },
+            "instructions_present": {
+                "type": "yes_no",
+                "question": "Are those instructions persistently available and programmatically associated where necessary?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "context_reasonable"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "instructions_missing"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "missing_name": {
+                "interpretation": "The control is missing an accessible name.",
+                "recommendation": "Add a concise programmatic name, preferably using a properly associated visible label where suitable, then re-audit the rendered form.",
+                "status": "open"
+            },
+            "placeholder_only": {
+                "interpretation": "Placeholder text alone is not a reliable persistent label.",
+                "recommendation": "Provide a persistent accessible naming pattern appropriate to the control. Keep placeholder text, if useful, as an example rather than the only label.",
+                "status": "open"
+            },
+            "insufficient_name": {
+                "interpretation": "The accessible name likely does not communicate the control’s purpose.",
+                "recommendation": "Clarify the name through an appropriate visible or programmatic label and confirm it in the rendered form.",
+                "status": "open"
+            },
+            "instructions_missing": {
+                "interpretation": "Necessary instructions or error guidance appear to be missing or unavailable.",
+                "recommendation": "Provide the required state, format, completion, or error information before it is needed and associate it programmatically where necessary.",
+                "status": "open"
+            },
+            "context_reasonable": {
+                "interpretation": "The control’s label and instructional context may be appropriate.",
+                "recommendation": "Complete keyboard and assistive-technology review of the rendered form before closing the human review.",
+                "status": "needs_review"
+            },
+            "further_review": {
+                "interpretation": "The control’s accessible naming source needs further human review.",
+                "recommendation": "Inspect the rendered accessibility information and visible instructions; placeholder presence alone does not establish an adequate label.",
+                "status": "needs_review"
+            }
+        }
+    },
+    {
+        "id": "elavira.decision.use_of_color",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review use of color",
+        "purpose": "Determine whether color is the only perceivable cue for information, status, an action, or a distinction.",
+        "rules": [
+            {
+                "id": "elavira.color.color_only_review",
+                "version": "1.0.0"
+            }
+        ],
+        "learn_topics": [
+            "color_contrast"
+        ],
+        "start": "color_meaning",
+        "steps": {
+            "color_meaning": {
+                "type": "yes_no",
+                "question": "Is color used to communicate information, status, a required action, or a distinction?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "other_cue"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "contrast_review"
+                    }
+                ]
+            },
+            "other_cue": {
+                "type": "single_choice",
+                "question": "What equivalent perceivable cue communicates the same meaning without relying on color?",
+                "options": [
+                    {
+                        "id": "none",
+                        "label": "No equivalent cue",
+                        "target": "color_only"
+                    },
+                    {
+                        "id": "text",
+                        "label": "Text",
+                        "target": "contrast_review"
+                    },
+                    {
+                        "id": "icon_name",
+                        "label": "An icon with equivalent text or an accessible name",
+                        "target": "contrast_review"
+                    },
+                    {
+                        "id": "visual_cue",
+                        "label": "A pattern, shape, underline, position, or other perceivable indicator",
+                        "target": "contrast_review"
+                    },
+                    {
+                        "id": "uncertain",
+                        "label": "I am not sure",
+                        "target": "further_review"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "color_only": {
+                "interpretation": "Color appears to be the only cue and likely needs remediation.",
+                "recommendation": "Add an equivalent text or other perceivable indicator. Separately test contrast; solving color-only communication does not establish sufficient contrast.",
+                "status": "open"
+            },
+            "contrast_review": {
+                "interpretation": "Meaning may be available without color alone.",
+                "recommendation": "Confirm the non-color cue remains understandable, then evaluate text and non-text contrast separately. This review does not determine contrast ratios.",
+                "status": "needs_review"
+            },
+            "further_review": {
+                "interpretation": "Whether color is the only meaningful cue needs further human review.",
+                "recommendation": "Review the content without color and confirm that text or another perceivable indicator communicates the same meaning; assess contrast separately.",
+                "status": "needs_review"
+            }
+        }
+    },
+    {
+        "id": "elavira.decision.keyboard_interaction",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review keyboard interaction",
+        "purpose": "Guide a human keyboard test of reachability, expected operation, focus escape, visibility, and order.",
+        "rules": [
+            {
+                "id": "elavira.keyboard.positive_tabindex",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.keyboard.non_native_interactive",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.keyboard.possible_unreachable_control",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.keyboard.possible_trap",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.keyboard.custom_widget_review",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.focus.possible_hidden_focus",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.focus.order_review",
+                "version": "1.0.0"
+            },
+            {
+                "id": "elavira.focus.modal_management_review",
+                "version": "1.0.0"
+            }
+        ],
+        "learn_topics": [
+            "keyboard_accessibility",
+            "focus_focus_order"
+        ],
+        "start": "instructions",
+        "steps": {
+            "instructions": {
+                "type": "information",
+                "question": "Test the rendered interaction",
+                "content": "Use only the keyboard. For native controls use their expected keys; for custom widgets compare behavior with the widget’s documented keyboard pattern. Receiving Tab focus alone does not establish operability.",
+                "options": [
+                    {
+                        "id": "continue",
+                        "label": "Continue",
+                        "target": "reachable"
+                    }
+                ]
+            },
+            "reachable": {
+                "type": "yes_no",
+                "question": "Can the interactive functionality be reached using the keyboard?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "operable"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "unreachable"
+                    }
+                ]
+            },
+            "operable": {
+                "type": "yes_no",
+                "question": "Can every relevant action be performed using the expected keyboard interaction?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "can_leave"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "inoperable"
+                    }
+                ]
+            },
+            "can_leave": {
+                "type": "yes_no",
+                "question": "Can keyboard focus move away from the component without an undocumented method?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "focus_visible"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "keyboard_trap"
+                    }
+                ]
+            },
+            "focus_visible": {
+                "type": "yes_no",
+                "question": "Is keyboard focus visibly identifiable throughout the interaction?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "focus_order"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "focus_problem"
+                    }
+                ]
+            },
+            "focus_order": {
+                "type": "yes_no",
+                "question": "Does focus move in an order that preserves meaning and expected operation?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "keyboard_reasonable"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "order_problem"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "unreachable": {
+                "interpretation": "The functionality is not keyboard reachable.",
+                "recommendation": "Use a native interactive element or provide equivalent keyboard focusability, then test the entire interaction again.",
+                "status": "open"
+            },
+            "inoperable": {
+                "interpretation": "The component receives focus but is not fully keyboard operable.",
+                "recommendation": "Implement the expected keyboard behavior for every action. Focusability alone is insufficient.",
+                "status": "open"
+            },
+            "keyboard_trap": {
+                "interpretation": "The interaction appears to create a keyboard trap.",
+                "recommendation": "Ensure users can move focus away using standard interaction, or clearly document a nonstandard method only where WCAG permits it.",
+                "status": "open"
+            },
+            "focus_problem": {
+                "interpretation": "Keyboard focus is not consistently visible.",
+                "recommendation": "Provide a visible focus indicator in every relevant state without removing usable native focus styling.",
+                "status": "open"
+            },
+            "order_problem": {
+                "interpretation": "The focus order may not preserve meaning or operation.",
+                "recommendation": "Align DOM and focus order with the intended reading and interaction sequence, then repeat the keyboard test.",
+                "status": "open"
+            },
+            "keyboard_reasonable": {
+                "interpretation": "The observed keyboard interaction may be appropriate.",
+                "recommendation": "Repeat the test across states and relevant assistive technologies before treating the review as complete.",
+                "status": "needs_review"
+            }
+        }
+    },
+    {
+        "id": "elavira.decision.audio_video_alternatives",
+        "version": "1.0.0",
+        "editorial_version": "1.0.0",
+        "title": "Review audio and video alternatives",
+        "purpose": "Identify relevant alternatives for prerecorded audio-only, video-only, or synchronized media.",
+        "rules": [],
+        "learn_topics": [
+            "audio_video"
+        ],
+        "start": "media_type",
+        "steps": {
+            "media_type": {
+                "type": "single_choice",
+                "question": "Which type of prerecorded media are you reviewing?",
+                "options": [
+                    {
+                        "id": "audio_only",
+                        "label": "Audio only",
+                        "target": "audio_information"
+                    },
+                    {
+                        "id": "video_only",
+                        "label": "Video only, without synchronized audio",
+                        "target": "visual_information"
+                    },
+                    {
+                        "id": "synchronized",
+                        "label": "Synchronized audio and video",
+                        "target": "meaningful_speech"
+                    },
+                    {
+                        "id": "uncertain",
+                        "label": "I am not sure",
+                        "target": "further_review"
+                    }
+                ]
+            },
+            "audio_information": {
+                "type": "yes_no",
+                "question": "Does the audio-only content communicate meaningful speech or sound?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "transcript_available"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "further_review"
+                    }
+                ]
+            },
+            "transcript_available": {
+                "type": "yes_no",
+                "question": "Is an equivalent transcript or other text alternative available?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "audio_reasonable"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "audio_alternative_needed"
+                    }
+                ]
+            },
+            "visual_information": {
+                "type": "yes_no",
+                "question": "Does the video-only content communicate meaningful visual information?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "visual_alternative"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "further_review"
+                    }
+                ]
+            },
+            "meaningful_speech": {
+                "type": "yes_no",
+                "question": "Does the synchronized media contain meaningful speech or other audio information?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "captions_available"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "meaningful_visuals"
+                    }
+                ]
+            },
+            "captions_available": {
+                "type": "yes_no",
+                "question": "Are accurate synchronized captions available for that audio information?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "meaningful_visuals"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "captions_needed"
+                    }
+                ]
+            },
+            "meaningful_visuals": {
+                "type": "yes_no",
+                "question": "Does the media contain meaningful visual information not communicated in the audio?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "visual_alternative"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "media_reasonable"
+                    }
+                ]
+            },
+            "visual_alternative": {
+                "type": "yes_no",
+                "question": "Is that meaningful visual information available through audio description or an appropriate equivalent alternative?",
+                "options": [
+                    {
+                        "id": "yes",
+                        "label": "Yes",
+                        "target": "media_reasonable"
+                    },
+                    {
+                        "id": "no",
+                        "label": "No",
+                        "target": "visual_alternative_needed"
+                    }
+                ]
+            }
+        },
+        "outcomes": {
+            "audio_reasonable": {
+                "interpretation": "The audio-only content may have an appropriate text alternative.",
+                "recommendation": "Confirm the transcript conveys meaningful speech and sounds. A transcript is text; it is not the same as synchronized captions.",
+                "status": "needs_review"
+            },
+            "audio_alternative_needed": {
+                "interpretation": "The audio-only content likely needs an equivalent alternative.",
+                "recommendation": "Provide an accessible transcript or other equivalent presentation of the prerecorded audio information.",
+                "status": "open"
+            },
+            "captions_needed": {
+                "interpretation": "The synchronized media likely needs accurate captions.",
+                "recommendation": "Provide synchronized captions for meaningful speech and audio information. Subtitles or a transcript alone may not provide the same synchronized access.",
+                "status": "open"
+            },
+            "visual_alternative_needed": {
+                "interpretation": "Meaningful visual information likely needs an appropriate alternative.",
+                "recommendation": "Provide audio description or another equivalent treatment appropriate to the prerecorded media and applicable WCAG criterion.",
+                "status": "open"
+            },
+            "media_reasonable": {
+                "interpretation": "The reviewed media alternatives may address the identified information.",
+                "recommendation": "Verify caption accuracy, transcript equivalence, visual-information coverage, and player accessibility as applicable before completing the review.",
+                "status": "needs_review"
+            },
+            "further_review": {
+                "interpretation": "The media type or meaningful information needs further human review.",
+                "recommendation": "Identify whether the prerecorded content is audio-only, video-only, or synchronized and what speech, sound, or visual information it communicates before selecting alternatives.",
+                "status": "needs_review"
+            }
+        }
+    }
+]

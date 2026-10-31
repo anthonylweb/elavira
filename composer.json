@@ -2,7 +2,7 @@
   "name": "elavira/elavira",
   "description": "Accessibility auditing and guidance for WordPress.",
   "type": "wordpress-plugin",
-  "license": "proprietary",
+  "license": "GPL-2.0-or-later",
   "require": {
     "php": ">=7.4"
   },

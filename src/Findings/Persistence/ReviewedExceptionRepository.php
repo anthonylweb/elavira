@@ -47,6 +47,16 @@ final class ReviewedExceptionRepository extends Repository {
 		);
 	}
 
+	/** Reconsider the linked historical exception, after occurrence ownership validation. @return int */
+	public function reset_id( $id, $actor ) {
+		return $this->reset_where( 'id = %d', array( absint( $id ) ), $actor );
+	}
+
+	/** Reconsider only the exact condition, preserving other decisions. @return int */
+	public function reset_identity( $rule, $version, $page, $target, $evidence, $actor ) {
+		return $this->reset_where( 'rule_id = %s AND rule_version = %s AND canonical_url_hash = %s AND target_fingerprint = %s AND material_evidence_fingerprint = %s', array( $rule, $version, $page, $target, $evidence ), $actor );
+	}
+
 	/** Deactivate exceptions for one canonical page without touching history. @return int */
 	public function reset_page( $canonical_url_hash, $actor_user_id ) {
 		return $this->reset_where( 'canonical_url_hash = %s', array( $this->hash_value( $canonical_url_hash ) ), $actor_user_id );

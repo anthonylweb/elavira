@@ -42,7 +42,7 @@ final class FrontendToolbar {
 		if ( is_admin() || ! $this->is_active() ) {
 			return;
 		}
-		wp_enqueue_style( 'elavira-toolbar', ELAVIRA_URL . 'assets/css/toolbar.css', array(), ELAVIRA_VERSION );
+		wp_enqueue_style( 'elavira-toolbar', ELAVIRA_URL . 'assets/css/toolbar.css', array(), ELAVIRA_VERSION . '-titles-1' );
 		wp_enqueue_script( 'elavira-toolbar', ELAVIRA_URL . 'assets/js/toolbar.js', array(), ELAVIRA_VERSION, true );
 	}
 

@@ -41,8 +41,8 @@ final class AdminModule implements Module {
 	/** Load scoped responsive admin CSS. @return void */
 	public function enqueue() { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page routing.
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-		if ( in_array( $page, array( 'elavira-dashboard', 'elavira-settings' ), true ) ) {
-			wp_enqueue_style( 'elavira-admin', ELAVIRA_URL . 'assets/css/admin.css', array(), ELAVIRA_VERSION ); }
+		if ( 0 === strpos( $page, 'elavira-' ) ) {
+			wp_enqueue_style( 'elavira-admin', ELAVIRA_URL . 'assets/css/admin.css', array(), ELAVIRA_VERSION . '-titles-1' ); }
 	}
 
 	/** Add an optional admin-bar shortcut. @param object $bar Admin bar. @return void */

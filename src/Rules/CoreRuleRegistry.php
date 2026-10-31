@@ -16,7 +16,7 @@ use Elavira\Rules\Values\EvaluationType;
 use Elavira\Rules\Values\FindingClassification;
 
 /**
- * Builds the small initial Core rule set used to establish scanner contracts.
+ * Builds the current and historically supported Core rule contracts.
  */
 final class CoreRuleRegistry {
 	/**
@@ -25,22 +25,13 @@ final class CoreRuleRegistry {
 	 * @return RuleRegistry
 	 */
 	public static function create() {
-		$registry = new RuleRegistry();
+		$registry    = new RuleRegistry();
+		$guidance    = CoreRuleGuidance::all();
+		$definitions = array_merge( self::rules(), RoundThreeRuleDefinitions::all(), RoundFourRuleDefinitions::all(), RoundFiveRuleDefinitions::all(), RoundSixRuleDefinitions::all() );
 
-		foreach ( self::rules() as $rule ) {
-			$registry->register( $rule );
-		}
-		foreach ( RoundThreeRuleDefinitions::all() as $rule ) {
-			$registry->register( $rule );
-		}
-		foreach ( RoundFourRuleDefinitions::all() as $rule ) {
-			$registry->register( $rule );
-		}
-		foreach ( RoundFiveRuleDefinitions::all() as $rule ) {
-			$registry->register( $rule );
-		}
-		foreach ( RoundSixRuleDefinitions::all() as $rule ) {
-			$registry->register( $rule );
+		foreach ( $definitions as $rule ) {
+			$key = $rule->id() . '@' . $rule->version();
+			$registry->register( isset( $guidance[ $key ] ) ? $rule->with_editorial( $guidance[ $key ] ) : $rule );
 		}
 
 		return $registry;

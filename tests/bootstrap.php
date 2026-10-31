@@ -7,6 +7,30 @@
 
 require dirname( __DIR__ ) . '/vendor/autoload.php';
 
+if ( ! function_exists( '_n' ) ) {
+	function _n( $single, $plural, $number, $domain = 'default' ) {
+		unset( $domain );
+		return 1 === (int) $number ? $single : $plural;
+	}
+}
+if ( ! function_exists( 'number_format_i18n' ) ) {
+	function number_format_i18n( $number, $decimals = 0 ) {
+		return number_format( $number, $decimals );
+	}
+}
+if ( ! function_exists( 'wp_nonce_url' ) ) {
+	function wp_nonce_url( $url, $action ) {
+		unset( $action );
+		return $url . '&_wpnonce=test';
+	}
+}
+if ( ! function_exists( 'wp_nonce_field' ) ) {
+	function wp_nonce_field( $action ) {
+		unset( $action );
+		echo '<input type="hidden" name="_wpnonce" value="test">';
+	}
+}
+
 if ( ! defined( 'ARRAY_A' ) ) {
 	define( 'ARRAY_A', 'ARRAY_A' );
 }
@@ -126,6 +150,12 @@ if ( ! function_exists( 'sanitize_key' ) ) {
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	function wp_json_encode( $value ) {
 		return json_encode( $value );
+	}
+}
+
+if ( ! function_exists( 'wp_kses_post' ) ) {
+	function wp_kses_post( $value ) {
+		return (string) $value;
 	}
 }
 
@@ -307,7 +337,10 @@ if ( ! function_exists( 'wp_parse_url' ) ) {
 }
 
 if ( ! function_exists( 'add_query_arg' ) ) {
-	function add_query_arg( $key, $value, $url ) {
+	function add_query_arg( $key, $value, $url = '' ) {
+		if ( is_array( $key ) ) {
+			return $value . ( false === strpos( $value, '?' ) ? '?' : '&' ) . http_build_query( $key );
+		}
 		return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . rawurlencode( $key ) . '=' . $value;
 	}
 }
@@ -351,4 +384,44 @@ if ( ! function_exists( 'get_post_type_object' ) ) {
 if ( ! function_exists( 'is_post_type_viewable' ) ) {
 	function is_post_type_viewable( $post_type ) {
 		return ! empty( $post_type->publicly_queryable ); }
+}
+
+function wp_safe_remote_get( $url, $args = array() ) {
+	$GLOBALS['elavira_test_http_requests'][] = array( $url, $args );
+	if ( ! empty( $GLOBALS['elavira_test_http_responses'] ) ) {
+		return array_shift( $GLOBALS['elavira_test_http_responses'] ); }
+	return array(
+		'response' => array( 'code' => 200 ),
+		'headers'  => array(),
+	);
+}
+function is_wp_error( $value ) {
+	return $value instanceof WP_Error; }
+function wp_remote_retrieve_response_code( $response ) {
+	return $response['response']['code'] ?? 0; }
+function wp_remote_retrieve_header( $response, $name ) {
+	return $response['headers'][ $name ] ?? ''; }
+function wp_create_nonce( $action ) {
+	return 'nonce-' . $action; }
+
+require __DIR__ . '/Support/HttpStubs.php';
+
+function set_transient( $key, $value, $expiration = 0 ) {
+	unset( $expiration );
+	$GLOBALS['elavira_test_transients'][ $key ] = $value;
+	return true;
+}
+function get_transient( $key ) {
+	return $GLOBALS['elavira_test_transients'][ $key ] ?? false;
+}
+function delete_transient( $key ) {
+	unset( $GLOBALS['elavira_test_transients'][ $key ] );
+	return true;
+}
+
+function esc_textarea( $text ) {
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
+
+function get_userdata( $user_id ) {
+	return $GLOBALS['elavira_test_users'][ $user_id ] ?? false;
 }

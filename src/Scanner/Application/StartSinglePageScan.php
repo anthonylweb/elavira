@@ -78,12 +78,13 @@ final class StartSinglePageScan {
 	 *
 	 * @param string $requested_url Requested URL.
 	 * @param string $wcag_target   WCAG target.
+	 * @param bool   $audit_404     Explicit intent to audit a not-found response.
 	 * @return array
 	 * @throws RuntimeException When the user lacks authorization.
 	 * @throws \InvalidArgumentException When the target level is unsupported.
 	 * @throws Throwable When authorization, validation, or persistence fails.
 	 */
-	public function start( $requested_url, $wcag_target = '2.2_AA' ) {
+	public function start( $requested_url, $wcag_target = '2.2_AA', $audit_404 = false ) {
 		if ( ! current_user_can( Capability::RUN_AUDITS ) ) {
 			throw new RuntimeException( 'You are not allowed to run accessibility audits.' );
 		}
@@ -93,6 +94,7 @@ final class StartSinglePageScan {
 
 		$user_id   = get_current_user_id();
 		$canonical = $this->canonical->authorize( $requested_url );
+		$canonical = ( new \Elavira\Scanner\Security\PageResponse() )->check( $canonical, true === $audit_404 );
 		$versions  = array();
 		foreach ( $this->rules->all() as $rule ) {
 			$versions[ $rule->id() ] = $rule->version();
@@ -107,7 +109,10 @@ final class StartSinglePageScan {
 					'wcag_target'       => $wcag_target,
 					'status'            => AuditStatus::RUNNING,
 					'owner_user_id'     => $user_id,
-					'configuration'     => array( 'source' => 'browser_session' ),
+					'configuration'     => array(
+						'source'    => 'browser_session',
+						'audit_404' => true === $audit_404,
+					),
 					'scanner_version'   => Versions::SCANNER,
 					'ruleset_version'   => Versions::RULESET,
 					'editorial_version' => Versions::EDITORIAL,

@@ -51,10 +51,12 @@ final class BrowserEvidenceValidator {
 		$this->registry       = $registry;
 		$this->target_schema  = new EvidenceSchema(
 			array(
-				'selector'   => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 512 ),
-				'locator'    => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 512 ),
-				'tag_name'   => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 32 ),
-				'element_id' => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 191 ),
+				'selector'         => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 512 ),
+				'locator'          => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 512 ),
+				'tag_name'         => new FieldDefinition( FieldDefinition::TYPE_STRING, true, 32 ),
+				'element_id'       => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 764, array(), true ),
+				'identity_version' => new FieldDefinition( FieldDefinition::TYPE_INTEGER, false, 0, array( 2 ) ),
+				'element_classes'  => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 2048, array(), true ),
 			),
 			PersistenceValidator::TARGET_MAX_BYTES
 		);
@@ -64,6 +66,15 @@ final class BrowserEvidenceValidator {
 				'role'                => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 64 ),
 				'input_type'          => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 32 ),
 				'has_accessible_name' => new FieldDefinition( FieldDefinition::TYPE_BOOLEAN ),
+				'link_kind'           => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 32, array( 'image_only', 'text', 'mixed_or_unknown' ) ),
+				'link_destination'    => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 2048 ),
+				'image_filename'      => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 2048 ),
+				'image_alt_state'     => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 16, array( 'missing', 'empty', 'present' ) ),
+				'image_alt_excerpt'   => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 1024 ),
+				'link_name_excerpt'   => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 1024 ),
+				'text_excerpt'        => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 1024 ),
+				'context_excerpt'     => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 1024 ),
+				'field_name'          => new FieldDefinition( FieldDefinition::TYPE_STRING, false, 512 ),
 			),
 			PersistenceValidator::ELEMENT_MAX_BYTES
 		);
@@ -133,12 +144,23 @@ final class BrowserEvidenceValidator {
 			$outcome                 = $calculated < $evidence['required_milli'] ? RuleOutcome::AUTOMATIC_FAILURE : RuleOutcome::PASS;
 		}
 
+		$element = $this->element_schema->validate( $payload['element'] );
+		if ( isset( $element['link_destination'] ) ) {
+			$url = wp_parse_url( $element['link_destination'] );
+			if ( ! is_array( $url ) || empty( $url['host'] ) || ! in_array( $url['scheme'] ?? '', array( 'http', 'https' ), true ) || isset( $url['user'] ) || isset( $url['pass'] ) || isset( $url['query'] ) || isset( $url['fragment'] ) ) {
+				throw new InvalidArgumentException( 'Identification destinations must be minimized HTTP URLs.' );
+			}
+		}
+		if ( isset( $element['image_filename'] ) && preg_match( '~[/:\\\\?#]~', $element['image_filename'] ) ) {
+			throw new InvalidArgumentException( 'Identification image references must be filenames only.' );
+		}
+		$target = $this->target_schema->validate( $payload['target'] );
 		return new BrowserRuleResult(
 			$rule,
 			$outcome,
-			$this->target_schema->validate( $payload['target'] ),
+			$target,
 			$evidence,
-			$this->element_schema->validate( $payload['element'] ),
+			$element,
 			$rule->grouping_schema()->validate( $grouping )
 		);
 	}

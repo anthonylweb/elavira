@@ -81,6 +81,52 @@ final class RuleRegistryTest extends TestCase {
 		return new RuleDefinition( $data );
 	}
 
+	public function test_guidance_defaults_and_comparison_model() {
+		$editorial = $this->rule()->editorial();
+		$this->assertSame( '', $editorial['what_to_check'] );
+		$this->assertSame( '', $editorial['verification_guidance'] );
+		$this->assertSame( array(), $editorial['examples'] );
+		$data                          = $this->rule_data();
+		$data['what_to_check']         = 'Inspect the image purpose.';
+		$data['verification_guidance'] = 'Check the updated page.';
+		$data['examples']              = array(
+			array(
+				'instead_of'  => 'alt="arrow"',
+				'consider'    => 'alt="View pricing"',
+				'explanation' => 'Only when the image links to pricing.',
+			),
+		);
+		$editorial                     = ( new RuleDefinition( $data ) )->editorial();
+		$this->assertSame( $data['examples'], $editorial['examples'] );
+		$this->assertSame( $data['what_to_check'], $editorial['what_to_check'] );
+		$this->assertSame( $data['verification_guidance'], $editorial['verification_guidance'] );
+	}
+
+	public function test_examples_require_context() {
+		$data             = $this->rule_data();
+		$data['examples'] = array(
+			array(
+				'instead_of' => 'a',
+				'consider'   => 'b',
+			),
+		);
+		$this->expectException( InvalidArgumentException::class );
+		new RuleDefinition( $data );
+	}
+
+	public function test_current_count_excludes_historical_versions_and_tracks_registry() {
+		$registry = new RuleRegistry();
+		$resolver = new \Elavira\Reports\Application\HistoricalRuleResolver( $registry );
+		$this->assertSame( 0, $resolver->current_rule_count() );
+		$registry->register( $this->rule() );
+		$registry->register( $this->rule( '2.0.0' ) );
+		$this->assertSame( 1, $resolver->current_rule_count() );
+		$data       = $this->rule_data();
+		$data['id'] = 'elavira.test.another';
+		$registry->register( new RuleDefinition( $data ) );
+		$this->assertSame( 2, $resolver->current_rule_count() );
+	}
+
 	private function rule_data() {
 		return array(
 			'id'                 => 'elavira.test.example',

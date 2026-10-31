@@ -26,8 +26,55 @@ final class BrowserEvidenceContractTest extends TestCase {
 		$this->normalizer = new RuleResultNormalizer();
 	}
 
+	public function test_actual_element_identification_is_bounded_and_preserved_as_text() {
+		$payload                               = $this->image_payload();
+		$payload['target']['element_id']       = 'actual<id>"';
+		$payload['target']['element_classes']  = 'elavira-qa-empty-link <svg/onload=alert(1)>';
+		$payload['target']['identity_version'] = 2;
+		$result                                = $this->validator->validate( $payload );
+		$this->assertSame( $payload['target']['element_id'], $result->target()['element_id'] );
+		$this->assertSame( $payload['target']['element_classes'], $result->target()['element_classes'] );
+		$payload['target']['element_classes'] = str_repeat( 'x', 2049 );
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
+	}
+
 	public function test_expanded_rule_result_vocabulary_is_complete() {
 		$this->assertSame( array( RuleOutcome::PASS, RuleOutcome::AUTOMATIC_FAILURE, RuleOutcome::POTENTIAL_ISSUE, RuleOutcome::HUMAN_REVIEW, RuleOutcome::NOT_EVALUATED ), RuleOutcome::all() );
+	}
+
+	public function test_optional_identification_survives_normalization_without_changing_outcome() {
+		$payload             = $this->image_payload();
+		$payload['element'] += array(
+			'image_filename'   => 'banner.png',
+			'image_alt_state'  => 'missing',
+			'link_destination' => 'https://example.org/contact/',
+		);
+		$result              = $this->normalizer->normalize( $this->validator->validate( $payload ) )->to_array();
+		ksort( $payload['element'] );
+		ksort( $result['element'] );
+		$this->assertSame( $payload['element'], $result['element'] );
+		$this->assertSame( RuleOutcome::AUTOMATIC_FAILURE, $result['outcome'] );
+	}
+
+	public function test_identification_rejects_sensitive_or_unsafe_destinations() {
+		foreach ( array( 'javascript:alert(1)', 'https://example.org/?token=secret', 'https://name:secret@example.org/path', 'https://example.org/#private' ) as $url ) {
+			$payload                                = $this->image_payload();
+			$payload['element']['link_destination'] = $url;
+			try {
+				$this->validator->validate( $payload );
+				$this->fail( 'Unsafe identification destination accepted.' );
+			} catch ( InvalidArgumentException $error ) {
+				$this->assertStringContainsString( 'minimized HTTP URLs', $error->getMessage() );
+			}
+		}
+	}
+
+	public function test_identification_size_and_unknown_fields_remain_bounded() {
+		$payload                                 = $this->image_payload();
+		$payload['element']['image_alt_excerpt'] = str_repeat( 'x', 1025 );
+		$this->expectException( InvalidArgumentException::class );
+		$this->validator->validate( $payload );
 	}
 
 	public function test_automatic_failure_uses_only_registered_trusted_metadata() {
@@ -39,7 +86,7 @@ final class BrowserEvidenceContractTest extends TestCase {
 		$this->assertSame( Priority::HIGH, $normalized['priority'] );
 		$this->assertSame( ReviewState::NOT_REQUIRED, $normalized['review_state'] );
 		$this->assertSame( '1.1.1', $normalized['wcag_criterion'] );
-		$this->assertSame( 'Images are missing alternative text attributes.', $normalized['editorial']['summary'] );
+		$this->assertSame( 'Elavira found an image without an alt attribute, the place where HTML supplies its text alternative.', $normalized['editorial']['summary'] );
 	}
 
 	public function test_review_rule_normalizes_as_review_not_failure_or_severity() {
