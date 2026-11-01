@@ -17,6 +17,7 @@ final class CoreTopicRegistry {
 		foreach ( self::topics() as $topic ) {
 			$registry->register( new TopicDefinition( $topic ) );
 		}
+		$registry->register( new TopicDefinition( StatementGuidance::topic() ) );
 		foreach ( $registry->all() as $topic ) {
 			foreach ( $topic->get( 'related_topics' ) as $related ) {
 				if ( ! $registry->find( $related ) ) {

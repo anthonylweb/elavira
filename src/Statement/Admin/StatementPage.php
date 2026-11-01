@@ -10,6 +10,7 @@ namespace Elavira\Statement\Admin;
 // phpcs:disable Squiz.Commenting.FunctionComment, Squiz.Commenting.FunctionCommentThrowTag, Squiz.Commenting.VariableComment, WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Controller methods centralize nonce validation before reading bounded form data.
 
 use Elavira\Core\Capabilities\Capability;
+use Elavira\Learn\Admin\LearnPage;
 use Elavira\Statement\RecommendationRepository;
 use Elavira\Statement\StatementFields;
 use Elavira\Statement\StatementRenderer;
@@ -39,6 +40,9 @@ final class StatementPage {
 		if ( in_array( $page, array( 'elavira-statement', 'elavira-statement-preview' ), true ) ) {
 			wp_enqueue_style( 'elavira-statement', ELAVIRA_URL . 'assets/css/statement.css', array(), ELAVIRA_VERSION );
 		}
+		if ( 'elavira-statement' === $page ) {
+			wp_enqueue_script( 'elavira-statement-help', ELAVIRA_URL . 'assets/js/statement-help.js', array(), ELAVIRA_VERSION, true );
+		}
 	}
 
 	/** Render editor or first-use state. @return void */
@@ -47,6 +51,7 @@ final class StatementPage {
 		$statement = $this->services['statements']->find();
 		?>
 		<div class="wrap elavira-statement-admin"><h1><?php echo esc_html__( 'Accessibility Statement', 'elavira' ); ?></h1><?php $this->notice(); ?>
+		<p class="elavira-statement-learn"><?php echo esc_html__( 'Need help getting started?', 'elavira' ); ?> <a href="<?php echo esc_url( LearnPage::url( 'creating_accessibility_statement' ) ); ?>"><?php echo esc_html__( 'Creating an Accessibility Statement', 'elavira' ); ?></a></p>
 		<?php if ( ! $statement ) : ?>
 			<p><?php echo esc_html__( 'Create a structured draft to review before anything is published.', 'elavira' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="elavira_statement_create"><?php wp_nonce_field( 'elavira_statement_create' ); ?><button class="button button-primary"><?php echo esc_html__( 'Create Statement', 'elavira' ); ?></button></form>
@@ -256,7 +261,22 @@ endif;
 
 	/** Render input. @param string $key Key. @param string $label Label. @param array $fields Fields. @param bool $area Textarea. @param bool $required Required. @return void */
 	private function text( $key, $label, array $fields, $area = true, $required = false ) {
+		$hints = array(
+			'known_limitations'      => __( 'Describe known barriers, the tasks they affect, and any workarounds. Include improvement plans and dates only when they are realistic.', 'elavira' ),
+			'feedback'               => __( 'Invite people to report barriers or request another way to access content. Explain which contact methods you monitor and when they can expect a response.', 'elavira' ),
+			'compatibility'          => __( 'List browser and assistive technology combinations you have actually tested, including versions where known. Be clear about gaps in testing.', 'elavira' ),
+			'assessment_approach'    => __( 'Say who assessed the site, when, which pages and tasks they checked, and how. Explain testing limits; automated checks alone do not establish WCAG conformance.', 'elavira' ),
+			'additional_information' => __( 'Include useful details such as alternative access arrangements and who maintains this statement. Say when it will be reviewed again.', 'elavira' ),
+		);
+		if ( isset( $hints[ $key ] ) ) {
+			echo '<div class="elavira-field-help">';
+		}
 		echo '<label for="elavira-' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label>';
+		if ( isset( $hints[ $key ] ) ) {
+			/* translators: %s: Statement field label. */
+			$name = sprintf( __( 'Help for %s', 'elavira' ), $label );
+			echo '<button type="button" class="elavira-help-toggle" hidden aria-label="' . esc_attr( $name ) . '" aria-expanded="false" aria-controls="elavira-help-' . esc_attr( $key ) . '" aria-describedby="elavira-help-' . esc_attr( $key ) . '"><span aria-hidden="true">i</span></button><p class="elavira-field-hint" id="elavira-help-' . esc_attr( $key ) . '">' . esc_html( $hints[ $key ] ) . '</p></div>';
+		}
 		if ( $area ) {
 			echo '<textarea id="elavira-' . esc_attr( $key ) . '" name="fields[' . esc_attr( $key ) . ']" rows="5"' . ( $required ? ' required' : '' ) . '>' . esc_textarea( $fields[ $key ] ?? '' ) . '</textarea>';
 		} else {

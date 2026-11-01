@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 final class LifecycleTest extends TestCase {
 	protected function setUp(): void {
 		if ( ! defined( 'ELAVIRA_VERSION' ) ) {
-			define( 'ELAVIRA_VERSION', '0.2.3' );
+			define( 'ELAVIRA_VERSION', '0.2.5' );
 		}
 
 		if ( ! defined( 'ELAVIRA_SCHEMA_VERSION' ) ) {
@@ -33,7 +33,7 @@ final class LifecycleTest extends TestCase {
 	public function test_activation_installs_versions_and_capabilities() {
 		Activator::activate();
 
-		$this->assertSame( '0.2.3', get_option( VersionManager::PLUGIN_VERSION_OPTION ) );
+		$this->assertSame( '0.2.5', get_option( VersionManager::PLUGIN_VERSION_OPTION ) );
 		$this->assertSame( '0.3.0', get_option( VersionManager::SCHEMA_VERSION_OPTION ) );
 		$this->assertSame( Capability::all(), array_keys( $GLOBALS['elavira_test_administrator']->capabilities ) );
 		$this->assertArrayHasKey( 'elavira_activated', $GLOBALS['elavira_test_fired_actions'] );

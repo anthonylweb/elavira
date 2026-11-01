@@ -3,6 +3,66 @@
 	max-width: 72rem;
 }
 
+.elavira-statement-learn {
+	padding: 1rem;
+	border-left: 4px solid #2271b1;
+	background: #fff;
+}
+
+.elavira-field-help {
+	max-width: 42rem;
+	margin-top: 1rem;
+}
+
+.elavira-field-help-enhanced {
+	position: relative;
+}
+
+.elavira-field-help-enhanced .elavira-field-hint {
+	position: absolute;
+	z-index: 10;
+	top: 100%;
+	inset-inline-start: 0;
+	box-sizing: border-box;
+	width: min(28rem, 100%);
+	box-shadow: 0 3px 8px rgb(0 0 0 / 15%);
+}
+
+.elavira-field-help label {
+	font-weight: 600;
+}
+
+.elavira-help-toggle {
+	min-width: 24px;
+	min-height: 20px;
+	margin-inline-start: .35rem;
+	margin-block: 3px;
+	border: 1px solid #2271b1;
+	border-radius: 50%;
+	background: #fff;
+	color: #135e96;
+	font: bold 1rem Georgia, serif;
+	cursor: pointer;
+}
+
+.elavira-help-toggle:focus-visible {
+	outline: 3px solid #1d2327;
+	outline-offset: 3px;
+}
+
+.elavira-field-hint {
+	margin: 0;
+	padding: .75rem;
+	border: 1px solid #2271b1;
+	background: #fff;
+	color: #1d2327;
+	overflow-wrap: anywhere;
+}
+
+.elavira-field-help [hidden] {
+	display: none;
+}
+
 .elavira-statement-form > label,
 .elavira-statement-form fieldset > label,
 .elavira-recommendation label {

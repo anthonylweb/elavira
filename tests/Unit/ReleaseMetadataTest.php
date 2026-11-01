@@ -15,9 +15,9 @@ final class ReleaseMetadataTest extends TestCase {
 		$bootstrap = file_get_contents( $root . '/elavira.php' );
 		$readme    = file_get_contents( $root . '/readme.txt' );
 
-		$this->assertMatchesRegularExpression( '/^ \* Version:\s+0\.2\.3$/m', $bootstrap );
-		$this->assertStringContainsString( "define( 'ELAVIRA_VERSION', '0.2.3' );", $bootstrap );
-		$this->assertMatchesRegularExpression( '/^Stable tag: 0\.2\.3$/m', $readme );
+		$this->assertMatchesRegularExpression( '/^ \* Version:\s+0\.2\.5$/m', $bootstrap );
+		$this->assertStringContainsString( "define( 'ELAVIRA_VERSION', '0.2.5' );", $bootstrap );
+		$this->assertMatchesRegularExpression( '/^Stable tag: 0\.2\.5$/m', $readme );
 	}
 
 	public function test_wordpress_org_metadata_matches_runtime_requirements() {

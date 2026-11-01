@@ -3,7 +3,7 @@ Contributors: elavira
 Tags: accessibility, audit, wcag, reports, toolbar
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 0.2.3
+Stable tag: 0.2.5
 Requires PHP: 7.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -54,6 +54,22 @@ records in the WordPress database.
 
 == Changelog ==
 
+= 0.2.5 =
+
+* Reduce statement info buttons to a 24px minimum width and 20px minimum height, with surrounding spacing.
+* Open hover guidance only from the info button, while keeping the open panel hoverable and preserving focus, tap, and Escape support.
+* Position enhanced guidance panels absolutely to avoid form layout shifts, with wrapping constrained to the field width.
+* Preserve visible inline guidance when JavaScript is unavailable. Saved content and publishing behavior are unchanged.
+
+
+= 0.2.4 =
+
+* Add plain-language information controls beside five Accessibility Statement fields, with hover, focus, tap, Escape dismissal, and inline guidance that wraps at narrow widths.
+* Add the Creating an Accessibility Statement Learn article, with practical examples and guidance on honest claims, barriers, feedback, testing, and regular reviews.
+* Link the article prominently from the statement editor and first-use screen.
+* Preserve saved statement content, explicit publishing, and revision history. No database migration is required.
+
+
 = 0.2.3 =
 
 * Add Needs Correction workflow status with required notes, server/client validation, retained rejected input, active counts, filters, and XLSX support.
@@ -94,6 +110,16 @@ records in the WordPress database.
 * Initial development release of the Phase 1 Core workflow.
 
 == Upgrade Notice ==
+
+= 0.2.5 =
+
+Refines statement info buttons and floating guidance panels. No database migration is required.
+
+
+= 0.2.4 =
+
+Adds statement-writing help and a Learn article. Existing saved content and publishing behavior are preserved; no database migration is required.
+
 
 = 0.2.3 =
 

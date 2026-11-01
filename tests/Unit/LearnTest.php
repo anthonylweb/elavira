@@ -20,10 +20,24 @@ use PHPUnit\Framework\TestCase;
 final class LearnTest extends TestCase {
 	public function test_initial_registry_covers_every_current_rule_topic() {
 		$topics = CoreTopicRegistry::create();
-		$this->assertCount( 14, $topics->all() );
+		$this->assertCount( 15, $topics->all() );
 		foreach ( CoreRuleRegistry::create()->all() as $rule ) {
 			$this->assertNotNull( $topics->find( $rule->editorial()['learn_topic'] ) );
 		}
+	}
+
+	public function test_statement_article_is_discoverable_and_renders_without_conformance_claims() {
+		$topics = CoreTopicRegistry::create();
+		$this->assertSame( 'creating_accessibility_statement', $topics->search( 'Creating an Accessibility Statement' )[0]->get( 'id' ) );
+		$_GET['topic'] = 'creating_accessibility_statement';
+		ob_start();
+		$this->page()->detail();
+		$html = ob_get_clean();
+		unset( $_GET['topic'] );
+		$this->assertStringContainsString( '<h1>Creating an Accessibility Statement</h1>', $html );
+		$this->assertStringContainsString( 'plugin findings do not establish complete WCAG conformance', $html );
+		$this->assertStringContainsString( 'Include only tests that actually happened', $html );
+		$this->assertStringContainsString( 'https://www.w3.org/WAI/planning/statements/', $html );
 	}
 
 	public function test_duplicate_topic_ids_are_rejected() {
