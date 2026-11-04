@@ -7,7 +7,7 @@
 
 namespace Elavira\Rules;
 
-// phpcs:disable Squiz.Commenting.FunctionComment, WordPress.WP.I18n.NonSingularStringLiteralText -- Compact trusted registry copy is centralized here.
+// phpcs:disable Squiz.Commenting.FunctionComment -- Compact trusted registry copy is centralized here.
 
 use Elavira\Findings\Values\Priority;
 use Elavira\Rules\Evidence\EvidenceSchema;
@@ -25,10 +25,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.keyboard.positive_tabindex',
 				Priority::HIGH,
 				'2.4.3:A:operable',
-				'Positive tabindex needs focus-order review',
-				'A visible interactive or focusable element uses a positive tabindex, which can move keyboard focus away from logical DOM and reading order.',
-				'Start before the region; use Tab through it, compare focus with visual and content order, then repeat with Shift+Tab.',
-				'Prefer logical DOM order and the normal document focus order instead of positive tabindex values.',
+				array(
+					'title'   => __( 'Positive tabindex needs focus-order review', 'elavira' ),
+					'summary' => __( 'Positive tabindex needs focus-order review.', 'elavira' ),
+				),
+				__( 'A visible interactive or focusable element uses a positive tabindex, which can move keyboard focus away from logical DOM and reading order.', 'elavira' ),
+				__( 'Start before the region; use Tab through it, compare focus with visual and content order, then repeat with Shift+Tab.', 'elavira' ),
+				__( 'Prefer logical DOM order and the normal document focus order instead of positive tabindex values.', 'elavira' ),
 				self::fields(
 					array(
 						'tabindex_category' => array( 16, array( 'positive' ) ),
@@ -44,10 +47,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.keyboard.non_native_interactive',
 				Priority::HIGH,
 				'2.1.1:A:operable',
-				'Non-native interactive element needs keyboard review',
-				'A visible non-native element exposes an interactive role or focusability signal. That pattern does not prove keyboard inoperability.',
-				'Reach it using Tab or the widget’s expected navigation model; verify activation, state changes, visible focus, and a usable way to leave it.',
-				'Prefer a native HTML control where it meets the need; otherwise implement and test the documented keyboard pattern and semantic states.',
+				array(
+					'title'   => __( 'Non-native interactive element needs keyboard review', 'elavira' ),
+					'summary' => __( 'Non-native interactive element needs keyboard review.', 'elavira' ),
+				),
+				__( 'A visible non-native element exposes an interactive role or focusability signal. That pattern does not prove keyboard inoperability.', 'elavira' ),
+				__( 'Reach it using Tab or the widget’s expected navigation model; verify activation, state changes, visible focus, and a usable way to leave it.', 'elavira' ),
+				__( 'Prefer a native HTML control where it meets the need; otherwise implement and test the documented keyboard pattern and semantic states.', 'elavira' ),
 				self::fields(
 					array(
 						'role'               => array( 32, array() ),
@@ -63,10 +69,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.keyboard.possible_unreachable_control',
 				Priority::HIGH,
 				'2.1.1:A:operable',
-				'Custom control may require keyboard-reachability testing',
-				'A visible non-native interactive role has no ordinary tab stop or uses a negative tabindex. Script-managed or composite navigation may still be valid.',
-				'Begin at a logical point before the control, attempt to reach and operate it without a pointer, and test any documented arrow-key model.',
-				'Use a native control where feasible, or provide an appropriate focus-management and keyboard interaction model.',
+				array(
+					'title'   => __( 'Custom control may require keyboard-reachability testing', 'elavira' ),
+					'summary' => __( 'Custom control may require keyboard-reachability testing.', 'elavira' ),
+				),
+				__( 'A visible non-native interactive role has no ordinary tab stop or uses a negative tabindex. Script-managed or composite navigation may still be valid.', 'elavira' ),
+				__( 'Begin at a logical point before the control, attempt to reach and operate it without a pointer, and test any documented arrow-key model.', 'elavira' ),
+				__( 'Use a native control where feasible, or provide an appropriate focus-management and keyboard interaction model.', 'elavira' ),
 				self::fields(
 					array(
 						'role'         => array( 32, array() ),
@@ -81,10 +90,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.keyboard.possible_trap',
 				Priority::HIGH,
 				'2.1.2:A:operable',
-				'Application-style region needs keyboard-trap testing',
-				'A visible application-role region contains multiple focusable descendants. Static inspection cannot establish that focus becomes trapped.',
-				'Keyboard into the region, traverse controls forward and backward, try Escape where conventional, and confirm focus can leave without a pointer or unexpected action.',
-				'Provide standard movement and exit behavior; intentional modal containment must include an accessible keyboard dismissal path.',
+				array(
+					'title'   => __( 'Application-style region needs keyboard-trap testing', 'elavira' ),
+					'summary' => __( 'Application-style region needs keyboard-trap testing.', 'elavira' ),
+				),
+				__( 'A visible application-role region contains multiple focusable descendants. Static inspection cannot establish that focus becomes trapped.', 'elavira' ),
+				__( 'Keyboard into the region, traverse controls forward and backward, try Escape where conventional, and confirm focus can leave without a pointer or unexpected action.', 'elavira' ),
+				__( 'Provide standard movement and exit behavior; intentional modal containment must include an accessible keyboard dismissal path.', 'elavira' ),
 				self::fields(
 					array(
 						'structure'             => array( 32, array( 'application_region' ) ),
@@ -99,10 +111,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.keyboard.custom_widget_review',
 				Priority::MEDIUM,
 				'2.1.1:A:operable',
-				'Custom widget needs interaction-pattern review',
-				'A visible non-native composite or specialized ARIA widget requires manual verification of its role-specific keyboard behavior.',
-				'Test only the keys expected for this widget type, such as Tab, arrows, Enter, Space, Escape, Home, or End as its documented pattern requires.',
-				'Prefer native controls where suitable; otherwise implement the applicable WAI-ARIA keyboard interaction pattern completely.',
+				array(
+					'title'   => __( 'Custom widget needs interaction-pattern review', 'elavira' ),
+					'summary' => __( 'Custom widget needs interaction-pattern review.', 'elavira' ),
+				),
+				__( 'A visible non-native composite or specialized ARIA widget requires manual verification of its role-specific keyboard behavior.', 'elavira' ),
+				__( 'Test only the keys expected for this widget type, such as Tab, arrows, Enter, Space, Escape, Home, or End as its documented pattern requires.', 'elavira' ),
+				__( 'Prefer native controls where suitable; otherwise implement the applicable WAI-ARIA keyboard interaction pattern completely.', 'elavira' ),
 				self::fields(
 					array(
 						'role'           => array( 32, array() ),
@@ -117,10 +132,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.focus.possible_hidden_focus',
 				Priority::HIGH,
 				'2.4.7:AA:operable',
-				'Author styles may suppress the focus indicator',
-				'A bounded author focus rule removes the outline without declaring another detectable focus-state border, shadow, or background treatment. Interaction may still provide a valid indicator elsewhere.',
-				'Keyboard through the affected controls and visually confirm a persistent, perceivable focus indicator in every relevant state.',
-				'Retain native focus styling or add a clear focus-visible treatment; verify visibility rather than relying on outline removal alone.',
+				array(
+					'title'   => __( 'Author styles may suppress the focus indicator', 'elavira' ),
+					'summary' => __( 'Author styles may suppress the focus indicator.', 'elavira' ),
+				),
+				__( 'A bounded author focus rule removes the outline without declaring another detectable focus-state border, shadow, or background treatment. Interaction may still provide a valid indicator elsewhere.', 'elavira' ),
+				__( 'Keyboard through the affected controls and visually confirm a persistent, perceivable focus indicator in every relevant state.', 'elavira' ),
+				__( 'Retain native focus styling or add a clear focus-visible treatment; verify visibility rather than relying on outline removal alone.', 'elavira' ),
 				self::fields(
 					array(
 						'style_pattern' => array( 40, array( 'outline_removed_no_alternative' ) ),
@@ -131,15 +149,33 @@ final class RoundFourRuleDefinitions {
 				'focus_focus_order',
 				'keyboard_interaction'
 			),
-			self::rule( 'elavira.focus.order_review', Priority::HIGH, '2.4.3:A:operable', 'Focus order needs manual review', 'A bounded focus configuration may alter sequential focus order. Static inspection cannot determine whether the resulting sequence preserves meaning and operation.', 'Use Tab and Shift+Tab through the region and compare the actual focus sequence with its logical reading, visual, and interaction order.', 'Align DOM and normal focus order with the intended sequence and avoid positive tabindex values.', self::fields( array( 'order_trigger' => array( 24, array( 'positive_tabindex' ) ) ) ), array(), 'focus_focus_order', 'keyboard_interaction' ),
+			self::rule(
+				'elavira.focus.order_review',
+				Priority::HIGH,
+				'2.4.3:A:operable',
+				array(
+					'title'   => __( 'Focus order needs manual review', 'elavira' ),
+					'summary' => __( 'Focus order needs manual review.', 'elavira' ),
+				),
+				__( 'A bounded focus configuration may alter sequential focus order. Static inspection cannot determine whether the resulting sequence preserves meaning and operation.', 'elavira' ),
+				__( 'Use Tab and Shift+Tab through the region and compare the actual focus sequence with its logical reading, visual, and interaction order.', 'elavira' ),
+				__( 'Align DOM and normal focus order with the intended sequence and avoid positive tabindex values.', 'elavira' ),
+				self::fields( array( 'order_trigger' => array( 24, array( 'positive_tabindex' ) ) ) ),
+				array(),
+				'focus_focus_order',
+				'keyboard_interaction'
+			),
 			self::rule(
 				'elavira.focus.obscured_review',
 				Priority::HIGH,
 				'2.4.11:AA:operable',
-				'Persistent overlay may obscure focused content',
-				'A substantial fixed or sticky, elevated region touches a viewport boundary and may overlap focused content during keyboard navigation.',
-				'Move focus near each overlay boundary, test scrolling, and confirm every focused component remains sufficiently visible.',
-				'Adjust scrolling offsets, spacing, overlay dimensions, or focus movement so focused components remain visible.',
+				array(
+					'title'   => __( 'Persistent overlay may obscure focused content', 'elavira' ),
+					'summary' => __( 'Persistent overlay may obscure focused content.', 'elavira' ),
+				),
+				__( 'A substantial fixed or sticky, elevated region touches a viewport boundary and may overlap focused content during keyboard navigation.', 'elavira' ),
+				__( 'Move focus near each overlay boundary, test scrolling, and confirm every focused component remains sufficiently visible.', 'elavira' ),
+				__( 'Adjust scrolling offsets, spacing, overlay dimensions, or focus movement so focused components remain visible.', 'elavira' ),
 				self::fields(
 					array(
 						'position' => array( 16, array( 'fixed', 'sticky' ) ),
@@ -155,10 +191,13 @@ final class RoundFourRuleDefinitions {
 				'elavira.focus.modal_management_review',
 				Priority::HIGH,
 				'2.4.3:A:operable',
-				'Dialog focus management needs interaction review',
-				'A visible open native dialog or ARIA modal dialog requires human verification of focus entry, containment, dismissal, background restriction, and restoration.',
-				'Open it by keyboard, inspect its name and initial focus, traverse it, dismiss it by keyboard, and confirm focus returns logically and background interaction is restricted.',
-				'Use native dialog behavior or a complete accessible dialog pattern with an accessible name, managed focus, keyboard dismissal, and logical restoration.',
+				array(
+					'title'   => __( 'Dialog focus management needs interaction review', 'elavira' ),
+					'summary' => __( 'Dialog focus management needs interaction review.', 'elavira' ),
+				),
+				__( 'A visible open native dialog or ARIA modal dialog requires human verification of focus entry, containment, dismissal, background restriction, and restoration.', 'elavira' ),
+				__( 'Open it by keyboard, inspect its name and initial focus, traverse it, dismiss it by keyboard, and confirm focus returns logically and background interaction is restricted.', 'elavira' ),
+				__( 'Use native dialog behavior or a complete accessible dialog pattern with an accessible name, managed focus, keyboard dismissal, and logical restoration.', 'elavira' ),
 				self::fields(
 					array(
 						'dialog_pattern' => array( 24, array( 'native_open', 'aria_modal' ) ),
@@ -190,17 +229,17 @@ final class RoundFourRuleDefinitions {
 				'id'                 => $id,
 				'version'            => '1.0.0',
 				'editorial_version'  => '1.0.0',
-				'title'              => __( $title, 'elavira' ),
-				'description'        => __( $observed, 'elavira' ),
+				'title'              => $title['title'],
+				'description'        => $observed,
 				'evaluation_type'    => EvaluationType::HUMAN_REVIEW,
 				'classification'     => FindingClassification::HUMAN_REVIEW,
 				'priority'           => $priority,
 				'wcag'               => array( new WcagMapping( $criterion, $level, $principle ) ),
-				'summary'            => __( $title . '.', 'elavira' ),
-				'why_it_matters'     => __( $observed, 'elavira' ),
-				'recommendation'     => __( $manual_test, 'elavira' ),
-				'wordpress_guidance' => __( $remediation, 'elavira' ),
-				'developer_guidance' => __( $remediation, 'elavira' ),
+				'summary'            => $title['summary'],
+				'why_it_matters'     => $observed,
+				'recommendation'     => $manual_test,
+				'wordpress_guidance' => $remediation,
+				'developer_guidance' => $remediation,
 				'learn_topic'        => $learn,
 				'guided_decision'    => $decision,
 				'evidence_schema'    => new EvidenceSchema( $evidence, 1024 ),

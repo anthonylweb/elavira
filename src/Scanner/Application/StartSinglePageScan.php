@@ -85,6 +85,9 @@ final class StartSinglePageScan {
 	 * @throws Throwable When authorization, validation, or persistence fails.
 	 */
 	public function start( $requested_url, $wcag_target = '2.2_AA', $audit_404 = false ) {
+		if ( \Elavira\Core\Lifecycle\UpgradeManager::has_failed() ) {
+			throw new RuntimeException( 'database_update_failed' );
+		}
 		if ( ! current_user_can( Capability::RUN_AUDITS ) ) {
 			throw new RuntimeException( 'You are not allowed to run accessibility audits.' );
 		}

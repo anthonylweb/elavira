@@ -76,3 +76,26 @@ must not be required to run Composer after installing the plugin.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module layout and
 current architectural boundaries.
+
+## Pre-submission remediation 0.2.5
+
+See `docs/PRE_SUBMISSION_0.2.5.md` for this candidate's validation status and
+remaining manual gates. Historical release checklists do not establish readiness
+of this candidate. See `readme.txt (Third-Party Licenses and Notices)` for third-party provenance.
+
+Core retains audit URLs (including public query selectors), evidence, user
+attribution and review history indefinitely, including after uninstall. The
+readme and WordPress Privacy guide describe the full data policy. Private query
+keys are rejected rather than silently changing the audited page. Elavira must
+remain active to render its structured public statement; copy approved content
+to a standalone WordPress page before deactivating if continued public availability
+is needed. Visitor preferences remain browser-local and work per-page when
+storage is unavailable.
+
+## Release candidate 0.2.6
+
+Version 0.2.6 is the release candidate containing the pre-submission remediation
+and Plugin Check follow-up. See `docs/RELEASE_CANDIDATE_0.2.6.md` for validation
+and remaining release gates. Earlier 0.2.5 reports describe the checks completed
+before this version designation. Schema and scanner/content-contract versions
+remain unchanged.

@@ -42,17 +42,10 @@ final class FrontendToolbar {
 		if ( is_admin() || ! $this->is_active() ) {
 			return;
 		}
+		wp_enqueue_script( 'elavira-toolbar-state', ELAVIRA_URL . 'assets/js/toolbar-state.js', array(), ELAVIRA_VERSION, false );
+		wp_add_inline_script( 'elavira-toolbar-state', 'window.ElaviraToolbarControls=' . wp_json_encode( array_keys( array_filter( ToolbarSettings::get()['controls'] ) ) ) . ';', 'before' );
 		wp_enqueue_style( 'elavira-toolbar', ELAVIRA_URL . 'assets/css/toolbar.css', array(), ELAVIRA_VERSION . '-titles-1' );
 		wp_enqueue_script( 'elavira-toolbar', ELAVIRA_URL . 'assets/js/toolbar.js', array(), ELAVIRA_VERSION, true );
-	}
-
-	/** Apply persisted preferences before the body paints where practical. @return void */
-	public function early_state() {
-		if ( is_admin() || ! $this->is_active() ) {
-			return;
-		}
-		$enabled = array_keys( array_filter( ToolbarSettings::get()['controls'] ) );
-		echo '<script id="elavira-toolbar-state">(function(){try{var a=' . wp_json_encode( $enabled ) . ',s=JSON.parse(localStorage.getItem("elaviraToolbarPreferences")||"{}"),r=document.documentElement;if(a.indexOf("text_size")>-1&&[110,120,130,140,150].indexOf(s.textSize)>-1){r.style.setProperty("--elavira-text-size",s.textSize+"%");r.classList.add("elavira-pref-text-size")}var m={textSpacing:"text_spacing",lineHeight:"line_height",highContrast:"high_contrast",grayscale:"grayscale",highlightLinks:"highlight_links",enhancedFocus:"enhanced_focus",readingGuide:"reading_guide",readableFont:"readable_font"};Object.keys(m).forEach(function(k){if(a.indexOf(m[k])>-1&&s[k]===true)r.classList.add("elavira-pref-"+k.replace(/[A-Z]/g,function(x){return"-"+x.toLowerCase()}))});if(a.indexOf("appearance")>-1&&["light","dark"].indexOf(s.appearance)>-1)r.classList.add("elavira-pref-appearance-"+s.appearance)}catch(e){}})();</script>';
 	}
 
 	/** Render accessible trigger and modal. @return void */
@@ -61,7 +54,7 @@ final class FrontendToolbar {
 			return;
 		}
 		$settings  = ToolbarSettings::get();
-		$statement = $this->statements->find();
+		$statement = \Elavira\Core\Lifecycle\UpgradeManager::has_failed() ? null : $this->statements->find();
 		$url       = $statement && 'published' === $statement['status'] && ! empty( $statement['post_id'] ) ? get_permalink( $statement['post_id'] ) : '';
 		$labels    = array(
 			'text_spacing'    => __( 'Increase text spacing', 'elavira' ),

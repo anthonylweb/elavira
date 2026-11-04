@@ -51,6 +51,7 @@ final class ScannerModule implements Module {
 		add_action( 'post_submitbox_misc_actions', array( $context, 'editor' ) );
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_action( 'wp_loaded', array( $this, 'protect_cache_early' ), 0 );
 		add_action( 'template_redirect', array( $this, 'protect_cache' ), 1 );
 	}
 	/** Register launcher. */ public function register_admin() {
@@ -98,9 +99,14 @@ final class ScannerModule implements Module {
 		( new ScanPage( new SessionGuard( $GLOBALS['wpdb'], $sessions, new AuditRepository( $GLOBALS['wpdb'] ), new AuditUrlRepository( $GLOBALS['wpdb'] ) ), new CanonicalUrl() ) )->enqueue();
 	}
 
-	/** Prevent valid credential-bearing pages from entering shared caches. @return void */
-	public function protect_cache() {
+	/** Signal cache bypass before the main request and headers; response status is not known yet. @return void */
+	public function protect_cache_early() {
+		$this->protect_cache( false );
+	}
+
+	/** Prevent valid credential-bearing pages from entering shared caches. @param bool $check_response Whether the main query is ready. @return void */
+	public function protect_cache( $check_response = true ) {
 		$sessions = new ScanSessionRepository( $GLOBALS['wpdb'] );
-		( new ScanPage( new SessionGuard( $GLOBALS['wpdb'], $sessions, new AuditRepository( $GLOBALS['wpdb'] ), new AuditUrlRepository( $GLOBALS['wpdb'] ) ), new CanonicalUrl() ) )->protect_cache();
+		( new ScanPage( new SessionGuard( $GLOBALS['wpdb'], $sessions, new AuditRepository( $GLOBALS['wpdb'] ), new AuditUrlRepository( $GLOBALS['wpdb'] ) ), new CanonicalUrl() ) )->protect_cache( $check_response );
 	}
 }

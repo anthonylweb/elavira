@@ -1,3 +1,4 @@
+/* IANA registry data: CC0 1.0. Extracted primary subtags; see readme.txt (Third-Party Licenses and Notices). */
 /* IANA Language Subtag Registry primary language subtags. Registry File-Date: 2026-08-08. Source: https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry */
 ( function ( root, values ) {
 	'use strict';

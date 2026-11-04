@@ -3,7 +3,14 @@
 	if (typeof module === 'object' && module.exports) {
 		module.exports = factory;
 	} else {
-		factory(root.document, root.localStorage);
+		var storage;
+		try {
+			storage = root.localStorage;
+		} catch (error) {
+			// Preferences still work for this page when browser storage is denied.
+			storage = null;
+		}
+		factory(root.document, storage);
 	}
 }(typeof window !== 'undefined' ? window : this, function (document, storage) {
 	'use strict';

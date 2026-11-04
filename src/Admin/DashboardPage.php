@@ -61,13 +61,28 @@ final class DashboardPage {
 		<?php
 		if ( $pending ) :
 			?>
-			— <?php echo esc_html( sprintf( _n( '%d pending recommendation', '%d pending recommendations', $pending, 'elavira' ), $pending ) ); ?><?php endif; ?></p><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-statement' ) ); ?>"><?php echo esc_html( ! $statement ? __( 'Create Statement', 'elavira' ) : __( 'Review or edit Statement', 'elavira' ) ); ?></a>
+			—
+			<?php
+			/* translators: %d: Number of pending recommendations. */
+			echo esc_html( sprintf( _n( '%d pending recommendation', '%d pending recommendations', $pending, 'elavira' ), $pending ) );
+			?>
+			<?php endif; ?></p><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-statement' ) ); ?>"><?php echo esc_html( ! $statement ? __( 'Create Statement', 'elavira' ) : __( 'Review or edit Statement', 'elavira' ) ); ?></a>
 			<?php
 			if ( $statement && 'published' === $statement['status'] && $statement['post_id'] ) :
 				?>
 			· <a href="<?php echo esc_url( get_permalink( $statement['post_id'] ) ); ?>"><?php echo esc_html__( 'View published Statement', 'elavira' ); ?></a><?php endif; ?></p></section>
-		<section><h2><?php echo esc_html__( 'Guided Decisions', 'elavira' ); ?></h2><p><?php echo esc_html( sprintf( __( '%d Phase 1 decisions are available. Finding-bound decisions are completed from compatible reports; manual reviews remain available through Learn.', 'elavira' ), count( CoreDecisionRegistry::create()->all() ) ) ); ?></p><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-learn#guided-decisions' ) ); ?>"><?php echo esc_html__( 'Browse Guided Decisions', 'elavira' ); ?></a></p></section>
-		<section><h2><?php echo esc_html__( 'Visitor Toolbar', 'elavira' ); ?></h2><p><?php echo esc_html( $toolbar['enabled'] ? __( 'Enabled', 'elavira' ) : __( 'Disabled', 'elavira' ) ); ?> — <?php echo esc_html( sprintf( __( '%d visitor preferences configured', 'elavira' ), count( array_filter( $toolbar['controls'] ) ) ) ); ?></p><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-toolbar' ) ); ?>"><?php echo esc_html__( 'Configure Toolbar', 'elavira' ); ?></a></p></section>
+		<section><h2><?php echo esc_html__( 'Guided Decisions', 'elavira' ); ?></h2><p>
+		<?php
+		/* translators: %d: Number of available Guided Decisions. */
+		echo esc_html( sprintf( _n( '%d Phase 1 decision is available. Finding-bound decisions are completed from compatible reports; manual reviews remain available through Learn.', '%d Phase 1 decisions are available. Finding-bound decisions are completed from compatible reports; manual reviews remain available through Learn.', count( CoreDecisionRegistry::create()->all() ), 'elavira' ), count( CoreDecisionRegistry::create()->all() ) ) );
+		?>
+		</p><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-learn#guided-decisions' ) ); ?>"><?php echo esc_html__( 'Browse Guided Decisions', 'elavira' ); ?></a></p></section>
+		<section><h2><?php echo esc_html__( 'Visitor Toolbar', 'elavira' ); ?></h2><p><?php echo esc_html( $toolbar['enabled'] ? __( 'Enabled', 'elavira' ) : __( 'Disabled', 'elavira' ) ); ?> —
+		<?php
+		/* translators: %d: Number of configured visitor preferences. */
+		echo esc_html( sprintf( _n( '%d visitor preference configured', '%d visitor preferences configured', count( array_filter( $toolbar['controls'] ) ), 'elavira' ), count( array_filter( $toolbar['controls'] ) ) ) );
+		?>
+		</p><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-toolbar' ) ); ?>"><?php echo esc_html__( 'Configure Toolbar', 'elavira' ); ?></a></p></section>
 		<section><h2><?php echo esc_html__( 'Learn', 'elavira' ); ?></h2><p><a href="<?php echo esc_url( admin_url( 'admin.php?page=elavira-learn' ) ); ?>"><?php echo esc_html__( 'Browse Learn and the WCAG Reference', 'elavira' ); ?></a></p></section>
 		<?php
 		if ( $latest ) :

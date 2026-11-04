@@ -116,7 +116,7 @@ endif;
 			$this->services['statements']->publish( $statement['id'], $post_id, $fields, get_current_user_id(), $reviewed );
 			$this->redirect( 'published' );
 		} catch ( Throwable $error ) {
-			$this->redirect( 'invalid_fields' );
+			$this->redirect( 'publish_forbidden' === $error->getMessage() ? 'publish_forbidden' : 'invalid_fields' );
 		}
 	}
 
@@ -167,7 +167,7 @@ endif;
 		if ( $url && 'published' === $statement['status'] ) :
 			?>
 			· <a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html__( 'View public statement', 'elavira' ); ?></a><?php endif; ?></p>
-		<p><?php echo esc_html__( 'Saving a draft never changes the currently published statement. Publishing is always explicit.', 'elavira' ); ?></p>
+		<p><?php echo esc_html__( 'Saving a draft never changes the currently published statement. Publishing is always explicit. Elavira must remain active to render the public statement. Deactivation or deletion retains its page and structured records, but the public statement body is unavailable. Before deactivation, copy the approved statement into a standalone WordPress page if it must remain public.', 'elavira' ); ?></p>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="elavira-statement-form"><input type="hidden" name="action" value="elavira_statement_save"><?php wp_nonce_field( 'elavira_statement_save' ); ?>
 		<?php
 		$this->text( 'title', __( 'Statement title', 'elavira' ), $fields, false, true );
@@ -294,6 +294,9 @@ endif;
 		} echo '</select>'; }
 	/** Create/update associated page. @param array $statement Statement. @param array $fields Fields. @return int */
 	private function publish_page( array $statement, array $fields ) {
+		if ( ! current_user_can( 'publish_pages' ) || ! current_user_can( 'edit_pages' ) || ( $statement['post_id'] && ! current_user_can( 'edit_post', absint( $statement['post_id'] ) ) ) ) {
+			throw new \RuntimeException( 'publish_forbidden' );
+		}
 		$data = array(
 			'post_title'   => $fields['title'],
 			'post_content' => '<!-- Elavira renders this Accessibility Statement from approved structured fields. -->',
@@ -335,6 +338,7 @@ endif;
 			'published'               => __( 'Accessibility Statement published.', 'elavira' ),
 			'recommendation_reviewed' => __( 'Recommendation reviewed. Publish explicitly when the draft is ready.', 'elavira' ),
 			'invalid_page'            => __( 'Choose an editable WordPress page.', 'elavira' ),
+			'publish_forbidden'       => __( 'Publishing requires permission to edit and publish pages, including permission to edit the connected page.', 'elavira' ),
 			'invalid_fields'          => __( 'Correct the invalid Statement fields and try again.', 'elavira' ),
 			'recommendation_failed'   => __( 'The recommendation could not be reviewed.', 'elavira' ),
 			'failed'                  => __( 'The Statement could not be created.', 'elavira' ),
@@ -342,7 +346,7 @@ endif;
 		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirect feedback only. */
 		$key = isset( $_GET['elavira_notice'] ) ? sanitize_key( wp_unslash( $_GET['elavira_notice'] ) ) : '';
 		if ( isset( $messages[ $key ] ) ) {
-			echo '<div class="notice ' . ( in_array( $key, array( 'invalid_page', 'invalid_fields', 'recommendation_failed', 'failed' ), true ) ? 'notice-error' : 'notice-success' ) . ' inline"><p>' . esc_html( $messages[ $key ] ) . '</p></div>';
+			echo '<div class="notice ' . ( in_array( $key, array( 'invalid_page', 'publish_forbidden', 'invalid_fields', 'recommendation_failed', 'failed' ), true ) ? 'notice-error' : 'notice-success' ) . ' inline"><p>' . esc_html( $messages[ $key ] ) . '</p></div>';
 		}
 	}
 }

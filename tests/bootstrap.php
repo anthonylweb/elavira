@@ -271,7 +271,10 @@ if ( ! function_exists( 'plugin_dir_url' ) ) {
 }
 
 if ( ! function_exists( 'current_user_can' ) ) {
-	function current_user_can( $capability ) {
+	function current_user_can( $capability, $object_id = null ) {
+		if ( null !== $object_id && isset( $GLOBALS['elavira_test_capabilities'][ $capability . ':' . $object_id ] ) ) {
+			return $GLOBALS['elavira_test_capabilities'][ $capability . ':' . $object_id ];
+		}
 		return ! empty( $GLOBALS['elavira_test_capabilities'][ $capability ] );
 	}
 }
@@ -325,7 +328,13 @@ if ( ! function_exists( 'get_current_user_id' ) ) {
 
 if ( ! function_exists( 'home_url' ) ) {
 	function home_url( $path = '/' ) {
-		return 'https://example.com' . $path;
+		return rtrim( $GLOBALS['elavira_test_home_url'] ?? 'https://example.com', '/' ) . '/' . ltrim( $path, '/' );
+	}
+}
+
+if ( ! function_exists( 'site_url' ) ) {
+	function site_url( $path = '/' ) {
+		return rtrim( $GLOBALS['elavira_test_site_url'] ?? 'https://example.com', '/' ) . '/' . ltrim( $path, '/' );
 	}
 }
 
@@ -424,4 +433,45 @@ function esc_textarea( $text ) {
 
 function get_userdata( $user_id ) {
 	return $GLOBALS['elavira_test_users'][ $user_id ] ?? false;
+}
+
+function rest_url() {
+	return $GLOBALS['elavira_test_rest_url'] ?? home_url( '/wp-json/' ); }
+function is_admin() {
+	return ! empty( $GLOBALS['elavira_test_is_admin'] ); }
+function wp_enqueue_script( $handle, $src, $deps, $version, $footer ) {
+	$GLOBALS['elavira_test_scripts'][ $handle ] = array(
+		'src'     => $src,
+		'deps'    => $deps,
+		'version' => $version,
+		'footer'  => $footer,
+	);
+}
+function wp_enqueue_style( $handle, $src, $deps, $version ) {
+	$GLOBALS['elavira_test_styles'][ $handle ] = array(
+		'src'     => $src,
+		'deps'    => $deps,
+		'version' => $version,
+	);
+}
+function wp_add_inline_script( $handle, $data, $position ) {
+	$GLOBALS['elavira_test_inline'][ $handle ] = array(
+		'data'     => $data,
+		'position' => $position,
+	);
+}
+function wp_insert_post( $data, $error = false ) {
+	unset( $error );
+	$GLOBALS['elavira_test_inserted_posts'][] = $data;
+	return $data['ID'] ?? 123;
+}
+function wp_slash( $value ) {
+	return $value; }
+
+function nocache_headers() {
+	$GLOBALS['elavira_test_nocache_headers'] = ( $GLOBALS['elavira_test_nocache_headers'] ?? 0 ) + 1;
+}
+function is_404() {
+	$GLOBALS['elavira_test_404_checks'] = ( $GLOBALS['elavira_test_404_checks'] ?? 0 ) + 1;
+	return ! empty( $GLOBALS['elavira_test_is_404'] );
 }

@@ -66,9 +66,9 @@ final class RunAuditPage {
 			$result = $this->start->start( $url, $target, isset( $_POST['audit_404'] ) && '1' === $_POST['audit_404'] );
 			wp_safe_redirect( $result['scan_url'] );
 			exit; } catch ( InvalidArgumentException $error ) {
-			$this->redirect_failure( 'invalid_target' ); } catch ( Throwable $error ) {
+			$this->redirect_failure( 'sensitive_query' === $error->getMessage() ? 'sensitive_query' : 'invalid_target' ); } catch ( Throwable $error ) {
 				$code = $error->getMessage();
-				$this->redirect_failure( in_array( $code, array( 'page_missing', 'page_blocked', 'request_failed', 'response_failed', 'redirect_failed', 'expected_404' ), true ) ? $code : 'launch_failed' ); }
+				$this->redirect_failure( in_array( $code, array( 'page_missing', 'page_blocked', 'request_failed', 'response_failed', 'redirect_failed', 'expected_404', 'database_update_failed' ), true ) ? $code : 'launch_failed' ); }
 	}
 	/** Require capability. */
 	private function authorize() {
@@ -82,12 +82,14 @@ final class RunAuditPage {
 	private function notice() {
 		$notice   = sanitize_key( (string) filter_input( INPUT_GET, 'elavira_notice', FILTER_SANITIZE_FULL_SPECIAL_CHARS ) );
 		$messages = array(
-			'page_missing'    => __( 'The requested page could not be found (HTTP 404). Check the URL, or explicitly choose Audit 404 page.', 'elavira' ),
-			'page_blocked'    => __( 'The page requires authentication or blocked the request (HTTP 401/403). No audit was created.', 'elavira' ),
-			'request_failed'  => __( 'The page request failed or timed out. Check connectivity and try again.', 'elavira' ),
-			'response_failed' => __( 'The server returned an unsuccessful response. No audit was created.', 'elavira' ),
-			'redirect_failed' => __( 'The page redirect could not be followed safely. Enter the final public URL.', 'elavira' ),
-			'expected_404'    => __( 'Audit 404 page requires a URL that returns HTTP 404. This URL returned a successful response.', 'elavira' ),
+			'sensitive_query'        => \Elavira\Scanner\Security\PageResponse::message( 'sensitive_query' ),
+			'database_update_failed' => \Elavira\Scanner\Security\PageResponse::message( 'database_update_failed' ),
+			'page_missing'           => __( 'The requested page could not be found (HTTP 404). Check the URL, or explicitly choose Audit 404 page.', 'elavira' ),
+			'page_blocked'           => __( 'The page requires authentication or blocked the request (HTTP 401/403). No audit was created.', 'elavira' ),
+			'request_failed'         => __( 'The page request failed or timed out. Check connectivity and try again.', 'elavira' ),
+			'response_failed'        => __( 'The server returned an unsuccessful response. No audit was created.', 'elavira' ),
+			'redirect_failed'        => __( 'The page redirect could not be followed safely. Enter the final public URL.', 'elavira' ),
+			'expected_404'           => __( 'Audit 404 page requires a URL that returns HTTP 404. This URL returned a successful response.', 'elavira' ),
 		);
 		if ( isset( $messages[ $notice ] ) ) {
 			echo '<div class="notice notice-error inline" role="alert"><p>' . esc_html( $messages[ $notice ] ) . '</p></div>';

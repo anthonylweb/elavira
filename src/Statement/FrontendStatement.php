@@ -24,7 +24,7 @@ final class FrontendStatement {
 
 	/** Render only inside the main singular loop. @param string $content Existing content. @return string */
 	public function filter_content( $content ) {
-		if ( is_admin() || ! is_singular( 'page' ) || ! in_the_loop() || ! is_main_query() ) {
+		if ( \Elavira\Core\Lifecycle\UpgradeManager::has_failed() || is_admin() || ! is_singular( 'page' ) || ! in_the_loop() || ! is_main_query() ) {
 			return $content;
 		}
 		$statement = $this->repository->find_published_by_post( get_the_ID() );

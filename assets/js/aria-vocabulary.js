@@ -1,3 +1,7 @@
+/* Derived from WAI-ARIA 1.2. Copyright 2013-2023 W3C (MIT, ERCIM, Keio, Beihang).
+ * Modified into bounded JavaScript vocabulary by Elavira.
+ * W3C Software and Document License (2015): see licenses/W3C-2015.txt and readme.txt (Third-Party Licenses and Notices).
+ */
 /* Bounded WAI-ARIA 1.2 vocabulary used by Elavira Round 3. Source: https://www.w3.org/TR/wai-aria-1.2/ (W3C Recommendation, 2023-06-06). */
 ( function ( root ) {
 	'use strict';

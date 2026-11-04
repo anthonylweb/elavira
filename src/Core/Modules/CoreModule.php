@@ -24,5 +24,6 @@ final class CoreModule implements Module {
 	 */
 	public function register() {
 		add_action( 'plugins_loaded', array( new UpgradeManager(), 'maybe_upgrade' ), 5 );
+		add_action( 'admin_init', array( new \Elavira\Core\Privacy\PrivacyPolicy(), 'register' ) );
 	}
 }

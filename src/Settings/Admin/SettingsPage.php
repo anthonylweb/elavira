@@ -68,7 +68,12 @@ final class SettingsPage {
 		<?php
 		foreach ( ( new CoreHealth( $this->database ) )->checks() as $check ) :
 			?>
-			<div><dt><?php echo esc_html( $check['label'] ); ?></dt><dd><strong><?php echo esc_html( $check['healthy'] ? __( 'Available', 'elavira' ) : __( 'Needs attention', 'elavira' ) ); ?>:</strong> <?php echo esc_html( $check['message'] ); ?></dd></div><?php endforeach; ?><div><dt><?php echo esc_html__( 'Environment', 'elavira' ); ?></dt><dd><?php echo esc_html( sprintf( __( 'WordPress %1$s; PHP %2$s; Elavira %3$s; schema %4$s.', 'elavira' ), get_bloginfo( 'version' ), PHP_VERSION, ELAVIRA_VERSION, ( new VersionManager() )->schema_version() ) ); ?></dd></div></dl>
+			<div><dt><?php echo esc_html( $check['label'] ); ?></dt><dd><strong><?php echo esc_html( $check['healthy'] ? __( 'Available', 'elavira' ) : __( 'Needs attention', 'elavira' ) ); ?>:</strong> <?php echo esc_html( $check['message'] ); ?></dd></div><?php endforeach; ?><div><dt><?php echo esc_html__( 'Environment', 'elavira' ); ?></dt><dd>
+			<?php
+			/* translators: 1: WordPress version, 2: PHP version, 3: Elavira version, 4: Database schema version. */
+			echo esc_html( sprintf( __( 'WordPress %1$s; PHP %2$s; Elavira %3$s; schema %4$s.', 'elavira' ), get_bloginfo( 'version' ), PHP_VERSION, ELAVIRA_VERSION, ( new VersionManager() )->schema_version() ) );
+			?>
+		</dd></div></dl>
 		<?php
 	}
 
@@ -80,6 +85,7 @@ final class SettingsPage {
 
 	/** Data disclosures. @return void */
 	private function privacy() {
+		echo '<p>' . esc_html( \Elavira\Core\Privacy\PrivacyPolicy::text() ) . '</p>';
 		?>
 		<h2><?php echo esc_html__( 'Data & Privacy', 'elavira' ); ?></h2><h3><?php echo esc_html__( 'Core audit data', 'elavira' ); ?></h3><p><?php echo esc_html__( 'Audit reports, grouped findings, bounded evidence, workflow history, completed Guided Decisions, and Statement history are stored in this WordPress database. Core reports are retained indefinitely; Core provides no scheduled deletion or retention control.', 'elavira' ); ?></p><h3><?php echo esc_html__( 'Visitor preferences', 'elavira' ); ?></h3><p><?php echo esc_html__( 'Toolbar presentation choices are stored only in the visitor’s browser. Elavira does not transmit them to WordPress or treat them as disability information.', 'elavira' ); ?></p><h3><?php echo esc_html__( 'Uninstall behavior', 'elavira' ); ?></h3><p><?php echo esc_html__( 'Deactivation preserves Elavira data. This build does not automatically delete Core records or published WordPress pages.', 'elavira' ); ?></p>
 		<?php

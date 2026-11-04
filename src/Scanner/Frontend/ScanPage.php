@@ -44,7 +44,7 @@ final class ScanPage {
 			return; }
 		try {
 			$request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) );
-			$current     = $this->canonical->authorize( home_url( $request_uri ) );
+			$current     = $this->canonical->current_request( $request_uri );
 			$session     = $this->guard->authorize( $token, get_current_user_id(), $current, array( ScanSessionState::CREATED, ScanSessionState::ACTIVE ) );
 		} catch ( Throwable $error ) {
 			return; }
@@ -88,17 +88,25 @@ final class ScanPage {
 		);
 	}
 
-	/** Disable shared caching only after the credential and page binding validate. @return void */
-	public function protect_cache() {
+	/**
+	 * Signal cache bypass only after the credential and page binding validate.
+	 *
+	 * @param bool $check_response Whether the main query is ready for a 404 check.
+	 * @return void
+	 */
+	public function protect_cache( $check_response = true ) {
+		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+			return;
+		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only session credential; REST mutations require a separate nonce.
 		$token = isset( $_GET['elavira_scan'] ) ? sanitize_text_field( wp_unslash( $_GET['elavira_scan'] ) ) : '';
 		if ( '' === $token || ! is_user_logged_in() ) {
 			return; }
 		try {
 			$request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ?? '/' ) );
-			$current     = $this->canonical->authorize( home_url( $request_uri ) );
+			$current     = $this->canonical->current_request( $request_uri );
 			$session     = $this->guard->authorize( $token, get_current_user_id(), $current, array( ScanSessionState::CREATED, ScanSessionState::ACTIVE ) );
-			if ( function_exists( 'is_404' ) && is_404() ) {
+			if ( $check_response && function_exists( 'is_404' ) && is_404() ) {
 				$database      = $GLOBALS['wpdb'];
 				$audits        = new \Elavira\Audit\Persistence\AuditRepository( $database );
 				$audit         = $audits->find( $session['audit_id'] );
@@ -110,7 +118,10 @@ final class ScanPage {
 				}
 			}
 			if ( ! defined( 'DONOTCACHEPAGE' ) ) {
-				define( 'DONOTCACHEPAGE', true ); }
+				// Cache plugins require this standard global name; a prefixed name would have no effect.
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Interoperable page-cache opt-out convention.
+				define( 'DONOTCACHEPAGE', true );
+			}
 			nocache_headers();
 		} catch ( Throwable $error ) {
 			return; }

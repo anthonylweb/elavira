@@ -132,7 +132,12 @@ final class CoreRuleGuidanceTest extends TestCase {
 		);
 		foreach ( array( 'instead_of', 'consider', 'explanation' ) as $field ) {
 			preg_match_all( "/'" . $field . "'\\s*=>\\s*__\\(\\s*'(?:[^'\\\\]|\\\\.)*', 'elavira' \\)/u", $source, $matches );
-			$this->assertCount( $examples, $matches[0], $field );
+			// Code examples translate the label independently of fixed HTML syntax.
+			$code_examples = 'explanation' === $field ? 0 : 1;
+			$this->assertCount( $examples - $code_examples, $matches[0], $field );
+			if ( $code_examples ) {
+				$this->assertSame( 1, preg_match( "/'" . $field . "'\\s*=>\\s*'<button[^']*' \\. __\\( 'Save', 'elavira' \\) \\. '<\\/button>'/", $source ) );
+			}
 		}
 	}
 }

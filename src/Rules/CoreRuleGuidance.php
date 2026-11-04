@@ -430,10 +430,8 @@ final class CoreRuleGuidance {
 				'developer_guidance'    => __( 'Native semantics are usually preferable to repeated ARIA. Test the supported browser and assistive-technology combinations when compatibility motivated the role.', 'elavira' ),
 				'examples'              => array(
 					array(
-						// phpcs:ignore WordPress.WP.I18n.NoHtmlWrappedStrings -- Literal escaped code example, not rendered HTML.
-						'instead_of'  => __( '<button role="button">Save</button>', 'elavira' ),
-						// phpcs:ignore WordPress.WP.I18n.NoHtmlWrappedStrings -- Literal escaped code example, not rendered HTML.
-						'consider'    => __( '<button>Save</button>', 'elavira' ),
+						'instead_of'  => '<button role="button">' . __( 'Save', 'elavira' ) . '</button>',
+						'consider'    => '<button>' . __( 'Save', 'elavira' ) . '</button>',
 						'explanation' => __( 'The native button already supplies the button role. Retain additional markup only for a justified, tested reason.', 'elavira' ),
 					),
 				),

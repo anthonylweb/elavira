@@ -71,6 +71,34 @@ final class SinglePageScanTest extends TestCase {
 		$this->complete                          = new CompleteScan( $this->database, $this->sessions, $this->guard, $this->audits, $this->urls, $this->findings, $occurrences, new \Elavira\Findings\Persistence\ReviewedExceptionRepository( $this->database ), $identity, $supersession, $staged );
 	}
 
+	public function test_sensitive_url_is_rejected_before_network_or_persistence() {
+		$before                                = $this->database->tables;
+		$GLOBALS['elavira_test_http_requests'] = array();
+		try {
+			$this->start->start( 'https://example.com/?p=42&access_token=secret' );
+			$this->fail(); } catch ( InvalidArgumentException $error ) {
+					$this->assertSame( 'sensitive_query', $error->getMessage() ); }
+			$this->assertSame( array(), $GLOBALS['elavira_test_http_requests'] );
+			$this->assertSame( $before, $this->database->tables );
+	}
+
+	public function test_sensitive_redirect_is_not_requested_or_persisted() {
+		$before                                 = $this->database->tables;
+		$GLOBALS['elavira_test_http_requests']  = array();
+		$GLOBALS['elavira_test_http_responses'] = array(
+			array(
+				'response' => array( 'code' => 302 ),
+				'headers'  => array( 'location' => '/?p=42&_wpnonce=secret' ),
+			),
+		);
+		try {
+			$this->start->start( 'https://example.com/public/' );
+			$this->fail(); } catch ( InvalidArgumentException $error ) {
+					$this->assertSame( 'sensitive_query', $error->getMessage() ); }
+			$this->assertCount( 1, $GLOBALS['elavira_test_http_requests'] );
+			$this->assertSame( $before, $this->database->tables );
+	}
+
 	public function test_creates_unpredictable_owner_bound_session_and_version_snapshot() {
 		$first  = $this->token( $this->start->start( 'https://example.com/article/?b=2&a=1' ) );
 		$second = $this->token( $this->start->start( 'https://example.com/article/' ) );

@@ -13,12 +13,14 @@ namespace Elavira\Scanner\Security;
 final class PageResponse {
 	public static function message( $code ) {
 		$messages = array(
-			'page_missing'    => __( 'The requested page could not be found (HTTP 404). Check the URL or explicitly choose Audit 404 page.', 'elavira' ),
-			'page_blocked'    => __( 'Authentication or access restrictions blocked this request (HTTP 401/403). No audit was created.', 'elavira' ),
-			'request_failed'  => __( 'The page request failed or timed out. Check connectivity and try again.', 'elavira' ),
-			'response_failed' => __( 'The server returned an unsuccessful response. No audit was created.', 'elavira' ),
-			'redirect_failed' => __( 'The redirect could not be followed safely. Enter the final public URL.', 'elavira' ),
-			'expected_404'    => __( 'Audit 404 page requires a URL returning HTTP 404. This URL returned a successful response.', 'elavira' ),
+			'database_update_failed' => __( 'The Elavira database update must finish before another audit can run. Ask an administrator to review the update notice.', 'elavira' ),
+			'sensitive_query'        => __( 'This URL contains a private or internal query parameter. Choose a public URL without credentials or personal contact details. Public page selectors and filters are supported.', 'elavira' ),
+			'page_missing'           => __( 'The requested page could not be found (HTTP 404). Check the URL or explicitly choose Audit 404 page.', 'elavira' ),
+			'page_blocked'           => __( 'Authentication or access restrictions blocked this request (HTTP 401/403). No audit was created.', 'elavira' ),
+			'request_failed'         => __( 'The page request failed or timed out. Check connectivity and try again.', 'elavira' ),
+			'response_failed'        => __( 'The server returned an unsuccessful response. No audit was created.', 'elavira' ),
+			'redirect_failed'        => __( 'The redirect could not be followed safely. Enter the final public URL.', 'elavira' ),
+			'expected_404'           => __( 'Audit 404 page requires a URL returning HTTP 404. This URL returned a successful response.', 'elavira' ),
 		);
 		return $messages[ $code ] ?? $code;
 	}

@@ -3,6 +3,6 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/js/*.test.js",
-    "lint": "node --check assets/js/aria-vocabulary.js && node --check assets/js/language-primary-subtags.js && node --check assets/js/scanner.js && node --check assets/js/toolbar.js && node --check assets/js/reports.js && node --check assets/js/statement-help.js"
+    "lint": "node --check assets/js/aria-vocabulary.js && node --check assets/js/language-primary-subtags.js && node --check assets/js/scanner.js && node --check assets/js/toolbar-state.js && node --check assets/js/toolbar.js && node --check assets/js/reports.js && node --check assets/js/statement-help.js"
   }
 }

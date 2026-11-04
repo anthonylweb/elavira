@@ -47,7 +47,7 @@ final class ToolbarTest extends TestCase {
 	public function test_module_registers_scoped_frontend_and_protected_admin_hooks() {
 		$GLOBALS['wpdb'] = new \Elavira\Tests\Support\FakeWpdb();
 		Bootstrap::boot();
-		$this->assertArrayHasKey( 'wp_head', $GLOBALS['elavira_test_actions'] );
+		$this->assertArrayHasKey( 'wp_enqueue_scripts', $GLOBALS['elavira_test_actions'] );
 		$this->assertArrayHasKey( 'wp_footer', $GLOBALS['elavira_test_actions'] );
 		$this->assertArrayHasKey( 'admin_post_elavira_toolbar_save', $GLOBALS['elavira_test_actions'] );
 		$source = file_get_contents( dirname( __DIR__, 2 ) . '/src/Toolbar/Admin/ToolbarPage.php' );

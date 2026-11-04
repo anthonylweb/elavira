@@ -31,7 +31,6 @@ final class ToolbarModule implements Module {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'register_admin' ) );
 		add_action( 'admin_post_elavira_toolbar_save', array( $this, 'save' ) );
-		add_action( 'wp_head', array( $this, 'early_state' ), 1 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'wp_footer', array( $this, 'render' ) );
 	}
@@ -42,9 +41,6 @@ final class ToolbarModule implements Module {
 	/** Save settings. @return void */
 	public function save() {
 		$this->page()->save(); }
-	/** Print early preference state. @return void */
-	public function early_state() {
-		$this->frontend()->early_state(); }
 	/** Enqueue frontend assets. @return void */
 	public function enqueue() {
 		$this->frontend()->enqueue(); }
