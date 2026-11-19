@@ -1,0 +1,35 @@
+@font-face { font-family: "Elavira Atkinson Hyperlegible"; src: url("../fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
+html.elavira-pref-text-size { font-size: var(--elavira-text-size); }
+.elavira-toolbar, .elavira-toolbar * { box-sizing: border-box; }
+.elavira-toolbar { position: fixed; z-index: 9990; font: 1rem/1.5 system-ui, sans-serif; color: #171717; }
+.elavira-toolbar--bottom-right { right: 1rem; bottom: 1rem; }
+.elavira-toolbar--bottom-left { left: 1rem; bottom: 1rem; }
+.elavira-toolbar--top-right { right: 1rem; top: calc(1rem + var(--wp-admin--admin-bar--height, 0px)); }
+.elavira-toolbar--top-left { left: 1rem; top: calc(1rem + var(--wp-admin--admin-bar--height, 0px)); }
+.elavira-toolbar__trigger, .elavira-toolbar__panel button { min-height: 2.75rem; border: 2px solid #fff; border-radius: .35rem; padding: .55rem .8rem; background: #172554; color: #fff; font: inherit; cursor: pointer; }
+.elavira-toolbar :focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
+.elavira-toolbar__dialog { position: fixed; z-index: 9991; inset: 0; background: rgba(0,0,0,.62); }
+.elavira-toolbar__panel { position: absolute; inset-block: 0; right: 0; width: min(28rem, 100%); overflow: auto; padding: 1.25rem; background: #fff; color: #171717; box-shadow: 0 0 2rem rgba(0,0,0,.35); }
+.elavira-toolbar__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.elavira-toolbar__header h2 { margin: 0; color: inherit; font: 700 1.5rem/1.3 system-ui, sans-serif; text-transform: capitalize; }
+.elavira-toolbar__panel fieldset { margin: 1rem 0; border: 1px solid #666; padding: .75rem; }
+.elavira-toolbar__panel legend { padding: 0 .3rem; font-weight: 700; }
+.elavira-toolbar__panel label { display: block; margin: .65rem 0; color: inherit; }
+.elavira-toolbar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1rem; }
+.elavira-toolbar__actions a { color: #1d4ed8; text-decoration: underline; }
+.elavira-reading-guide { position: fixed; z-index: 9989; left: 0; width: 100%; height: 2.5rem; border-block: 3px solid #f59e0b; background: rgba(245,158,11,.12); pointer-events: none; }
+html.elavira-pref-text-spacing body { letter-spacing: .12em; word-spacing: .16em; }
+html.elavira-pref-line-height body { line-height: 1.8; }
+html.elavira-pref-readable-font body { font-family: "Elavira Atkinson Hyperlegible", Verdana, Tahoma, Arial, sans-serif; }
+html.elavira-pref-grayscale body > :not(.elavira-toolbar) { filter: grayscale(1); }
+html.elavira-pref-highlight-links body a:not([role="button"]):not(.button):not(.wp-element-button) { text-decoration: underline 3px currentColor !important; text-underline-offset: .2em; }
+html.elavira-pref-enhanced-focus body :focus-visible { outline: 4px solid #f59e0b !important; outline-offset: 4px !important; }
+html.elavira-pref-high-contrast body, html.elavira-pref-appearance-dark body { background: #111 !important; color: #fff !important; }
+html.elavira-pref-high-contrast body :where(main,header,footer,nav,section,article,aside,div), html.elavira-pref-appearance-dark body :where(main,header,footer,nav,section,article,aside) { background-color: transparent !important; color: inherit !important; }
+html.elavira-pref-high-contrast body a, html.elavira-pref-appearance-dark body a { color: #7dd3fc !important; }
+html.elavira-pref-appearance-light body { background: #fff !important; color: #171717 !important; }
+html.elavira-pref-appearance-light body :where(main,header,footer,nav,section,article,aside) { background-color: transparent !important; color: inherit !important; }
+html.elavira-pref-high-contrast .elavira-toolbar__panel, html.elavira-pref-appearance-dark .elavira-toolbar__panel, html.elavira-pref-appearance-light .elavira-toolbar__panel { background: #fff !important; color: #171717 !important; }
+html.elavira-pref-high-contrast .elavira-toolbar__panel a, html.elavira-pref-appearance-dark .elavira-toolbar__panel a, html.elavira-pref-appearance-light .elavira-toolbar__panel a { color: #1d4ed8 !important; }
+@media (max-width: 30rem) { .elavira-toolbar { right: .5rem; left: auto; bottom: .5rem; top: auto; } .elavira-toolbar__panel { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .elavira-toolbar *, .elavira-toolbar *::before, .elavira-toolbar *::after { animation: none !important; transition: none !important; } }

@@ -1,0 +1,137 @@
+<?php
+/**
+ * Elavira database table names.
+ *
+ * @package Elavira
+ */
+
+namespace Elavira\Core\Database;
+
+/**
+ * Builds collision-safe table names with the active WordPress prefix.
+ */
+final class TableNames {
+	/**
+	 * WordPress table prefix.
+	 *
+	 * @var string
+	 */
+	private $prefix;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string $prefix WordPress table prefix.
+	 */
+	public function __construct( $prefix ) {
+		$this->prefix = $prefix . 'elavira_';
+	}
+
+	/**
+	 * Return the audits table name.
+	 *
+	 * @return string
+	 */
+	public function audits() {
+		return $this->prefix . 'audits';
+	}
+
+	/**
+	 * Return the audit URLs table name.
+	 *
+	 * @return string
+	 */
+	public function audit_urls() {
+		return $this->prefix . 'audit_urls';
+	}
+
+	/**
+	 * Return the findings table name.
+	 *
+	 * @return string
+	 */
+	public function findings() {
+		return $this->prefix . 'findings';
+	}
+
+	/**
+	 * Return the occurrences table name.
+	 *
+	 * @return string
+	 */
+	public function occurrences() {
+		return $this->prefix . 'occurrences';
+	}
+
+	/**
+	 * Return the finding status history table name.
+	 *
+	 * @return string
+	 */
+	public function finding_status_history() {
+		return $this->prefix . 'finding_status_history';
+	}
+
+	/** Return reviewed exception table name. @return string */
+	public function reviewed_exceptions() {
+		return $this->prefix . 'reviewed_exceptions';
+	}
+
+	/** Return the completed Guided Decisions table name. @return string */
+	public function guided_decisions() {
+		return $this->prefix . 'guided_decisions';
+	}
+
+	/** Return the statements table name. @return string */
+	public function statements() {
+		return $this->prefix . 'statements';
+	}
+
+	/** Return the statement recommendations table name. @return string */
+	public function statement_recommendations() {
+		return $this->prefix . 'statement_recommendations';
+	}
+
+	/** Return the statement revisions table name. @return string */
+	public function statement_revisions() {
+		return $this->prefix . 'statement_revisions';
+	}
+
+	/** Return the short-lived scan sessions table name. @return string */
+	public function scan_sessions() {
+		return $this->prefix . 'scan_sessions';
+	}
+
+	/** Return the accepted scan batches table name. @return string */
+	public function scan_batches() {
+		return $this->prefix . 'scan_batches';
+	}
+
+	/** Return staged normalized scan observations table name. @return string */
+	public function scan_observations() {
+		return $this->prefix . 'scan_observations';
+	}
+
+	/**
+	 * Return every Core audit table.
+	 *
+	 * @return string[]
+	 */
+	public function all() {
+		return array(
+			$this->audits(),
+			$this->audit_urls(),
+			$this->findings(),
+			$this->occurrences(),
+			$this->finding_status_history(),
+			$this->reviewed_exceptions(),
+			$this->guided_decisions(),
+			$this->statements(),
+			$this->statement_recommendations(),
+			$this->statement_revisions(),
+			$this->scan_sessions(),
+			$this->scan_batches(),
+			$this->scan_observations(),
+		);
+	}
+}

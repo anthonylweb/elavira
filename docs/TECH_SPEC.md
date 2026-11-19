@@ -6,13 +6,15 @@
 
 **Phase 1 operating principle:** **Detect → Explain → Recommend → User acts → Re-audit → Verify.** The plugin does not automatically modify content, markup, CSS, accessibility attributes, themes, plugins, or configuration in response to findings.
 
-**Specification date:** August 30, 2026
+**Specification date:** August 31, 2026
+
+**Revision note:** Core/Free Phase 1 is intentionally focused on rendered single-page auditing executed in the user's browser. Site-wide auditing and remote browser-worker infrastructure are Premium capabilities reserved for later implementation.
 
 ## Contents
 
 1. Product principles and scope
 2. Admin information architecture
-3. Audit engine and site-wide processing
+3. Core single-page audit engine and Premium expansion boundary
 4. Dashboard
 5. Audits: Run Audit, lifecycle, reports and exports
 6. Findings, workflow and Guided Decisions
@@ -35,7 +37,7 @@
 - No accessibility score. Do not present a percentage that implies overall accessibility or WCAG conformance.
 - Conformance language must be qualified. Use **“Conformance Status — Based on Plugin Findings”** when representing what the plugin currently knows.
 - Human judgment remains authoritative. Guided Decisions support judgment; they do not replace it.
-- Core accessibility capability stays useful. Premium primarily adds agency-scale management, customization, retention, diagnostics, and permissions.
+- Core accessibility capability stays useful through rendered single-page auditing and the full improvement workflow around those scans. Premium adds site-wide auditing through remote browser workers plus agency-scale management, customization, retention, diagnostics, and permissions.
 
 ## Primary Phase 1 workflow
 
@@ -46,47 +48,57 @@
 | Area | Purpose |
 |---|---|
 | Dashboard | Operational overview: latest audit, open findings, human review, statement recommendations, Guided Decisions, toolbar status, recent audits. |
-| Audits | Run single-page or site-wide audits; monitor active audit; browse historical reports. |
+| Audits | Run rendered single-page audits and browse historical reports. Premium later adds persistent site-wide audit workflows. |
 | Statement | Create, maintain, review, version, and publish the accessibility statement. |
 | Toolbar | Configure the visitor-facing accessibility preferences toolbar and preview it. |
 | Learn | Contextual accessibility education, WCAG explanations, topic guidance, Guided Decision directory, and WCAG reference. |
 | Settings | Tabbed global configuration. Core tabs: General, Audit Defaults, Data & Privacy. Premium adds Content & URLs, Developer, Permissions. |
 
-# 3. Audit Engine and Site-wide Processing
+# 3. Core Single-page Audit Engine and Premium Expansion Boundary
 
-## 3.1 Scan types
+## 3.1 Core scan type
 
-- **Single-page scan:** available from page/post/custom-post-type editing contexts and from the front-end admin bar. Scans only the canonical rendered URL for that content.
-- **Selected URL/content scan:** user chooses a limited set of public URLs or content types.
-- **Site-wide audit:** scans the managed inventory of eligible canonical public URLs. Only one site-wide audit may be active at a time.
+- **Rendered single-page scan:** Core/Free scans one canonical public URL at a time using browser-side JavaScript executing against the page as rendered to the user, including relevant client-side DOM changes.
+- Single-page scans are available from supported page/post/custom-post-type editing contexts and from the front-end admin bar.
+- The scanner must evaluate the public visitor experience, not the WordPress editor DOM.
+- A scan launched from an editing context must resolve to the canonical public URL and execute against that public page.
+- Because Core scanning executes in the user's browser, the scan requires the scan page/browser session to remain open until that individual page scan completes. The UI must communicate this clearly when relevant.
+- Core does not provide multi-page, selected-URL batch, content-type batch, or site-wide auditing in this release.
 
-## 3.2 Self-contained background queue
+## 3.2 Browser scanner architecture
 
-The plugin must implement its own purpose-built persistent audit queue. It may borrow proven queue concepts, but Phase 1 must not require a separate scheduler plugin or user-managed dependency.
+Core browser scanning must be designed as a defined scanner execution boundary rather than coupling the audit domain directly to frontend implementation details.
 
-- Persist audit and page-scan jobs in the WordPress database.
-- Process work in small batches to respect PHP execution and memory limits.
-- Each URL is an independent job; one failed page must not fail the audit.
-- Support queued, processing, completed, failed, retrying, skipped, paused, and cancelled states.
-- Support retry/backoff and recovery after request termination or temporary host failure.
-- Persist progress incrementally so audits are resumable.
-- User-initiated single-page scans receive higher queue priority than background site-wide jobs.
-- A paused site-wide audit still counts as the single active site-wide audit.
-- Finalization aggregates page findings only after all eligible jobs have reached a terminal state.
+- Browser JavaScript evaluates the rendered DOM and produces structured scanner evidence.
+- Scanner evidence should include stable rule ID/version, outcome/category, target/selector or equivalent element reference, and the minimum evidence required to explain the result.
+- WordPress persists the audit, evidence, findings, workflow state, and report history.
+- WCAG mappings, priority, explanations, recommendations, WordPress guidance, developer guidance, and Guided Decision associations remain Elavira domain/editorial data rather than being embedded as the browser worker's product logic.
+- The browser scanner must not perform automated remediation.
+- Scanner requests/results must be authorized and protected against forged or unauthorized persistence.
+- Do not claim that PHP-only retrieval of server HTML is equivalent to rendered browser auditing.
 
-## 3.3 URL discovery
+## 3.3 Premium site-wide expansion — later implementation
 
-- Build a managed inventory from intentionally public WordPress content rather than blindly crawling every discovered link.
-- Include published pages, posts, public custom post types, products, homepage, and applicable public archives.
-- Use canonical URLs to deduplicate equivalent pages.
-- Automatically ignore `wp-admin`, previews, feeds, REST endpoints, XML sitemaps, add-to-cart/action URLs, common tracking parameters, and duplicate canonicals.
-- WooCommerce variations that are UI states of one canonical product page do not automatically become separate URLs.
-- Core supports basic content-type inclusion/exclusion. Premium provides custom URL patterns, query rules, advanced content rules, and later saved audit scopes.
+Premium is the intended home for persistent site-wide auditing and remote browser-worker execution. These capabilities are architecturally anticipated but are **not part of the current Core implementation**.
 
-## 3.4 Large sites
+Later Premium implementation may add:
 
-Do not impose an arbitrary hard site-size limit. Show the estimated URL count before starting and provide a large-audit warning with options to continue or adjust scope. Processing remains incremental and resumable.
+- Managed inventory of intentionally public WordPress URLs.
+- Selected-URL/content-type batch scopes and site-wide scopes.
+- Canonical deduplication and advanced URL/content rules.
+- Persistent audit/page jobs and resumable background processing.
+- Retry/backoff, failure isolation, pause/resume/cancel, and concurrency controls.
+- A controlled remote browser-worker service using a real browser execution environment for rendered pages.
+- One active site-wide audit at a time unless a future specification explicitly changes that rule.
+- Optional future self-hosted or agency runner implementations behind the same scanner contract.
 
+Core architecture must leave clean extension points for these capabilities, but Core must not require a remote service, browser binary on the WordPress host, separate scheduler plugin, or persistent site-wide queue.
+
+## 3.4 Premium remote worker principles — reserved
+
+When implemented, a remote worker should be an execution environment rather than the owner of Elavira's product semantics. It should render and inspect a page, return structured evidence, and minimize retained page content. WordPress/Elavira remains authoritative for findings, rule metadata, guidance, history, Guided Decisions, reports, and statement recommendations.
+
+Remote-worker security, authentication, privacy, abuse prevention, URL/network restrictions, scaling, retention, and service economics require a separate Premium implementation specification before production development begins.
 # 4. Dashboard
 
 - Latest audit date and scope.
@@ -107,23 +119,22 @@ Do not display an overall accessibility percentage or conformance score.
 
 ## 5.1 Run Audit
 
-- Scope: Entire public website / Specific content types / Selected URLs.
-- Content Included: dynamically discovered Pages, Posts, Products, public custom post types, public archives.
-- Estimated URL count and View URL Inventory.
+- Core scope is **Current Page / Single Page** only.
+- A scan may be initiated from supported editing contexts or the front-end admin bar and must execute against the canonical public page.
 - WCAG target defaults to WCAG 2.2 Level AA; Level A may be selected.
 - WCAG Target includes an accessible info button/dialog explaining A, AA, and AAA, that levels are nested rather than grades, and that AAA is not a general whole-site target. Link to Learn.
 - Default always means site styling/settings wherever the product uses a Default presentation choice; it never means OS preference.
-- Performance preset: Conservative / Balanced (default) / Performance; advanced technical tuning is not required for normal use.
-- Premium: optional custom Audit Name. Core uses generated date/time-based labels.
-- Premium: advanced custom URL exclusions/rules. Core always applies built-in safe URL hygiene.
+- Core uses generated date/time-based audit labels.
+- Premium may later add custom Audit Name, selected/multi-page scopes, site-wide scopes, advanced URL/content rules, and remote execution controls.
 
-## 5.2 Active audit
+## 5.2 Active single-page scan
 
-- Show started time, processed/total URLs, progress, completed, skipped, failed, remaining, findings so far, and current activity.
-- Allow Pause and Cancel.
-- Leaving the page does not interrupt processing.
-- If another site-wide audit is attempted, direct the user to the existing active audit.
-- Failed URLs can be retried; user may complete the audit without them. Final report must disclose unscanned failures.
+- Show clear scan state and current activity without implying a long-running background audit.
+- Tell the user when the scan page/browser session must remain open until completion.
+- Allow safe cancellation when technically applicable.
+- A completed scan persists its audit metadata, evidence, findings, and report history in WordPress.
+- Failed scans must produce an actionable error without creating false completed results.
+- Core does not promise that a browser-executed single-page scan continues after the scan page/browser session closes.
 
 ## 5.3 Reports
 
@@ -165,13 +176,63 @@ Every report and XLSX export must explain that Priority is an internal organizat
 - Contextual Learn links.
 - Status management does not modify the website.
 
-## 6.2 Status model
+## 6.2 Status and review-decision model
 
-- **Open.**
+Finding workflow and scanner outcome are separate concepts.
+
+### Scanner outcome
+
+Each rule evaluation uses one of these semantic outcomes:
+
+- **Pass** — the individual Elavira check found no issue. It does not establish that the complete WCAG success criterion or page passed.
+- **Automatic Failure** — Elavira has sufficient objective evidence to establish the accessibility failure represented by the mapped rule.
+- **Potential Issue** — Elavira found an objectively suspicious condition, but context is required before declaring an accessibility failure.
+- **Human Review** — a person must evaluate the condition. Elavira supplies evidence, testing guidance, and possible remediation.
+- **Not Evaluated** — Elavira cannot responsibly evaluate the condition.
+
+Priority remains separate from outcome. High, Medium, and Low are Elavira organizational priorities; Review is not a severity.
+
+### Finding workflow
+
+- **Open** — unresolved finding.
 - **Addressed** — user indicates remediation work has been performed; not proof of resolution.
-- **Verified** — subsequent audit confirms the detectable condition is no longer present.
-- **Accepted Limitation** — intentionally retained and eligible for Statement workflow.
-- **Needs Review** is treated as an evaluation state/category and may be supported by a Guided Decision.
+- **Verified** — a subsequent audit verifies that a detectable condition is no longer present. Users cannot manually set Verified.
+- **Accepted Limitation** — a known accessibility issue is intentionally retained and may participate in Accessibility Statement workflow.
+- **Needs Review** — human evaluation remains outstanding.
+- **Reviewed — Not an Issue** — a human reviewed the reported condition in context and determined that it is acceptable and is not an accessibility issue in the current implementation.
+
+Reviewed — Not an Issue is not equivalent to Accepted Limitation.
+
+### Reviewed exceptions and future audits
+
+When a user marks an eligible Potential Issue or Human Review finding **Reviewed — Not an Issue**, Elavira may persist a reviewed exception so that the same materially unchanged condition is not repeatedly presented as an active issue in future audits.
+
+A reviewed exception must:
+
+- Be an explicit human decision.
+- Remain auditable and discoverable.
+- Preserve the original finding and status history.
+- Be scoped at minimum by stable rule ID, rule version, canonical page, stable target fingerprint, and material evidence fingerprint or an equivalently robust domain identity.
+- Never rely only on a CSS selector.
+- Stop suppressing when the rule version, page, target, or material evidence changes enough that the prior decision is no longer safely applicable.
+- Never suppress a different rule merely because it affects the same element.
+- Be applied server-side from trusted normalized evidence, not from a browser-provided suppression key.
+- Be reversible.
+
+Normal active-finding views should exclude matched reviewed exceptions by default while providing an auditable way to view reviewed/suppressed decisions.
+
+### Reset Reviewed Exceptions
+
+Core provides a deliberate **Reset Reviewed Exceptions** action with at least:
+
+- **This page**
+- **All reviewed exceptions**
+
+Reset removes future suppression decisions only. It does not delete or rewrite historical audits, findings, Guided Decision history, status history, reports, or statement history.
+
+The confirmation must clearly explain that future audits will evaluate those conditions again.
+
+This provides a safe fresh-review workflow after a redesign without destroying historical records.
 
 ## 6.3 Guided Decision system
 
@@ -311,21 +372,21 @@ Settings use tabs. Feature-specific configuration remains in its feature area ra
 | Tab | Phase 1 contents |
 |---|---|
 | General | Default WCAG target, admin notifications, admin-bar visibility, basic system status. |
-| Audit Defaults | Default scope/content types, scanning profile, retry behavior. One-site-wide-audit rule is fixed, not configurable. |
+| Audit Defaults | Default WCAG target and single-page scanner defaults that are meaningful for Core. Site-wide scope, queue, and remote-worker settings are not exposed in Core. |
 | Data & Privacy | Core storage disclosures, local visitor preferences disclosure, uninstall behavior. Free reports are kept indefinitely. |
 
 ## 10.2 Premium tabs
 
 | Tab | Premium capability |
 |---|---|
-| Content & URLs | Custom path exclusions/inclusions, wildcard rules, query parameter rules, advanced content rules; future saved scopes. |
-| Developer | Debug logging, detailed diagnostics, processing queue inspection, failed jobs, advanced audit diagnostics. |
+| Content & URLs | Site-wide/selected scope controls, custom path exclusions/inclusions, wildcard rules, query parameter rules, advanced content rules; future saved scopes. |
+| Developer | Debug logging and detailed diagnostics; later Premium site-wide implementation may add remote-worker/processing queue inspection and failed jobs. |
 | Permissions | Role/capability management for audits, reports, statement, toolbar, and settings. |
 
 ## 10.3 Core system health
 
-- Basic operational health remains Core: background processing, rendered scanning, database availability, and actionable failure messages.
-- Premium Developer diagnostics expose forensic detail, not the ability to know whether the plugin is functioning.
+- Basic operational health remains Core: browser scanner availability, database availability, persistence health, and actionable failure messages.
+- Premium Developer diagnostics expose forensic detail. When site-wide/remote execution is implemented, basic user-facing service health must still be understandable without requiring forensic access.
 
 ## 10.4 Report retention
 
@@ -336,27 +397,29 @@ Settings use tabs. Feature-specific configuration remains in its feature area ra
 
 | Capability | Tier |
 |---|---|
-| Single-page audits | Core |
-| Site-wide audits | Core |
+| Rendered single-page audits using browser JavaScript | Core |
+| Admin-bar / supported editing-context single-page scan launch | Core |
 | WCAG reporting and recommendations | Core |
 | Guided Decisions | Core |
-| Historical reports | Core |
+| Historical reports for completed single-page scans | Core |
 | XLSX export | Core |
-| Built-in URL hygiene and basic content scope | Core |
 | Accessibility Statement and audit recommendations | Core |
 | Visitor toolbar | Core |
 | Learn / WCAG education | Core |
-| Custom audit names | Premium |
+| Site-wide audits | Premium — later implementation |
+| Selected-URL/content-type batch audits | Premium — later implementation |
+| Remote browser-worker execution | Premium — later implementation |
+| Persistent site-wide audit queue and recovery controls | Premium — later implementation |
 | Advanced URL/query/content rules | Premium |
+| Custom audit names | Premium |
 | Report retention controls | Premium |
-| Developer diagnostics / queue inspection | Premium |
+| Developer diagnostics / future worker and queue inspection | Premium |
 | Permission management UI | Premium |
 | Future saved audit scopes | Premium backlog |
 | Future scheduled audits | Premium candidate / later phase |
 | Future statement approval/client workflow | Premium backlog |
 
-**Commercial principle:** Core contains what is needed to identify and improve accessibility. Premium improves professional management of complex sites, teams, clients, and long-running programs.
-
+**Commercial principle:** Core contains what is needed to evaluate and improve one rendered page at a time, including education, reporting, human review, and communication workflows. Premium extends Elavira from page-level improvement into website-scale accessibility management and professional operations.
 # 12. Data Model and Technical Architecture
 
 ## 12.1 Recommended entities
@@ -364,7 +427,7 @@ Settings use tabs. Feature-specific configuration remains in its feature area ra
 | Entity | Key responsibilities |
 |---|---|
 | Audit | ID, generated/custom label, scope, WCAG target, status, start/end times, counts, configuration snapshot, owner. |
-| Audit URL | Audit ID, canonical URL, content type/object ID, job status, attempts, timing, failure/skip reason. |
+| Audit URL | Audit ID, canonical URL, content type/object ID, scan status/timing, and failure reason for the scanned page. Structure should remain extensible to future multi-page Premium audits. |
 | Finding | Audit ID, rule ID, grouped issue key, priority, review state, WCAG mapping, description, recommendation, counts. |
 | Occurrence | Finding ID, URL ID, selector/element metadata, evidence needed for report/detail. |
 | Finding Status | Workflow status and status history; Addressed is user-declared, Verified is re-audit evidence. |
@@ -372,13 +435,18 @@ Settings use tabs. Feature-specific configuration remains in its feature area ra
 | Statement | Structured sections, draft/published state, page association, conformance fields, dates. |
 | Statement Recommendation | Finding/group source, suggested limitation text, state, dismissal reason, audit linkage. |
 | Statement Revision | Published snapshot and metadata. |
-| Queue Job | Type, audit/URL references, priority, state, lock/lease data, attempts, next run, error metadata. |
+| Premium Queue Job (reserved) | Future Premium site-wide entity for audit/URL references, priority, state, lock/lease data, attempts, next run, and error metadata. Do not require this entity for Core single-page scans. |
 
 ## 12.2 Rule architecture
 
-- Accessibility checks should map **rule → WCAG criterion → level → principle → explanation → recommendation → WordPress guidance → developer guidance → optional Guided Decision**.
-- Store rule/version metadata with audit results so historical reports remain interpretable after rules evolve.
-- Separate scanner evidence from editorial guidance so copy can improve without corrupting historical scan facts.
+- Stable rule IDs and explicit rule/scanner-contract versions are required.
+- Browser JavaScript returns bounded structured evidence; WordPress owns WCAG mappings, priority, classification, explanations, recommendations, WordPress guidance, developer guidance, and Guided Decision associations.
+- Historical rule/editorial versions must remain resolvable where required to explain historical findings accurately.
+- Rule grouping and cross-rule supersession are server-authoritative.
+- Browser-provided grouping or suppression identities are not trusted.
+- The approved initial production rule inventory and classification requirements are defined in `/docs/PHASE1_RULESET.md`.
+- Do not equate invalid markup with a WCAG failure unless the rule can establish the accessibility condition required by the mapped success criterion.
+- Do not equate an individual rule Pass with complete success-criterion or page conformance.
 
 ## 12.3 Permissions architecture
 
@@ -400,33 +468,32 @@ Define granular WordPress capabilities in the underlying architecture from the b
 
 - Use WordPress capability checks and nonces for state-changing admin actions.
 - Sanitize/validate stored configuration and user-entered URLs; escape output by context.
-- Only allow Phase 1 selected-URL auditing of URLs belonging to the current site.
-- Protect queue mutations against duplicate workers/races with leases/locks.
+- Only allow Core single-page auditing of canonical public URLs belonging to the current site.
+- Protect scan-result persistence against unauthorized or forged requests. Future Premium remote/site-wide execution requires a separate threat model for worker authentication, SSRF/network restrictions, redirects, and queue concurrency.
 - Do not expose sensitive diagnostics to users without appropriate capability.
 - Avoid storing sensitive form values or visitor-entered data as scan evidence.
 
 ## 13.3 Privacy
 
-- Core audit content remains in the site's WordPress database unless a future feature explicitly requires an external service.
+- Core single-page audit content remains in the site's WordPress database and Core does not require an external scanning service. Future Premium remote browser-worker execution requires explicit privacy disclosures and a separate data-minimization/retention specification.
 - Visitor toolbar preferences are stored locally in the browser.
 - Do not require visitor accounts or analytics/tracking for toolbar operation.
 - Verbose/debug logs must avoid sensitive content.
 
 ## 13.4 Performance
 
-- Never execute a full site-wide audit inside one synchronous PHP request.
-- Bound batch size, runtime, memory usage, retries, and concurrency.
-- One active site-wide audit maximum.
-- Single-page scans may coexist and should be prioritized.
+- Core single-page scanning must not require a full site-wide crawl, persistent background queue, remote browser service, or browser binary on the WordPress host.
+- Browser scanner JavaScript must be scoped to authorized scan sessions and should avoid materially degrading the page being evaluated.
+- Bound scan runtime and evidence payload size; avoid collecting unnecessary DOM/page content.
 - Frontend toolbar bootstrap must be small and avoid unnecessary layout shift or flash.
-- Audit tables must paginate/filter server-side as data grows; do not render tens of thousands of rows at once.
-
+- Audit tables must paginate/filter server-side as data grows; do not render unbounded report history or occurrence rows at once.
+- Future Premium site-wide processing must be incremental, resumable, bounded, and designed separately before implementation.
 # 14. Phase 1 Acceptance Criteria
 
-- A user can run a rendered single-page scan and receive persisted findings with explanations, WCAG mapping, recommendations, WordPress guidance, and developer guidance.
-- A user can start a site-wide audit, leave the page, return, pause/resume/cancel it, and recover from individual URL failures without losing completed work.
-- A second site-wide audit cannot start while one is active.
-- A completed audit produces a searchable/filterable grouped report and XLSX export.
+- A user can run a rendered single-page scan against the canonical public page using browser-side JavaScript and receive persisted findings with explanations, WCAG mapping, recommendations, WordPress guidance, and developer guidance.
+- A single-page scan evaluates the rendered DOM, including relevant client-side changes, rather than claiming server-fetched HTML is the rendered visitor experience.
+- The scan workflow clearly communicates that the scan page/browser session must remain open until that individual Core scan completes when required by the execution flow.
+- Completed scans produce searchable/filterable grouped reports and XLSX export.
 - Priority definitions/disclaimer appear in reports and exports.
 - Human-review findings can launch applicable Guided Decisions and save their answers/outcomes to audit history.
 - The Statement builder can create/connect a statement, maintain drafts, surface audit-derived recommendations, and publish only after user action.
@@ -434,19 +501,34 @@ Define granular WordPress capabilities in the underlying architecture from the b
 - The visitor toolbar exposes all 11 agreed controls, uses correct modal focus behavior, persists explicit choices locally, and treats Default as native site styling/settings.
 - Learn provides the agreed Start Here pages, ten topic areas, seven Guided Decisions, contextual links, and WCAG reference.
 - Core Settings use tabs; Premium-only settings are separated as specified.
+- Core remains fully functional without Premium, remote browser workers, a persistent site-wide queue, or external scanning services.
 - No audit finding triggers an automated remediation change anywhere in Phase 1.
+- Site-wide auditing and remote browser-worker execution are not required for Core Phase 1 acceptance and must not be silently implemented as Core dependencies.
+
+Additional ruleset/review acceptance criteria:
+
+- The initial production rule categories and semantics match `/docs/PHASE1_RULESET.md`.
+- Keyboard and focus findings remain human-authoritative.
+- Contrast failures are automatic only when the effective rendered comparison is determinate and applicable.
+- Missing/multiple H1 findings are prominent Structural Warnings/Human Review, not automatic WCAG failures.
+- `Reviewed — Not an Issue` is distinct from `Accepted Limitation`.
+- Eligible reviewed decisions can suppress the same materially unchanged condition on future audits without deleting history.
+- Reviewed-exception matching is server-authoritative, version-aware, page-aware, target-aware, and evidence-aware; selector-only suppression is prohibited.
+- Users can reset reviewed exceptions for a page or globally without deleting audit/report/history data.
+- Cross-rule grouping/supersession prevents avoidable duplicate active findings while retaining diagnostic evidence.
 
 # 15. Deferred Roadmap / Explicit Non-goals
 
 Phase 1 should resist scope expansion. The following are intentionally deferred or reserved for later evaluation.
 
 - Automated or semi-automated remediation — Phase 2/3 candidate only after the recommendation/audit system is stable.
-- Scheduled audits — later feature; likely premium-oriented.
+- Site-wide auditing, selected/multi-page batch auditing, persistent site-wide queue, and remote browser-worker execution — Premium later implementation; architecture may anticipate them but Core does not depend on them.
+- Scheduled audits — later Premium feature.
 - Saved/reusable audit scopes — premium backlog.
 - Advanced statement approval/client workflow — premium backlog.
 - Statement PDF export and enhanced branding/templates — premium backlog.
 - Restore old statement revisions — later enhancement; Phase 1 keeps viewable published history.
-- Advanced server/CLI runners — potential later performance feature for agencies/large sites.
+- Self-hosted browser workers, advanced server/CLI runners, and agency runners — potential later Premium features.
 - Arbitrary off-site URL scanning — not Phase 1.
 - Claims that automated scanning establishes complete WCAG conformance — prohibited product behavior.
 - Accessibility scores or percentage-conformant grades — prohibited Phase 1 behavior.

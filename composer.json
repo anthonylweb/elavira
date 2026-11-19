@@ -1,0 +1,39 @@
+{
+  "name": "elavira/elavira",
+  "description": "Accessibility auditing and guidance for WordPress.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=7.4"
+  },
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "phpcompatibility/phpcompatibility-wp": "^2.1",
+    "phpunit/phpunit": "^9.6",
+    "wp-coding-standards/wpcs": "^3.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Elavira\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Elavira\\Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "sort-packages": true
+  },
+  "scripts": {
+    "check": [
+      "@test",
+      "@phpcs"
+    ],
+    "phpcs": "phpcs",
+    "test": "phpunit"
+  }
+}
